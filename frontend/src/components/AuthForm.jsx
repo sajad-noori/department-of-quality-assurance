@@ -7,10 +7,31 @@ function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Helper to check if user is already logged in
+// Decode JWT payload (base64 decode)
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
+// Check if user is logged in by validating stored token and extracting user info
 function isLoggedIn() {
-  const user = localStorage.getItem('user');
-  return user ? JSON.parse(user) : null;
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  const user = parseJwt(token);
+  if (!user) return null;
+  // Optional: you can check token expiry here if your token has exp field
+  return user;
 }
 
 // ✅ LOGIN COMPONENT
@@ -41,8 +62,11 @@ export function Login() {
     setError('');
     try {
       const res = await axios.post('/api/auth/login', { email, password });
-      const user = res.data.user;
-      localStorage.setItem('user', JSON.stringify(user));
+      // Assume server returns { token: 'JWT_TOKEN_STRING' }
+      const { token } = res.data;
+      localStorage.setItem('token', token);
+
+      const user = parseJwt(token);
       navigate(user.role === 'admin' ? '/dashboard' : redirectPath);
     } catch (err) {
       setError(err.response?.data?.message || 'خطا در ورود');
@@ -112,7 +136,8 @@ export function Login() {
   );
 }
 
-// ✅ REGISTER COMPONENT
+// ✅ REGISTER COMPONENT stays the same except the isLoggedIn function now uses JWT check
+
 export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -122,7 +147,6 @@ export function Register() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // ✅ Redirect if already logged in
   useEffect(() => {
     const user = isLoggedIn();
     if (user) {

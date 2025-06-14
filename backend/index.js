@@ -10,13 +10,18 @@ const commentsRoutes = require('./routes/comments.route');
 const docsRoutes = require("./routes/docs.route");
 const videosRoutes = require("./routes/video.route")
 const educational_centers = require("./routes/educational_centers.route")
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -36,6 +41,9 @@ app.use("/api", educational_centers);
 app.use("/uploads/videos", express.static(path.join(__dirname, "uploads/videos")));
 app.use('/api/media', videosRoutes);
 
+
+
+app.set('trust proxy', 1);
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => {

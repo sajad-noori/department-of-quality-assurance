@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+
 
 const resources = [
   { title: 'اخبار', description: 'جدیدترین اخبار در مورد تضمین کیفیت و فعالیت‌ها.', route: '/news' },
@@ -55,9 +57,7 @@ const Card = ({ title, description, route, onClick }) => {
       tabIndex={0}
       onClick={onClick}
       onKeyPress={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          onClick();
-        }
+        if (e.key === 'Enter' || e.key === ' ') onClick();
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -80,9 +80,35 @@ Card.propTypes = {
 };
 
 const Dashboard = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [user, setUser] = useState(null);
+
+  // Validate JWT on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+
+      // Check if token is expired
+      if (decoded.exp * 1000 < Date.now()) {
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
+
+      setUser(decoded); // optional: you can use decoded.user if your token includes user info
+    } catch (err) {
+      console.error('Invalid token:', err);
+      localStorage.removeItem('token');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const filteredResources = resources.filter(
     (item) =>
@@ -121,8 +147,8 @@ const Dashboard = () => {
       <div style={{ marginTop: '2rem' }}>
         <button
           onClick={() => {
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            localStorage.removeItem('token');
+            navigate('/login');
           }}
           style={{ ...buttonStyle, backgroundColor: '#d9534f' }}
         >
@@ -133,6 +159,7 @@ const Dashboard = () => {
   );
 };
 
+// Styles (same as before)
 const searchStyle = {
   width: '100%',
   padding: '10px',
