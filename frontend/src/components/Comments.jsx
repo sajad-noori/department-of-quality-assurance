@@ -8,11 +8,10 @@ const Comments = ({ newsId }) => {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     setLoading(true);
@@ -22,6 +21,17 @@ const Comments = ({ newsId }) => {
       .catch(() => setError("خطا در بارگذاری نظرات"))
       .finally(() => setLoading(false));
   }, [newsId]);
+
+  useEffect(() => {
+    axios
+      .get("/api/auth/me", { withCredentials: true })
+      .then((res) => {
+        if (res.data?.user) {
+          setUser(res.data.user);
+        }
+      })
+      .catch(() => setUser(null));
+  }, []);
 
   const handleAddComment = () => {
     if (!newComment.trim()) return;
@@ -33,10 +43,11 @@ const Comments = ({ newsId }) => {
 
     setLoading(true);
     axios
-      .post(`/api/news/${newsId}/comments`, {
-        comment: newComment,
-        userId: user.id,
-      })
+      .post(
+        `/api/news/${newsId}/comments`,
+        { comment: newComment },
+        { withCredentials: true } // ✅ send cookie with JWT
+      )
       .then((res) => {
         setComments((prev) => [...prev, res.data]);
         setNewComment("");
@@ -112,7 +123,6 @@ const Comments = ({ newsId }) => {
   );
 };
 
-// ✅ PropTypes validation
 Comments.propTypes = {
   newsId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };

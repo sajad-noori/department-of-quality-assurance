@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-
+import axios from 'axios';
 
 const resources = [
   { title: 'اخبار', description: 'جدیدترین اخبار در مورد تضمین کیفیت و فعالیت‌ها.', route: '/news' },
@@ -83,38 +82,50 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Validate JWT on mount
+  // ✅ Use cookie-based auth (no jwtDecode, no localStorage)
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token);
-
-      // Check if token is expired
-      if (decoded.exp * 1000 < Date.now()) {
-        localStorage.removeItem('token');
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('User not authenticated:', err);
         navigate('/login');
-        return;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setUser(decoded); // optional: you can use decoded.user if your token includes user info
-    } catch (err) {
-      console.error('Invalid token:', err);
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
+    fetchUser();
   }, [navigate]);
+
+const handleLogout = async () => {
+  try {
+    await axios.post(
+      'http://localhost:5000/api/auth/logout',
+      {},
+      { withCredentials: true }
+    );
+  } catch (e) {
+    console.warn('Logout failed:', e);
+  } finally {
+    localStorage.removeItem('token'); // ✅ Clear token
+    navigate('/login');              // ✅ Redirect to login
+  }
+};
+
 
   const filteredResources = resources.filter(
     (item) =>
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.description.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) return <div>در حال بارگذاری...</div>;
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif', direction: 'rtl' }}>
@@ -146,10 +157,7 @@ const Dashboard = () => {
 
       <div style={{ marginTop: '2rem' }}>
         <button
-          onClick={() => {
-            localStorage.removeItem('token');
-            navigate('/login');
-          }}
+          onClick={handleLogout}
           style={{ ...buttonStyle, backgroundColor: '#d9534f' }}
         >
           🚪 خروج
@@ -159,7 +167,7 @@ const Dashboard = () => {
   );
 };
 
-// Styles (same as before)
+// Styles (unchanged)
 const searchStyle = {
   width: '100%',
   padding: '10px',

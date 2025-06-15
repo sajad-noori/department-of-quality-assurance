@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const { authenticate } = require('../middleware/auth.middleware');
+const { authLimiter } = require('../middleware/rateLimiter');
 
 // Controller functions (you need to have these implemented)
 const {
@@ -46,7 +48,14 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1 // Only allow one file at a time
+  }
+});
 
 // Error handling middleware for multer file validation
 function multerErrorHandler(err, req, res, next) {
@@ -54,30 +63,35 @@ function multerErrorHandler(err, req, res, next) {
     if (err.message === "فقط فایل‌های PDF، Word و Excel مجاز هستند.") {
       return res.status(400).json({ error: err.message });
     }
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." });
+    }
     // You can add other multer error checks here if needed
     return res.status(500).json({ error: "خطایی در آپلود فایل رخ داد." });
   }
   next();
 }
 
-// Routes with multer + error handler middleware to catch file validation errors
-router.post("/", (req, res, next) => {
+// Routes with security middlewares
+router.post("/", [authenticate, authLimiter], (req, res, next) => {
   upload.single("file")(req, res, (err) => {
     if (err) return multerErrorHandler(err, req, res, next);
     uploadDocument(req, res, next);
   });
 });
 
-router.put("/:id", (req, res, next) => {
+router.put("/:id", [authenticate, authLimiter], (req, res, next) => {
   upload.single("file")(req, res, (err) => {
     if (err) return multerErrorHandler(err, req, res, next);
     updateDocumentWithFile(req, res, next);
   });
 });
 
+// Public routes
 router.get("/", getDocuments);
-router.delete("/:id", deleteDocument);
 router.get("/documents", getDocumentsByType);
 
+// Protected routes
+router.delete("/:id", [authenticate, authLimiter], deleteDocument);
 
 module.exports = router;

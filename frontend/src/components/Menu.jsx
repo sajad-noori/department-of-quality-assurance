@@ -3,6 +3,7 @@ import styles from "../styles/Menu.module.css";
 import { FaWhatsapp, FaFacebookF, FaYoutube, FaXTwitter, FaEnvelope } from "react-icons/fa6";
 import { FaUserCircle } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const menuItems = [
   {
@@ -56,14 +57,15 @@ const menuItems = [
   },
   { label: "اخبار و رویداد های", submenu: [] },
   { label: "تماس با ما", submenu: [] },
-  { label: "درباره ما", submenu: [] }, // The item to link
+  { label: "درباره ما", submenu: [] },
 ];
 
 export default function MenuWithUtilityBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const menuRef = useRef(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -87,6 +89,24 @@ export default function MenuWithUtilityBar() {
     document.body.appendChild(script);
   }, []);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/auth/me", {
+          withCredentials: true,
+        });
+        if (res.data?.user) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
   const toggleDropdown = (index) => {
     setDropdownOpen(dropdownOpen === index ? null : index);
   };
@@ -102,12 +122,10 @@ export default function MenuWithUtilityBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Scroll handler for "اخبار و رویداد های"
   const handleNewsClick = (e) => {
     e.preventDefault();
     if (location.pathname !== "/") {
       navigate("/", { replace: false });
-      // Delay to allow page to load before scrolling
       setTimeout(() => {
         const section = document.getElementById("news-section");
         if (section) {
@@ -123,12 +141,10 @@ export default function MenuWithUtilityBar() {
     setMenuOpen(false);
   };
 
-  // Scroll handler for "تماس با ما"
   const handleFeedBackClick = (e) => {
     e.preventDefault();
     if (location.pathname !== "/") {
       navigate("/", { replace: false });
-      // Delay to allow page to load before scrolling
       setTimeout(() => {
         const section = document.getElementById("feedback-section");
         if (section) {
@@ -155,11 +171,6 @@ export default function MenuWithUtilityBar() {
       case "اسناد تقنینی":
         navigate("/documents/legal-doc");
         break;
-      default:
-        console.log("Clicked submenu:", label);
-        break;
-
-      // New routes for "آموزش و ارتقای ظرفیت"
       case "برنامههای آموزشی استادان و کارمندان":
         navigate("/training/teacher-staff-programs");
         break;
@@ -184,6 +195,9 @@ export default function MenuWithUtilityBar() {
       case "گزارش فعالیتهای آموزشی گذشته":
         navigate("/training/past-activities-report");
         break;
+      default:
+        console.log("Clicked submenu:", label);
+        break;
     }
   };
 
@@ -194,11 +208,9 @@ export default function MenuWithUtilityBar() {
           <a href="" target="_blank" rel="noopener noreferrer">
             <FaWhatsapp />
           </a>
-
           <a href="" target="_blank" rel="noopener noreferrer">
             <FaYoutube />
           </a>
-
           <a href="#">
             <FaFacebookF />
           </a>
@@ -210,18 +222,29 @@ export default function MenuWithUtilityBar() {
           <div id="google_translate_element"></div>
         </div>
         <div className={styles.rightOptions}>
-
-          {localStorage.getItem('user') ? (
+          {isLoggedIn ? (
             <button
               className={styles.loginBtn}
-              style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "18px", cursor: "pointer", background: "none", border: "none", color: "inherit", padding: 0 }}
-              onClick={() => navigate('/profile')}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "18px",
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+                color: "inherit",
+                padding: 0,
+              }}
+              onClick={() => navigate("/profile")}
               title="مشاهده پروفایل"
             >
               <FaUserCircle size={24} />
             </button>
           ) : (
-            <button className={styles.loginBtn} onClick={() => navigate('/login')}>ورود</button>
+            <button className={styles.loginBtn} onClick={() => navigate("/login")}>
+              ورود
+            </button>
           )}
 
           <div className={styles.email}>
@@ -269,28 +292,24 @@ export default function MenuWithUtilityBar() {
                 <a href="#news-section" className={styles.menuLink} onClick={handleNewsClick}>
                   {item.label}
                 </a>
-              )
-
-                : item.label === "تماس با ما" ? (
-                  <a href="#feedback-section" className={styles.menuLink} onClick={handleFeedBackClick}>
-                    {item.label}
-                  </a>
-                )
-
-                  : (
-                    <a
-                      href="#"
-                      className={styles.menuLink}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (item.submenu.length > 0) toggleDropdown(idx);
-                        else setMenuOpen(false);
-                      }}
-                    >
-                      {item.label}
-                      {item.submenu.length > 0 && <span className={styles.caret}>▼</span>}
-                    </a>
-                  )}
+              ) : item.label === "تماس با ما" ? (
+                <a href="#feedback-section" className={styles.menuLink} onClick={handleFeedBackClick}>
+                  {item.label}
+                </a>
+              ) : (
+                <a
+                  href="#"
+                  className={styles.menuLink}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (item.submenu.length > 0) toggleDropdown(idx);
+                    else setMenuOpen(false);
+                  }}
+                >
+                  {item.label}
+                  {item.submenu.length > 0 && <span className={styles.caret}>▼</span>}
+                </a>
+              )}
 
               {item.submenu.length > 0 && (
                 <ul

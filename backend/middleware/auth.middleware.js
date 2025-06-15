@@ -14,3 +14,16 @@ exports.verifyToken = (req, res, next) => {
     return res.status(401).json({ message: 'توکن معتبر نیست یا منقضی شده است' });
   }
 };
+
+exports.authenticate = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.sendStatus(401);
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.sendStatus(403);
+  }
+};

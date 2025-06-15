@@ -13,14 +13,17 @@ exports.getComments = async (req, res) => {
 
 exports.addComment = async (req, res) => {
   const newsId = req.params.newsId;
-  const { comment, userId } = req.body;  // get userId from body (sent by client)
-
+  const userId = req.user?.id; // ✅ Get user ID from decoded JWT
+  const { comment } = req.body;
+  
+  // 🔐 Ensure user is authenticated (JWT middleware should add req.user)
   if (!userId) {
     return res.status(401).json({ message: 'لطفاً وارد شوید تا بتوانید نظر دهید.' });
   }
 
+  // ✅ Input validation
   if (!comment || comment.trim() === '') {
-    return res.status(400).json({ message: 'نظر نمی تواند خالی باشد' });
+    return res.status(400).json({ message: 'نظر نمی‌تواند خالی باشد.' });
   }
 
   try {

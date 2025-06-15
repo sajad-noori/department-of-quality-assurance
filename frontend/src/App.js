@@ -20,6 +20,8 @@ import VideoGallery from './components/VideoGallery';
 import VideoPlayer from "./components/VideoPlayer";
 import Profile from './components/Profile';
 import NotFoundPage from './components/NotFoundPage';
+import RoleBasedRoute from './components/RoleBasedRoute';
+import PublicRoute from './components/PublicRoute';
 
 function App() {
   return (
@@ -61,13 +63,14 @@ function App() {
         />
 
           <Route
-          path="/profile"
-          element={
-            <AdminRoute>
-              <Profile />
-            </AdminRoute>
-          }
-        />
+  path="/profile"
+  element={
+    <RoleBasedRoute allowedRoles={['admin', 'institute']}>
+      <Profile />
+    </RoleBasedRoute>
+  }
+/>
+
 
         <Route
           path="/news/edit/:id"
@@ -98,7 +101,14 @@ function App() {
         
 
             {/*login and register page*/}
-            <Route path="/login" element={<Login />} />
+            <Route
+  path="/login"
+  element={
+    <PublicRoute>
+      <Login />
+    </PublicRoute>
+  }
+/>
             <Route path="/register" element={<Register />} />
             <Route path="/documents/:type" element={<DocumentsPage />} />
             <Route path="/training/:type" element={<VideoGallery />} />

@@ -54,24 +54,27 @@ export function Login() {
     }
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
-    if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
+  if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
 
-    setError('');
-    try {
-      const res = await axios.post('/api/auth/login', { email, password });
-      // Assume server returns { token: 'JWT_TOKEN_STRING' }
-      const { token } = res.data;
-      localStorage.setItem('token', token);
+  setError('');
+  try {
+    const res = await axios.post(
+      'http://localhost:5000/api/auth/login',
+      { email, password },
+      { withCredentials: true } // ✅ send cookie
+    );
 
-      const user = parseJwt(token);
-      navigate(user.role === 'admin' ? '/dashboard' : redirectPath);
-    } catch (err) {
-      setError(err.response?.data?.message || 'خطا در ورود');
-    }
-  };
+    const { user } = res.data;
+
+    navigate(user.role === 'admin' ? '/dashboard' : redirectPath);
+  } catch (err) {
+    console.error('Login error:', err);
+    setError(err.response?.data?.message || 'خطا در ورود');
+  }
+};
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">

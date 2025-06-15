@@ -26,7 +26,7 @@ const steps = [
 
 // Step components with Bootstrap classes
 function Step1() {
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     centerName: "",
     province: "",
     district: "",
@@ -39,41 +39,142 @@ const [formData, setFormData] = useState({
     email: "",
   });
 
-  
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Log form data for debugging
+    console.log('Validating form data:', formData);
+    
+    if (!formData.centerName || !formData.centerName.trim()) {
+      newErrors.centerName = "نام مرکز الزامی است";
+    }
+    if (!formData.province || !formData.province.trim()) {
+      newErrors.province = "ولایت الزامی است";
+    }
+    if (!formData.district || !formData.district.trim()) {
+      newErrors.district = "ولسوالی الزامی است";
+    }
+    if (!formData.village || !formData.village.trim()) {
+      newErrors.village = "قریه یا گذر الزامی است";
+    }
+    if (!formData.centerType || !formData.centerType.trim()) {
+      newErrors.centerType = "نوع مرکز الزامی است";
+    }
+    if (!formData.programType || !formData.programType.trim()) {
+      newErrors.programType = "نوع برنامه الزامی است";
+    }
+    if (!formData.foundingYear) {
+      newErrors.foundingYear = "سال تاسیس الزامی است";
+    } else if (isNaN(formData.foundingYear) || formData.foundingYear < 1300 || formData.foundingYear > new Date().getFullYear()) {
+      newErrors.foundingYear = "سال تاسیس باید بین ۱۳۰۰ و سال جاری باشد";
+    }
+    if (!formData.contactName || !formData.contactName.trim()) {
+      newErrors.contactName = "نام تماس گیرنده الزامی است";
+    }
+    if (!formData.phoneNumber || !formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = "شماره تماس الزامی است";
+    } else if (!/^[0-9]{10}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = "شماره تماس باید ۱۱ رقم باشد";
+    }
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = "ایمیل الزامی است";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "ایمیل معتبر نیست";
+    }
+
+    // Log validation errors for debugging
+    console.log('Validation errors:', newErrors);
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/centers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        alert("فرم با موفقیت ذخیره شد");
-      } else {
-        alert(`خطا: ${data.message}`);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("خطایی در ارسال اطلاعات رخ داد");
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
+      return newData;
+    });
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
     }
   };
 
-  
-  
+  const handleSubmit = async () => {
+    console.log('Submitting form with data:', formData);
+    
+    if (!validateForm()) {
+      console.log('Validation failed, errors:', errors);
+      alert("لطفاً تمام فیلدهای الزامی را پر کنید");
+      return;
+    }
+
+    try {
+      // First get the user info to ensure we're authenticated
+      const userResponse = await fetch("http://localhost:5000/api/auth/me", {
+        credentials: "include"
+      });
+
+      if (!userResponse.ok) {
+        if (userResponse.status === 401) {
+          alert("لطفاً ابتدا وارد شوید");
+          return;
+        }
+        throw new Error("خطا در دریافت اطلاعات کاربر");
+      }
+
+      const userData = await userResponse.json();
+      
+      // Now submit the form with user ID
+      const response = await fetch("http://localhost:5000/api/centers", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          ...formData,
+          user_id: userData.id
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Show specific error message from server if available
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          const errorMessages = errorData.errors.map(err => err.msg).join('\n');
+          alert(errorMessages);
+        } else {
+          alert(errorData.message || "خطا در ارسال اطلاعات");
+        }
+        return;
+      }
+
+      const data = await response.json();
+      alert("فرم با موفقیت ذخیره شد");
+    } catch (error) {
+      console.error("Error:", error);
+      alert(error.message || "خطایی در ارسال اطلاعات رخ داد");
+    }
+  };
+
   return (
     <GeneralInformationEducationalCenter
       formData={formData}
       onChange={handleChange}
       onSubmit={handleSubmit}
+      errors={errors}
     />
   );
 }
@@ -425,7 +526,7 @@ const handleSubmitStep = (e) => {
         </div>
       </form>
 
-      <style jsx>{`
+      <style>{`
         * {
           box-sizing: border-box;
         }
@@ -556,13 +657,9 @@ const handleSubmitStep = (e) => {
           width: 100%;
         }
         .white-placeholder::placeholder {
-  color: #e0eaff;
-  opacity: 1;
-}
-
-
-
-
+          color: #e0eaff;
+          opacity: 1;
+        }
       `}</style>
     </div>
   );

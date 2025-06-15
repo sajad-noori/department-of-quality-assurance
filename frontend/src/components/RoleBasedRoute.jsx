@@ -3,19 +3,20 @@ import PropTypes from 'prop-types';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 
-export default function AdminRoute({ children }) {
+export default function RoleBasedRoute({ children, allowedRoles }) {
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true, // very important for sending cookies
+          withCredentials: true,
         });
 
-        if (res.data?.user?.role === 'admin') {
-          setIsAdmin(true);
+        const userRole = res.data?.user?.role;
+        if (allowedRoles.includes(userRole)) {
+          setAuthorized(true);
         }
       } catch (err) {
         console.error('Auth check failed:', err);
@@ -25,14 +26,14 @@ export default function AdminRoute({ children }) {
     };
 
     checkAuth();
-  }, []);
+  }, [allowedRoles]);
 
   if (loading) return <div>در حال بارگذاری...</div>;
-
-  if (!isAdmin) return <Navigate to="/login" replace />;
+  if (!authorized) return <Navigate to="/login" replace />;
   return children;
 }
 
-AdminRoute.propTypes = {
+RoleBasedRoute.propTypes = {
   children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
