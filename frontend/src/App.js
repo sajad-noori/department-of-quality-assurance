@@ -8,6 +8,7 @@ import FooterSection from './components/FooterSection';
 import AboutUs from './components/AboutUs';
 import { Login, Register } from './components/AuthForm';
 import Dashboard from './pages/Dashboard';
+import UserManagement from './pages/UserManagement';
 import AdminRoute from './components/AdminRoute';
 import NewsSectionDashboard from './components/NewsSectionDashboard'
 import NewsForm from './components/NewsForm';
@@ -123,6 +124,15 @@ function App() {
                   <NewsSection />
                   <FeedbackSection />
                 </>
+              }
+            />
+
+            <Route
+              path="/dashboard/users"
+              element={
+                <AdminRoute>
+                  <UserManagement />
+                </AdminRoute>
               }
             />
           </Routes>

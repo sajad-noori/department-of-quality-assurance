@@ -70,6 +70,13 @@ exports.saveCenter = (req, res) => {
     });
   }
 
+  // Additional role check (as a backup)
+  if (req.user.role !== 'institute') {
+    return res.status(403).json({ 
+      message: "شما دسترسی به این بخش را ندارید. فقط کاربران با نقش مرکز آموزشی می‌توانند این فرم را پر کنند."
+    });
+  }
+
   const {
     centerName,
     province,
@@ -131,4 +138,32 @@ exports.saveCenter = (req, res) => {
     }
     res.status(201).json({ message: "مرکز آموزشی با موفقیت ذخیره شد" });
   });
+};
+
+// Get educational center data for a user
+exports.getCenter = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "لطفاً ابتدا وارد شوید" });
+    }
+
+    const sql = `
+      SELECT * FROM educational_centers 
+      WHERE user_id = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `;
+
+    db.query(sql, [userId], (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "خطا در دریافت اطلاعات" });
+      }
+      res.json(results);
+    });
+  } catch (error) {
+    console.error("Error in getCenter:", error);
+    res.status(500).json({ message: "خطا در دریافت اطلاعات" });
+  }
 };

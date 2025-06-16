@@ -185,7 +185,7 @@ const VideoGallery = () => {
         <input
           type="text"
           className="search-input"
-          placeholder="Search videos..."
+          placeholder="جستجوی ویدیو..."
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);

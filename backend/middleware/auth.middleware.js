@@ -16,14 +16,53 @@ exports.verifyToken = (req, res, next) => {
 };
 
 exports.authenticate = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) return res.sendStatus(401);
+  // Check for token in cookies
+  let token = req.cookies.token;
+  
+  // If not in cookies, check Authorization header
+  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return res.status(401).json({ 
+      success: false,
+      message: 'شما وارد نشده اید'
+    });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
-    res.sendStatus(403);
+    return res.status(401).json({ 
+      success: false,
+      message: 'توکن معتبر نیست یا منقضی شده است'
+    });
   }
+};
+
+exports.checkRole = (roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'شما وارد نشده اید'
+      });
+    }
+    
+    if (!Array.isArray(roles)) {
+      roles = [roles];
+    }
+    
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'شما دسترسی به این بخش را ندارید'
+      });
+    }
+    
+    next();
+  };
 };

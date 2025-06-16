@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { saveCenter } = require("../controllers/educational_centers.controller");
-const { authenticate } = require('../middleware/auth.middleware');
+const { saveCenter, getCenter } = require("../controllers/educational_centers.controller");
+const { authenticate, checkRole } = require('../middleware/auth.middleware');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { body, validationResult } = require('express-validator');
 
@@ -62,7 +62,10 @@ const validateCenter = [
   }
 ];
 
-// Protected route with authentication, rate limiting, and validation
-router.post("/centers", [authenticate, authLimiter, validateCenter], saveCenter);
+// Get educational center data
+router.get("/centers", [authenticate, checkRole('institute')], getCenter);
+
+// Protected route with authentication, role check, rate limiting, and validation
+router.post("/centers", [authenticate, checkRole('institute'), authLimiter, validateCenter], saveCenter);
 
 module.exports = router;

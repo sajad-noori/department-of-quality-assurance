@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter"
 import Personnel from "./accreditation/Personnel"
@@ -219,64 +220,238 @@ function Step3() {
   );
 }
 
-function Step4({ value, onChange }) {
+function Step4() {
+  const [formData, setFormData] = useState({
+    vision: '',
+    mission: '',
+    strategicGoals: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchVisionMission = async () => {
+      if (!user) return;
+
+      try {
+        const response = await axios.get('http://localhost:5000/api/vision-mission', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.data) {
+          setFormData({
+            vision: response.data.vision || '',
+            mission: response.data.mission || '',
+            strategicGoals: response.data.strategic_goals || ''
+          });
+          setHasExistingData(true);
+        }
+      } catch (err) {
+        console.error('Error fetching vision mission:', err);
+        setError('Error loading vision mission data');
+      }
+    };
+
+    fetchVisionMission();
+  }, [user]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.vision.trim()) {
+      setError('دیدگاه مرکز آموزشی الزامی است');
+      return false;
+    }
+    if (!formData.mission.trim()) {
+      setError('ماموریت مرکز آموزشی الزامی است');
+      return false;
+    }
+    if (!formData.strategicGoals.trim()) {
+      setError('اهداف استراتیژیک مرکز آموزشی الزامی است');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/vision-mission', formData, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      alert(response.data.message);
+      setHasExistingData(true);
+    } catch (err) {
+      console.error('Error saving vision mission:', err);
+      setError(err.response?.data?.message || 'Error saving vision mission data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        در حال بارگذاری...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
+    );
+  }
+
+  if (user.role !== 'institute') {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <label className="form-label-center"> دیدگاه، ماموریت و اهداف استراتیژیک مرکز آموزشی</label>
-      <div style={{height: '300px'}}>
-        
-        <label htmlFor="centerName" className="form-label small">دیدگاه مرکز آموزشی:</label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder="دیدگاه مرکز آموزشی را بیان دارید."
-        className="form-control h-100 white-placeholder"
-        style={{background: "transparent", color: "white"}}
-      />
-      </div>
+      <label className="form-label-center">دیدگاه، ماموریت و اهداف استراتیژیک مرکز آموزشی</label>
+      <fieldset className="mb-3 border rounded p-2">
+        <legend className="float-none w-auto px-2 mb-2 small" style={{ fontSize: '0.85rem' }}>
+          فورم دیدگاه، ماموریت و اهداف استراتیژیک
+          {hasExistingData && (
+            <span className="ms-2 text-info">
+              (اطلاعات قبلی شما نمایش داده شده است)
+            </span>
+          )}
+        </legend>
+        <div>
+          <div style={{height: '300px'}}>
+            <label htmlFor="vision" className="form-label small">دیدگاه مرکز آموزشی:</label>
+            <textarea
+              id="vision"
+              name="vision"
+              value={formData.vision}
+              onChange={handleChange}
+              placeholder="دیدگاه مرکز آموزشی را بیان دارید."
+              className="form-control h-100 white-placeholder"
+              style={{background: "transparent", color: "white"}}
+              required
+            />
+          </div>
+          <br />
+          <div style={{height: '300px'}}>
+            <label htmlFor="mission" className="form-label small">ماموریت مرکز آموزشی:</label>
+            <textarea
+              id="mission"
+              name="mission"
+              value={formData.mission}
+              onChange={handleChange}
+              placeholder="ماموریت مرکز آموزشی را بیان دارید"
+              className="form-control h-100 white-placeholder"
+              style={{background: "transparent", color: "white"}}
+              required
+            />
+          </div>
+          <br />
+          <div style={{height: '300px'}}>
+            <label htmlFor="strategicGoals" className="form-label small">اهداف استراتیژیک مرکز آموزشی</label>
+            <textarea
+              id="strategicGoals"
+              name="strategicGoals"
+              value={formData.strategicGoals}
+              onChange={handleChange}
+              placeholder="اهداف استراتیژیک مرکز آموزشی را بیان دارید
+              1.
+              2.
+              3.
+              4.
+              "
+              className="form-control h-100 white-placeholder"
+              style={{background: "transparent", color: "white"}}
+              required
+            />
+          </div>
+          {error && (
+            <div className="alert alert-danger mt-3" role="alert">
+              {error}
+            </div>
+          )}
+          <button 
+            type="button" 
+            className="btn btn-success w-100 mt-4"
+            disabled={loading}
+            onClick={handleSubmit}
+          >
+            {loading ? 'در حال ذخیره...' : hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+          </button>
+        </div>
+      </fieldset>
       <br />
-      <div style={{height: '300px'}}>
-        <label htmlFor="centerName" className="form-label small">ماموریت مرکز آموزشی:</label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder="ماموریت مرکز آموزشی را بیان دارید"
-        className="form-control h-100 white-placeholder"
-        style={{background: "transparent", color: "white"}}
-      />
-      </div>
-
-      <br />
-      <div style={{height: '300px'}}>
-        <label htmlFor="centerName" className="form-label small">اهداف استراتیژیک مرکز آموزشی</label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder="اهداف استراتیژیک مرکز آموزشی را بیان دارید
-        1.
-        2.
-        3.
-        4.
-        "
-        className="form-control h-100 white-placeholder"
-        style={{background: "transparent", color: "white"}}
-      />
-      </div>
-        <button type="submit" className="btn btn-success w-100 mt-4">
-          ثبت مرحله
-        </button>
-        <br />
     </>
   );
 }
 
-
-
 function Step5() {
   const [description, setDescription] = useState("");
 
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
+  const handleDescriptionChange = (value) => {
+    setDescription(value);
   };
 
   return (
@@ -313,27 +488,263 @@ function Step7() {
   );
 }
 
-function Step8({ value, onChange }) {
+function Step8() {
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+        setSnackbar({
+          open: true,
+          message: 'خطا در دریافت اطلاعات کاربر',
+          severity: 'error'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchStakeholderInvolvement = async () => {
+      if (!user) return;
+
+      try {
+        const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.data.success && response.data.data) {
+          setDescription(response.data.data.description || '');
+          setHasExistingData(true);
+        }
+      } catch (err) {
+        console.error('Error fetching stakeholder involvement:', err);
+        setError('خطا در بارگذاری اطلاعات');
+        setSnackbar({
+          open: true,
+          message: 'خطا در بارگذاری اطلاعات',
+          severity: 'error'
+        });
+      }
+    };
+
+    fetchStakeholderInvolvement();
+  }, [user]);
+
+  const handleChange = (e) => {
+    setDescription(e.target.value);
+    if (error) {
+      setError(null);
+    }
+  };
+
+  const validateForm = () => {
+    if (!description.trim()) {
+      setError('توضیحات الزامی است');
+      setSnackbar({
+        open: true,
+        message: 'لطفاً توضیحات را وارد کنید',
+        severity: 'error'
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/stakeholder-involvement', 
+        { description },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      setSnackbar({
+        open: true,
+        message: response.data.message,
+        severity: 'success'
+      });
+      setHasExistingData(true);
+    } catch (err) {
+      console.error('Error saving stakeholder involvement:', err);
+      setError(err.response?.data?.message || 'خطا در ذخیره اطلاعات');
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || 'خطا در ذخیره اطلاعات',
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">در حال بارگذاری...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
+    );
+  }
+
+  if (user.role !== 'institute') {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <label className="form-label-center"> دخیل سازی ذینفعان در پروسه آموزشی</label>
-      <div style={{height: '300px'}}>
-        
-        <label htmlFor="centerName" className="form-label small">در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت ذینفعان را واضح سازد.</label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder="شیوع دخیل سازی ذینفعان را در اینجا درج نمایید.."
-        className="form-control h-100 white-placeholder"
-        style={{background: "transparent", color: "white"}}
-      />
+      <label className="form-label-center">دخیل سازی ذینفعان در پروسه آموزشی</label>
+      <fieldset className="mb-3 border rounded p-4" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
+        <legend className="float-none w-auto px-3 mb-3" style={{ fontSize: '1rem', color: '#8db8ff' }}>
+          فورم دخیل سازی ذینفعان
+          {hasExistingData && (
+            <span className="ms-2 text-info">
+              (اطلاعات قبلی شما نمایش داده شده است)
+            </span>
+          )}
+        </legend>
+        <div>
+          <div style={{height: '300px'}}>
+            <label htmlFor="description" className="form-label small mb-2" style={{ color: '#8db8ff' }}>
+              در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت ذینفعان را واضح سازد.
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={handleChange}
+              placeholder="شیوع دخیل سازی ذینفعان را در اینجا درج نمایید.."
+              className="form-control h-100 white-placeholder"
+              style={{
+                background: "rgba(255, 255, 255, 0.1)",
+                color: "white",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: "8px",
+                padding: "12px",
+                fontSize: "0.95rem",
+                transition: "all 0.3s ease"
+              }}
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          {error && (
+            <div className="alert alert-danger mt-3" role="alert" style={{ borderRadius: "8px" }}>
+              <i className="fas fa-exclamation-circle me-2"></i>
+              {error}
+            </div>
+          )}
+          <button 
+            type="button" 
+            className="btn btn-success w-100 mt-4"
+            disabled={isSubmitting}
+            onClick={handleSubmit}
+            style={{
+              borderRadius: "8px",
+              padding: "12px",
+              fontSize: "1rem",
+              transition: "all 0.3s ease",
+              background: isSubmitting ? "#2c3e50" : "#28a745",
+              border: "none",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                در حال ذخیره...
+              </>
+            ) : hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+          </button>
+        </div>
+      </fieldset>
+
+      {/* Snackbar for feedback */}
+      <div 
+        className={`alert alert-${snackbar.severity === 'success' ? 'success' : 'danger'} position-fixed bottom-0 end-0 m-3`}
+        role="alert"
+        style={{
+          display: snackbar.open ? 'block' : 'none',
+          minWidth: '300px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          zIndex: 1000
+        }}
+      >
+        <div className="d-flex align-items-center">
+          <i className={`fas fa-${snackbar.severity === 'success' ? 'check-circle' : 'exclamation-circle'} me-2`}></i>
+          {snackbar.message}
+          <button 
+            type="button" 
+            className="btn-close ms-auto" 
+            onClick={handleCloseSnackbar}
+            aria-label="Close"
+          ></button>
+        </div>
       </div>
-
-
-        <button type="submit" className="btn btn-success w-100 mt-4">
-          ثبت مرحله
-        </button>
-        <br />
+      <br />
     </>
   );
 }
@@ -418,7 +829,7 @@ useEffect(() => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-const handleSubmitStep = (e) => {
+const handleSubmitStep = async (e) => {
   e.preventDefault();
 
   // Define required fields for each step
@@ -451,6 +862,11 @@ const handleSubmitStep = (e) => {
   }
 
   // If validation passes
+  if (currentStep === 4) {
+    // For Step4, we'll let the component handle its own submission
+    return;
+  }
+
   alert(`مرحله ${currentStep} ثبت شد`);
 
   if (currentStep < steps.length) setCurrentStep(currentStep + 1);

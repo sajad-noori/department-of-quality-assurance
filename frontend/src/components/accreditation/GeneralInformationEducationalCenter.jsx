@@ -1,12 +1,74 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
 import { provinces, districts } from '../../data/afghanistan-locations';
+import axios from 'axios';
 
 export default function EducationalCenterForm({ formData, onChange, onSubmit }) {
   const [errors, setErrors] = useState({});
   const [availableDistricts, setAvailableDistricts] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [hasExistingData, setHasExistingData] = useState(false);
 
-  // Update available districts when province changes
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // Fetch existing center data
+  useEffect(() => {
+    const fetchCenterData = async () => {
+      if (!user) return;
+
+      try {
+        const response = await axios.get('http://localhost:5000/api/centers', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.data && response.data.length > 0) {
+          const centerData = response.data[0];
+          setHasExistingData(true);
+          
+          // Update form with existing data
+          Object.entries(centerData).forEach(([key, value]) => {
+            if (formData[key] !== undefined) {
+              // Handle special cases for select fields
+              if (key === 'province') {
+                // Update available districts when province is loaded
+                const provinceDistricts = districts[value] || [];
+                setAvailableDistricts(provinceDistricts);
+              }
+              
+              // Update the form field
+              onChange({ target: { name: key, value: value } });
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching center data:', err);
+      }
+    };
+
+    fetchCenterData();
+  }, [user]);
+
   useEffect(() => {
     if (formData.province) {
       const provinceDistricts = districts[formData.province] || [];
@@ -19,6 +81,40 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
       setAvailableDistricts([]);
     }
   }, [formData.province]);
+
+  if (loading) {
+    return (
+      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        در حال بارگذاری...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
+    );
+  }
+
+  if (user.role !== 'institute') {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
+      </div>
+    );
+  }
 
   const validateForm = () => {
     const newErrors = {};
@@ -71,6 +167,11 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
     <fieldset className="mb-3 border rounded p-2">
       <legend className="float-none w-auto px-2 mb-2 small" style={{ fontSize: '0.85rem' }}>
         فورم معلومات عمومی مرکز آموزشی
+        {hasExistingData && (
+          <span className="ms-2 text-info">
+            (اطلاعات قبلی شما نمایش داده شده است)
+          </span>
+        )}
       </legend>
       <div className="container" dir="rtl">
         {/* اسم مرکز آموزشی */}
@@ -83,7 +184,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
             id="centerName"
             name="centerName"
             className={`form-control form-control white-placeholder ${errors.centerName ? 'is-invalid' : ''}`}
-            value={formData.centerName}
+            value={formData.centerName || ''}
             onChange={handleChange}
             placeholder="نام مرکز آموزشی را وارد کنید"
             required
@@ -107,7 +208,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
                 id="province"
                 name="province"
                 className={`form-select form-select white-placeholder ${errors.province ? 'is-invalid' : ''}`}
-                value={formData.province}
+                value={formData.province || ''}
                 onChange={handleChange}
                 required
                 style={{background: "transparent", color: "white"}}
@@ -129,7 +230,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
                 id="district"
                 name="district"
                 className={`form-select form-select white-placeholder ${errors.district ? 'is-invalid' : ''}`}
-                value={formData.district}
+                value={formData.district || ''}
                 onChange={handleChange}
                 required
                 disabled={!formData.province}
@@ -153,7 +254,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
                 id="village"
                 name="village"
                 className={`form-control form-control white-placeholder ${errors.village ? 'is-invalid' : ''}`}
-                value={formData.village}
+                value={formData.village || ''}
                 onChange={handleChange}
                 placeholder="قریه یا گذر"
                 required
@@ -174,7 +275,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="centerType"
               name="centerType"
               className={`form-select form-select white-placeholder ${errors.centerType ? 'is-invalid' : ''}`}
-              value={formData.centerType}
+              value={formData.centerType || ''}
               onChange={handleChange}
               required
               style={{background: "transparent", color: "white"}}
@@ -194,7 +295,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="programType"
               name="programType"
               className={`form-select form-select white-placeholder ${errors.programType ? 'is-invalid' : ''}`}
-              value={formData.programType}
+              value={formData.programType || ''}
               onChange={handleChange}
               required
               style={{background: "transparent", color: "white"}}
@@ -216,7 +317,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="foundingYear"
               name="foundingYear"
               className={`form-control form-control white-placeholder ${errors.foundingYear ? 'is-invalid' : ''}`}
-              value={formData.foundingYear}
+              value={formData.foundingYear || ''}
               onChange={handleChange}
               placeholder="سال"
               min="1300"
@@ -239,7 +340,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="contactName"
               name="contactName"
               className={`form-control white-placeholder ${errors.contactName ? 'is-invalid' : ''}`}
-              value={formData.contactName}
+              value={formData.contactName || ''}
               onChange={handleChange}
               placeholder="نام شخص"
               required
@@ -257,7 +358,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="phoneNumber"
               name="phoneNumber"
               className={`form-control white-placeholder ${errors.phoneNumber ? 'is-invalid' : ''}`}
-              value={formData.phoneNumber}
+              value={formData.phoneNumber || ''}
               onChange={handleChange}
               placeholder="شماره تماس (۱۰ رقم)"
               maxLength="10"
@@ -276,7 +377,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               id="email"
               name="email"
               className={`form-control white-placeholder ${errors.email ? 'is-invalid' : ''}`}
-              value={formData.email}
+              value={formData.email || ''}
               onChange={handleChange}
               placeholder="ایمیل"
               required
@@ -291,7 +392,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
           className="btn btn-primary btn-sm w-100"
           onClick={handleSubmit}
         >
-          ارسال فرم
+          {hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
         </button>
       </div>
     </fieldset>

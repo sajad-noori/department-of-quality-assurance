@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const resources = [
   { title: 'اخبار', description: 'جدیدترین اخبار در مورد تضمین کیفیت و فعالیت‌ها.', route: '/news' },
-  { title: 'نمای از فعالیت های کلی', description: '', route: '/activities' },
+  { title: ' یوزر ها', description: 'تمام یوزر ها را از این قسمت کنترول کنید', route: '/dashboard/users' },
   { title: 'رهنمود ها، فورم ها و اسناد تقنینی', description: 'کنترول اپلود رهنمود ها، فورم ها و اسناد تقینی در بخش مرکز اسناد و دانلود ها', route: '/dashboard/docs-center-and-uploads' },
   { title: 'ویدیو های آموزشی', description: 'کنترول ویدیو های آموزشی', route: '/dashboard/videos' },
 
