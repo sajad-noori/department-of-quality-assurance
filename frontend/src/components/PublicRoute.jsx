@@ -10,6 +10,12 @@ export default function PublicRoute({ children }) {
   const location = useLocation();
 
   useEffect(() => {
+    // Skip auth check for verification page
+    if (location.pathname === '/verify-code') {
+      setLoading(false);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/auth/me', {
@@ -29,7 +35,7 @@ export default function PublicRoute({ children }) {
       }
     };
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
   if (loading) return <div>در حال بارگذاری...</div>;
   

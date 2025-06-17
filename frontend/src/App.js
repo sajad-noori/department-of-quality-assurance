@@ -36,7 +36,14 @@ function App() {
             {/* ✅ About Us Page */}
             <Route path="/about" element={<AboutUs />} />
             <Route path="/news/:id" element={<NewsDetail />} />
-            <Route path="/verify-code" element={<VerifyCode />} />
+            <Route 
+              path="/verify-code" 
+              element={
+                <PublicRoute>
+                  <VerifyCode />
+                </PublicRoute>
+              } 
+            />
             <Route
           path="/dashboard"
           element={
@@ -54,6 +61,8 @@ function App() {
           }
         />
 
+
+
         <Route
           path="/news/create"
           element={
@@ -66,11 +75,12 @@ function App() {
           <Route
   path="/profile"
   element={
-    <RoleBasedRoute allowedRoles={['admin', 'institute']}>
+    <RoleBasedRoute allowedRoles={['admin', 'institute', 'user']}>
       <Profile />
     </RoleBasedRoute>
   }
 />
+
 
 
         <Route

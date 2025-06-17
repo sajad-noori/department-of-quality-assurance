@@ -139,8 +139,7 @@ const handleSubmit = async (e) => {
   );
 }
 
-// ✅ REGISTER COMPONENT stays the same except the isLoggedIn function now uses JWT check
-
+// ✅ REGISTER COMPONENT
 export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -148,8 +147,10 @@ export function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Redirect if already logged in
   useEffect(() => {
     const user = isLoggedIn();
     if (user) {
@@ -159,19 +160,174 @@ export function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (name.trim().length < 3) return setError('نام باید حداقل ۳ حرف باشد');
-    if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
-    if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
-    if (password !== confirmPassword) return setError('رمز عبور با تکرار آن مطابقت ندارد');
-
+    console.log('Registration form submitted');
+    setIsLoading(true);
     setError('');
+
+    // Validate inputs
+    if (name.trim().length < 3) {
+      console.log('Name validation failed');
+      setIsLoading(false);
+      return setError('نام باید حداقل ۳ حرف باشد');
+    }
+    if (!validateEmail(email)) {
+      console.log('Email validation failed');
+      setIsLoading(false);
+      return setError('ایمیل معتبر نیست');
+    }
+    if (password.length < 6) {
+      console.log('Password validation failed');
+      setIsLoading(false);
+      return setError('رمز عبور باید حداقل ۶ حرف باشد');
+    }
+    if (password !== confirmPassword) {
+      console.log('Password confirmation failed');
+      setIsLoading(false);
+      return setError('رمز عبور با تکرار آن مطابقت ندارد');
+    }
+
+    console.log('Sending registration request...');
+    
     try {
-      await axios.post('/api/auth/register', { name, email, password });
-      navigate('/verify-code?email=' + encodeURIComponent(email));
+      console.log('Request payload:', { name, email, password });
+      
+      // Create axios instance with default config
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:5000',
+        timeout: 30000, // Increased to 30 seconds
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      // Add request interceptor for logging
+      axiosInstance.interceptors.request.use(request => {
+        console.log('Starting Request:', request);
+        return request;
+      });
+
+      // Add response interceptor for logging
+      axiosInstance.interceptors.response.use(
+        response => {
+          console.log('Response:', response);
+          return response;
+        },
+        error => {
+          console.error('Response Error:', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            config: {
+              url: error.config?.url,
+              method: error.config?.method,
+              headers: error.config?.headers
+            }
+          });
+          return Promise.reject(error);
+        }
+      );
+
+      console.log('Making registration request to:', '/api/auth/register');
+      const res = await axiosInstance.post('/api/auth/register', {
+        name,
+        email,
+        password
+      });
+      
+      console.log('Registration response:', res.data);
+      
+      if (res.data) {
+        console.log('Registration successful, preparing to redirect...');
+        // Save registration data in localStorage
+        const registrationData = {
+          name,
+          email: res.data.email || email, // Use email from response if available
+          timestamp: new Date().toISOString(),
+          status: 'pending_verification'
+        };
+        console.log('Saving registration data:', registrationData);
+        localStorage.setItem('registrationData', JSON.stringify(registrationData));
+        localStorage.setItem('pendingVerificationEmail', res.data.email || email);
+        
+        // Clear any existing auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        console.log('Redirecting to verification page...');
+        const verificationUrl = '/verify-code?email=' + encodeURIComponent(res.data.email || email);
+        console.log('Verification URL:', verificationUrl);
+        
+        // Use replace: true to prevent back navigation to registration
+        navigate(verificationUrl, { replace: true });
+      } else {
+        console.log('Unexpected response:', res.data);
+        setError('خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'خطا در ثبت‌نام');
+      console.error('Registration error details:', {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers,
+        config: {
+          url: err.config?.url,
+          method: err.config?.method,
+          headers: err.config?.headers
+        }
+      });
+      
+      // Clear any partial registration data on error
+      localStorage.removeItem('registrationData');
+      localStorage.removeItem('pendingVerificationEmail');
+      
+      if (err.code === 'ERR_NETWORK') {
+        setError('خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید.');
+      } else if (err.code === 'ECONNABORTED') {
+        setError('زمان اتصال به سرور به پایان رسید. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.');
+      } else if (err.response?.status === 500) {
+        const errorMessage = err.response?.data?.message;
+        if (errorMessage) {
+          setError(errorMessage);
+        } else {
+          setError('خطای سرور. لطفاً بعداً تلاش کنید.');
+        }
+      } else if (err.response?.status === 429) {
+        setError('تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.');
+      } else if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message;
+        if (errorMessage) {
+          setError(errorMessage);
+        } else {
+          setError('اطلاعات وارد شده نامعتبر است.');
+        }
+      } else {
+        setError(err.response?.data?.message || 'خطا در ثبت‌نام');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Check for existing registration data on component mount
+  useEffect(() => {
+    const registrationData = localStorage.getItem('registrationData');
+    if (registrationData) {
+      try {
+        const data = JSON.parse(registrationData);
+        console.log(data)
+        // If registration is pending verification, redirect to verification page
+        if (data.status === 'pending_verification') {
+          navigate('/verify-code?email=' + encodeURIComponent(data.email));
+        }
+      } catch (error) {
+        console.error('Error parsing registration data:', error);
+        localStorage.removeItem('registrationData');
+      }
+    }
+  }, [navigate]);
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
@@ -179,7 +335,7 @@ export function Register() {
         <div className="card shadow">
           <div className="card-body p-4">
             <h2 className="card-title text-center mb-4">ثبت‌ نام</h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               {error && <p className="text-danger text-center small">{error}</p>}
               <div className="mb-3">
                 <label htmlFor="name" className="form-label">نام کامل</label>
@@ -190,6 +346,7 @@ export function Register() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="mb-3">
@@ -201,6 +358,7 @@ export function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="mb-3 position-relative">
@@ -212,16 +370,18 @@ export function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
                 <span
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => !isLoading && setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
                     top: '38px',
                     left: '12px',
-                    cursor: 'pointer',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
                     fontSize: '1.2rem',
                     userSelect: 'none',
+                    opacity: isLoading ? 0.5 : 1
                   }}
                   title={showPassword ? 'مخفی کردن رمز' : 'نمایش رمز'}
                 >
@@ -237,15 +397,31 @@ export function Register() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
-              <button type="submit" className="btn btn-success w-100">ثبت‌نام</button>
+              <button 
+                type="submit" 
+                className="btn btn-success w-100"
+                disabled={isLoading}
+                onClick={() => console.log('Register button clicked')}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    در حال ثبت‌نام...
+                  </>
+                ) : (
+                  'ثبت‌نام'
+                )}
+              </button>
               <p className="text-center mt-3 mb-0 small">
                 حساب دارید؟{' '}
                 <button
                   type="button"
                   className="btn btn-link p-0"
                   onClick={() => navigate('/login')}
+                  disabled={isLoading}
                 >
                   ورود
                 </button>

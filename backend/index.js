@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const authRoutes = require('./Routes/auth.route');
+const authRoutes = require('./routes/auth.route');
 const newsRoutes = require('./routes/news.route');
 const path = require('path');
 const visitorRoutes = require("./routes/visitorRoutes");
@@ -29,10 +29,16 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+
+// CORS configuration
 app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -48,23 +54,20 @@ const tempUploadsDir = path.join(__dirname, 'uploads', 'temp');
   }
 });
 
+// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads/files", express.static(path.join(__dirname, "uploads/files")));
+app.use("/uploads/videos", express.static(path.join(__dirname, "uploads/videos")));
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/news', newsRoutes);
-app.use("/api", visitorRoutes);
+app.use("/api/visitors", visitorRoutes);
 app.use('/api/feedback', feedbackRoute);
 app.use('/api/news/:newsId/comments', commentsRoutes);
-
-app.use("/api/docs-center-and-uploads", docsRoutes);
-app.use("/uploads/files", express.static(path.join(__dirname, "uploads/files"))); 
-app.use("/api", docsRoutes);
-
-// profile
-app.use("/api", educational_centers);
+app.use("/api/docs", docsRoutes);
+app.use("/api/educational-centers", educational_centers);
 app.use("/api/users", usersRoutes);
-
-app.use("/uploads/videos", express.static(path.join(__dirname, "uploads/videos")));
 app.use('/api/media', videosRoutes);
 app.use('/api/personnel', personnelRoutes);
 app.use('/api/students', studentRoutes);
@@ -78,7 +81,10 @@ app.use('/api/practical-facilities', practicalFacilityRoutes);
 app.use("/api/stakeholder-involvement", stakeholderInvolvementRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/profile-documents", profileDocumentRoutes);
+
+// Trust proxy for rate limiting
 app.set('trust proxy', 1);
+
 const port = process.env.PORT || 5000;
 
 app.listen(port, () => {

@@ -11,6 +11,7 @@ const ProfileSidebar = () => {
   const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(false);
   const [activeStage, setActiveStage] = useState(1);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -54,6 +55,20 @@ const ProfileSidebar = () => {
       } finally {
         setUploading(false);
       }
+    }
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await axios.post('http://localhost:5000/api/auth/logout', {}, {
+        withCredentials: true
+      });
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error logging out:', error);
+      alert('Error logging out. Please try again.');
+      setLoggingOut(false);
     }
   };
 
@@ -184,15 +199,36 @@ const ProfileSidebar = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        <motion.div
+          className="logout-container"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            className="logout-button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {loggingOut ? (
+              <CircularProgress size={20} sx={{ color: '#ffffff' }} />
+            ) : (
+              <>
+                <i className="fas fa-sign-out-alt"></i>
+                <span>خروج</span>
+              </>
+            )}
+          </motion.button>
+        </motion.div>
       </div>
 
       <style jsx>{`
         .profile-sidebar {
           width: 300px;
-          background: linear-gradient(145deg, #1a1a1a, #222222);
           padding: 3rem 2rem;
-          border-left: 1px solid rgba(47, 58, 112, 0.3);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
           position: absolute;
           right: 0;
           top: 0;
@@ -362,6 +398,44 @@ const ProfileSidebar = () => {
 
         .stage.completed .stage-text {
           color: #10b981;
+        }
+
+        .logout-container {
+          margin-top: 2rem;
+          width: 100%;
+          padding: 0 1.5rem;
+        }
+
+        .logout-button {
+          width: 100%;
+          padding: 0.75rem;
+          background: linear-gradient(145deg, #ef4444, #dc2626);
+          border: none;
+          border-radius: 8px;
+          color: white;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .logout-button:hover {
+          background: linear-gradient(145deg, #dc2626, #b91c1c);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .logout-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .logout-button i {
+          font-size: 1.1rem;
         }
       `}</style>
     </motion.div>

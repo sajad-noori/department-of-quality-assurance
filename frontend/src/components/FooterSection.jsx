@@ -24,13 +24,13 @@ const FooterSection = () => {
     }
 
     // Record the visit, then fetch stats
-    fetch("/api/visit", {
+    fetch("http://localhost:5000/api/visitors/visit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId }),
     })
       .then(res => res.json())
-      .then(() => fetch("/api/visitor-stats"))
+      .then(() => fetch("http://localhost:5000/api/visitors/visitor-stats"))
       .then(res => res.json())
       .then(stats => setVisitorStats(stats))
       .catch(err => console.error("Error fetching visitor stats:", err));

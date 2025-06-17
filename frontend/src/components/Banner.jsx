@@ -450,7 +450,7 @@ export default function Banner() {
       <style>{`
         /* Reset and basics */
         .banner {
-          background: black;
+          background-color: #121212;
           color: #eee;
           padding: 3rem 1rem 8rem;
           box-sizing: border-box;

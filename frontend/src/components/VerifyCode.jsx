@@ -5,44 +5,84 @@ import axios from 'axios';
 const VerifyCode = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const email = searchParams.get('email');
+  const email = searchParams.get('email') || localStorage.getItem('pendingVerificationEmail');
 
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(60);
   const [resending, setResending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
+    // Check for registration data
+    const registrationData = localStorage.getItem('registrationData');
+    if (!email || !registrationData) {
+      console.log('No registration data found, redirecting to register');
+      navigate('/register');
+      return;
+    }
+
+    try {
+      const data = JSON.parse(registrationData);
+      if (data.status !== 'pending_verification' || data.email !== email) {
+        console.log('Invalid registration data, redirecting to register');
+        localStorage.removeItem('registrationData');
+        localStorage.removeItem('pendingVerificationEmail');
+        navigate('/register');
+        return;
+      }
+    } catch (error) {
+      console.error('Error parsing registration data:', error);
+      localStorage.removeItem('registrationData');
+      localStorage.removeItem('pendingVerificationEmail');
+      navigate('/register');
+      return;
+    }
+
+    console.log('Verification page loaded with email:', email);
+
     const interval = setInterval(() => {
       setTimer(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [email, navigate]);
 
   const handleVerify = async (e) => {
     e.preventDefault();
     if (!code) {
-      setError("Please enter the verification code.");
+      setError('لطفاً کد تایید را وارد کنید');
       return;
     }
 
-    try {
-      const response = await axios.post('/api/auth/verify', {
-        email,
-        code
-      });
+    setVerifying(true);
+    setError('');
+    setMessage('');
 
-      setMessage(response.data.message);
-      setError('');
+    try {
+      console.log('Sending verification request for email:', email);
+      const response = await axios.post(
+        'http://localhost:5000/api/auth/verify',
+        { email, code },
+        { withCredentials: true }
+      );
+
+      console.log('Verification response:', response.data);
+      setMessage('ایمیل شما با موفقیت تایید شد');
+      
+      // Clear all registration data
+      localStorage.removeItem('registrationData');
+      localStorage.removeItem('pendingVerificationEmail');
       
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "Verification failed.");
-      setMessage('');
+      console.error('Verification error:', err);
+      setError(err.response?.data?.message || 'خطا در تایید کد');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -52,88 +92,80 @@ const VerifyCode = () => {
     setMessage('');
 
     try {
-      const response = await axios.post('/api/auth/resend-code', { email });
-
-      setMessage(response.data.message || "Code resent successfully.");
-      setTimer(60); // restart countdown
+      const response = await axios.post(
+        'http://localhost:5000/api/auth/resend-code',
+        { email },
+        { withCredentials: true }
+      );
+      setMessage('کد جدید با موفقیت ارسال شد');
+      setTimer(60);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to resend code.");
+      setError(err.response?.data?.message || 'خطا در ارسال مجدد کد');
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <h2>Email Verification</h2>
-      <p>We sent a code to <strong>{email}</strong></p>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
+      <div className="w-100" style={{ maxWidth: '400px' }}>
+        <div className="card shadow">
+          <div className="card-body p-4">
+            <h2 className="card-title text-center mb-4">تایید ایمیل</h2>
+            <p className="text-center mb-4">
+              کد تایید به ایمیل <strong>{email}</strong> ارسال شد
+            </p>
 
-      <form onSubmit={handleVerify} style={styles.form}>
-        <input
-          type="text"
-          placeholder="Enter verification code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          style={styles.input}
-        />
-        <button type="submit" style={styles.button}>Verify</button>
-      </form>
+            <form onSubmit={handleVerify}>
+              {error && <p className="text-danger text-center small">{error}</p>}
+              {message && <p className="text-success text-center small">{message}</p>}
+              
+              <div className="mb-3">
+                <label htmlFor="code" className="form-label">کد تایید</label>
+                <input
+                  id="code"
+                  type="text"
+                  className="form-control"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="کد تایید را وارد کنید"
+                  required
+                  disabled={verifying}
+                />
+              </div>
 
-      <div style={{ marginTop: 20 }}>
-        <button
-          onClick={handleResend}
-          disabled={timer > 0 || resending}
-          style={{
-            ...styles.resendButton,
-            backgroundColor: timer > 0 || resending ? '#ccc' : '#28a745',
-            cursor: timer > 0 || resending ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {resending ? 'Resending...' : timer > 0 ? `Resend Code in ${timer}s` : 'Resend Code'}
-        </button>
+              <button 
+                type="submit" 
+                className="btn btn-primary w-100 mb-3"
+                disabled={verifying}
+              >
+                {verifying ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    در حال تایید...
+                  </>
+                ) : 'تایید'}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline-secondary w-100"
+                onClick={handleResend}
+                disabled={timer > 0 || resending}
+              >
+                {resending ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    در حال ارسال...
+                  </>
+                ) : timer > 0 ? `ارسال مجدد (${timer} ثانیه)` : 'ارسال مجدد کد'}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
-
-      {message && <p style={{ color: 'green', marginTop: 10 }}>{message}</p>}
-      {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: 400,
-    margin: '100px auto',
-    padding: 20,
-    border: '1px solid #ccc',
-    borderRadius: 8,
-    textAlign: 'center'
-  },
-  form: {
-    marginTop: 20
-  },
-  input: {
-    width: '100%',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 4,
-    border: '1px solid #aaa'
-  },
-  button: {
-    padding: 10,
-    width: '100%',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: 4,
-    cursor: 'pointer'
-  },
-  resendButton: {
-    padding: 10,
-    width: '100%',
-    color: 'white',
-    border: 'none',
-    borderRadius: 4
-  }
 };
 
 export default VerifyCode;

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import debounce from 'lodash/debounce';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -12,33 +13,55 @@ const UserManagement = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [updateError, setUpdateError] = useState(null);
   const [updateSuccess, setUpdateSuccess] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const usersPerPage = 15;
 
   const roles = [
     { value: 'user', label: 'کاربر عادی' },
     { value: 'institute', label: 'مرکز آموزشی' },
-    { value: 'admin', label: 'مدیر' }
+    { value: 'admin', label: 'مدیر' },
+    { value: 'employee', label: "کارمند"}
   ];
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`, {
-          withCredentials: true
-        });
-        setUsers(response.data.users);
-        setTotalPages(Math.ceil(response.data.total / usersPerPage));
-        setError(null);
-      } catch (err) {
-        setError('خطا در دریافت اطلاعات کاربران');
-        console.error('Error fetching users:', err);
-      } finally {
-        setLoading(false);
+  const fetchUsers = async (retryCount = 0) => {
+    try {
+      setIsSearching(true);
+      const response = await axios.get(`http://localhost:5000/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`, {
+        withCredentials: true
+      });
+      setUsers(response.data.users);
+      setTotalPages(Math.ceil(response.data.total / usersPerPage));
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      if (retryCount < 3) {
+        // Retry up to 3 times with exponential backoff
+        setTimeout(() => {
+          fetchUsers(retryCount + 1);
+        }, Math.pow(2, retryCount) * 1000);
+      } else {
+        setError('خطا در دریافت اطلاعات کاربران. لطفا دوباره تلاش کنید.');
       }
-    };
+    } finally {
+      setLoading(false);
+      setIsSearching(false);
+    }
+  };
 
-    fetchUsers();
+  // Debounced search function
+  const debouncedFetchUsers = useCallback(
+    debounce(() => {
+      fetchUsers();
+    }, 500),
+    [currentPage, searchQuery]
+  );
+
+  useEffect(() => {
+    debouncedFetchUsers();
+    return () => {
+      debouncedFetchUsers.cancel();
+    };
   }, [currentPage, searchQuery]);
 
   const handleSearch = (e) => {
@@ -106,14 +129,23 @@ const UserManagement = () => {
       <h1 className="text-2xl font-bold mb-6 text-center">مدیریت کاربران</h1>
       
       <div style={{ width: '100%', maxWidth: '100%' }} className="mb-6">
-        <input
-          type="text"
-          placeholder="جستجو..."
-          value={searchQuery}
-          onChange={handleSearch}
-          style={{ width: '100%' }}
-          className="p-2 border rounded-lg text-right"
-        />
+        <div className="position-relative">
+          <input
+            type="text"
+            placeholder="جستجو..."
+            value={searchQuery}
+            onChange={handleSearch}
+            style={{ width: '100%' }}
+            className="p-2 border rounded-lg text-right"
+          />
+          {isSearching && (
+            <div className="position-absolute" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+              <div className="spinner-border spinner-border-sm text-primary" role="status">
+                <span className="visually-hidden">در حال جستجو...</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Success/Error Messages */}

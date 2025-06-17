@@ -47,7 +47,7 @@ exports.updateUserRole = async (req, res) => {
     const { role } = req.body;
 
     // Validate role
-    const validRoles = ['user', 'institute', 'admin'];
+    const validRoles = ['user', 'institute', 'admin', 'employee'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: 'نقش نامعتبر است' });
     }

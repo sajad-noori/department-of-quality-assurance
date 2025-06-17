@@ -1,19 +1,31 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const { authLimiter } = require('../middleware/rateLimiter');
+const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middleware/auth.middleware');
 
+// Rate limiting configuration
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: { message: 'Too many attempts, please try again later.' }
+});
+
+const verifyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 attempts per hour
+  message: { message: 'Too many verification attempts, please try again later.' }
+});
+
+// Apply rate limiting to routes
 router.post('/register', authLimiter, authController.register);
-router.post('/verify', authLimiter, authController.verify);
-router.post('/login', authLimiter, authController.login); 
+router.post('/verify', verifyLimiter, authController.verify);
+router.post('/login', authLimiter, authController.login);
 router.post('/resend-code', authLimiter, authController.resendCode);
 router.get('/me', authenticate, authController.getMe);
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logged out successfully' });
 });
-
-
 
 module.exports = router;
