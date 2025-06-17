@@ -215,14 +215,6 @@ const Departments = () => {
         <p className="mb-3">
           لطفاً ابتدا وارد حساب کاربری خود شوید.
         </p>
-        <StyledButton
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/login')}
-          startIcon={<AddIcon />}
-        >
-          ورود به سیستم
-        </StyledButton>
       </div>
     );
   }

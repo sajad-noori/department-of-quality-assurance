@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import { CircularProgress } from '@mui/material';
 
 export default function StaffCountForm({ formData, onChange, onSubmit }) {
   const [loading, setLoading] = useState(true);
@@ -113,7 +114,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
   // Fetch existing personnel data
   useEffect(() => {
     const fetchPersonnelData = async () => {
-      if (!user) return;
+      if (!user || user.role !== 'institute') return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/personnel', {
@@ -229,8 +230,8 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
 
   if (loading) {
     return (
-      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        در حال بارگذاری...
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+        <CircularProgress />
       </div>
     );
   }
@@ -295,7 +296,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
   return (
     <fieldset className="mb-3 border rounded p-2">
       <legend className="float-none w-auto px-2 mb-2 small" style={{ fontSize: '0.85rem' }}>
-        فورم معلومات پرسونل مرکز آموزشی
+        فورم معلومات عمومی مرکز آموزشی
         {hasExistingData && (
           <span className="ms-2 text-info">
             (اطلاعات قبلی شما نمایش داده شده است)

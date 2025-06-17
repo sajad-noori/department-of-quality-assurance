@@ -110,6 +110,7 @@ function App() {
     </PublicRoute>
   }
 />
+
             <Route path="/register" element={<Register />} />
             <Route path="/documents/:type" element={<DocumentsPage />} />
             <Route path="/training/:type" element={<VideoGallery />} />

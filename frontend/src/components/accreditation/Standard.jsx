@@ -7,6 +7,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import CircularProgress from '@mui/material/CircularProgress';
 import axios from 'axios';
+import PropTypes from 'prop-types';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -197,18 +198,26 @@ function Standard({ value, onChange }) {
 
   if (!user) {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert">
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
       </div>
     );
   }
 
   if (user.role !== 'institute') {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert">
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">فقط کاربران مرکز آموزشی می‌توانند به این بخش دسترسی داشته باشند.</p>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
       </div>
     );
   }
@@ -344,5 +353,18 @@ function Standard({ value, onChange }) {
     </>
   );
 }
+
+Standard.propTypes = {
+  value: PropTypes.shape({
+    trim: PropTypes.func,
+    split: PropTypes.func
+  }).isRequired,
+  onChange: PropTypes.func.isRequired
+};
+
+Standard.defaultProps = {
+  value: '',
+  onChange: () => {}
+};
 
 export default Standard;

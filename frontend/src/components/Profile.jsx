@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import CircularProgress from '@mui/material/CircularProgress';
+import PropTypes from 'prop-types';
+import ProfileSidebar from './ProfileSidebar';
 
 import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter"
 import Personnel from "./accreditation/Personnel"
@@ -11,6 +14,8 @@ import AcademyFacilities from "./accreditation/AcademyFacilities";
 import ClassFacilities from "./accreditation/ClassFacilities";
 import PracticalFacilities from "./accreditation/PracticalFacilities";
 import Documents from "./accreditation/Documents"
+import ReviewAndSubmit from "./accreditation/ReviewAndSubmit";
+
 const steps = [
   "معلومات عمومی مرکز آموزشی",
   "مشخصات پرسونل مرکز آموزشی",
@@ -21,7 +26,7 @@ const steps = [
   "امکانات و تسهیلات",
   "دخیل سازی ذینفعان در پروسه آموزشی",
   "اسناد و مدارک ضمیموی",
-  "تکمیل اسناد",
+  "تکمیل پروسه سطح اول",
 ];
 
 
@@ -208,6 +213,14 @@ function Step2({ onNext }) {
   );
 }
 
+Step2.propTypes = {
+  onNext: PropTypes.func
+};
+
+Step2.defaultProps = {
+  onNext: () => {}
+};
+
 function Step3() {
   return (
     <>
@@ -251,7 +264,7 @@ function Step4() {
 
   useEffect(() => {
     const fetchVisionMission = async () => {
-      if (!user) return;
+      if (!user || user.role !== 'institute') return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/vision-mission', {
@@ -336,8 +349,8 @@ function Step4() {
 
   if (loading) {
     return (
-      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        در حال بارگذاری...
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+        <CircularProgress />
       </div>
     );
   }
@@ -526,7 +539,7 @@ function Step8() {
 
   useEffect(() => {
     const fetchStakeholderInvolvement = async () => {
-      if (!user) return;
+      if (!user || user.role !== 'institute') return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
@@ -620,10 +633,8 @@ function Step8() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">در حال بارگذاری...</span>
-        </div>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+        <CircularProgress />
       </div>
     );
   }
@@ -766,21 +777,11 @@ function Step9() {
   );
 }
 
-function Step10({ value, onChange }) {
+function Step10() {
   return (
     <>
-      <label className="form-label">ورودی {steps[9]}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={onChange}
-        placeholder="ورودی مرحله دهم"
-        className="form-control"
-      />
-      
-        <button type="submit" className="btn btn-success w-100 mt-4">
-          ثبت مرحله
-        </button>
+      <label className="form-label-center">{steps[9]}</label>
+      <ReviewAndSubmit />
     </>
   );
 }
@@ -802,15 +803,15 @@ const stepComponents = {
 
 export default function MultiStepForm10() {
   const [currentStep, setCurrentStep] = useState(() => {
-  const savedStep = localStorage.getItem("currentStep");
-  return savedStep ? Number(savedStep) : 1;
-});
-
-useEffect(() => {
-  localStorage.setItem("currentStep", currentStep);
-}, [currentStep]);
+    const savedStep = localStorage.getItem("currentStep");
+    return savedStep ? Number(savedStep) : 1;
+  });
 
   const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    localStorage.setItem("currentStep", currentStep);
+  }, [currentStep]);
 
   const StepComponent = stepComponents[currentStep];
 
@@ -829,120 +830,138 @@ useEffect(() => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-const handleSubmitStep = async (e) => {
-  e.preventDefault();
+  const handleSubmitStep = async (e) => {
+    e.preventDefault();
 
-  // Define required fields for each step
-  const requiredFieldsByStep = {
-    1: [
-      "centerName",
-      "province",
-      "district",
-      "village",
-      "centerType",
-      "programType",
-      "foundingYear",
-      "contactName",
-      "phoneNumber",
-      "email",
-    ],
-    // Add step 2, 3, etc. if needed
+    // Define required fields for each step
+    const requiredFieldsByStep = {
+      1: [
+        "centerName",
+        "province",
+        "district",
+        "village",
+        "centerType",
+        "programType",
+        "foundingYear",
+        "contactName",
+        "phoneNumber",
+        "email",
+      ],
+      // Add step 2, 3, etc. if needed
+    };
+
+    const requiredFields = requiredFieldsByStep[currentStep] || [];
+
+    const missingField = requiredFields.find((key) => {
+      const val = formData[key];
+      return !val || val.toString().trim() === "";
+    });
+
+    if (missingField) {
+      alert(`لطفاً فیلدهای ضروری مرحله ${steps[currentStep - 1]} را پر کنید.`);
+      return;
+    }
+
+    // If validation passes
+    if (currentStep === 4) {
+      // For Step4, we'll let the component handle its own submission
+      return;
+    }
+
+    alert(`مرحله ${currentStep} ثبت شد`);
+
+    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
+    else alert("تمام مراحل تکمیل شد!");
   };
-
-  const requiredFields = requiredFieldsByStep[currentStep] || [];
-
-  const missingField = requiredFields.find((key) => {
-    const val = formData[key];
-    return !val || val.toString().trim() === "";
-  });
-
-  if (missingField) {
-    alert(`لطفاً فیلدهای ضروری مرحله ${steps[currentStep - 1]} را پر کنید.`);
-    return;
-  }
-
-  // If validation passes
-  if (currentStep === 4) {
-    // For Step4, we'll let the component handle its own submission
-    return;
-  }
-
-  alert(`مرحله ${currentStep} ثبت شد`);
-
-  if (currentStep < steps.length) setCurrentStep(currentStep + 1);
-  else alert("تمام مراحل تکمیل شد!");
-};
-
 
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   return (
-    <div className="container" dir="rtl">
-      <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت برای پروسه اعتبار دهی</h1>
+    <div className="page-container">
+      <div className="main-content">
+        <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت برای پروسه اعتبار دهی</h1>
 
-      <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
-        <div className="progress-bar-bg">
-          <div
-            className="progress-bar-fill"
-            style={{ width: `${progressPercent}%`, right: 0, left: "auto" }}
-          />
+        <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
+          <div className="progress-bar-bg">
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${progressPercent}%`, right: 0, left: "auto" }}
+            />
+          </div>
+
+          <ul className="steps-list">
+            {steps.map((title, idx) => {
+              const stepNum = idx + 1;
+              const isActive = currentStep === stepNum;
+              const isCompleted = currentStep > stepNum;
+
+              return (
+                <li
+                  key={stepNum}
+                  className={`step-item ${isActive ? "active" : ""} ${
+                    isCompleted ? "completed" : ""
+                  }`}
+                  onClick={() => setCurrentStep(stepNum)}
+                  tabIndex={0}
+                  role="button"
+                  aria-current={isActive ? "step" : undefined}
+                  aria-label={`مرحله ${stepNum} - ${title}`}
+                >
+                  <span className="step-circle">{stepNum}</span>
+                  <span className="step-label">{title}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
 
-        <ul className="steps-list">
-          {steps.map((title, idx) => {
-            const stepNum = idx + 1;
-            const isActive = currentStep === stepNum;
-            const isCompleted = currentStep > stepNum;
+        <form className="form" onSubmit={handleSubmitStep}>
+          <StepComponent
+            value={formData[`step${currentStep}Input`] || ""}
+            onChange={handleInputChange}
+          />
 
-            return (
-              <li
-                key={stepNum}
-                className={`step-item ${isActive ? "active" : ""} ${
-                  isCompleted ? "completed" : ""
-                }`}
-                onClick={() => setCurrentStep(stepNum)}
-                tabIndex={0}
-                role="button"
-                aria-current={isActive ? "step" : undefined}
-                aria-label={`مرحله ${stepNum} - ${title}`}
-              >
-                <span className="step-circle">{stepNum}</span>
-                <span className="step-label">{title}</span>
-              </li>
-            );
-          })}
-        </ul>
+          <div className="buttons d-flex justify-content-between">
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={currentStep === 1}
+              aria-disabled={currentStep === 1}
+              className="btn btn-primary"
+            >
+              قبلی
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={currentStep === steps.length}
+              aria-disabled={currentStep === steps.length}
+              className="btn btn-primary"
+            >
+              بعدی
+            </button>
+          </div>
+        </form>
       </div>
 
-      <form className="form" onSubmit={handleSubmitStep}>
-        <StepComponent
-          value={formData[`step${currentStep}Input`] || ""}
-          onChange={handleInputChange}
-        />
-
-        <div className="buttons d-flex justify-content-between">
-          <button
-            type="button"
-            onClick={handlePrev}
-            disabled={currentStep === 1}
-            aria-disabled={currentStep === 1}
-            className="btn btn-primary"
-          >
-            قبلی
-          </button>
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={currentStep === steps.length}
-            aria-disabled={currentStep === steps.length}
-            className="btn btn-primary"
-          >
-            بعدی
-          </button>
-        </div>
-      </form>
+      <ProfileSidebar />
 
       <style>{`
+        .page-container {
+          display: flex;
+          min-height: 100vh;
+          background: #121212;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .main-content {
+          flex: 1;
+          padding: 2rem;
+          margin-right: 320px; /* Width of sidebar + margin */
+          min-height: 100vh;
+        }
+
         * {
           box-sizing: border-box;
         }

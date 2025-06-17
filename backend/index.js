@@ -23,6 +23,7 @@ const classFacilityRoutes = require('./routes/class_facility.routes');
 const practicalFacilityRoutes = require('./routes/practical_facility.routes');
 const stakeholderInvolvementRoutes = require("./routes/stakeholder_involvement.routes");
 const documentRoutes = require("./routes/document.routes");
+const profileDocumentRoutes = require("./routes/profile_document.routes");
 const fs = require('fs');
 
 require('dotenv').config();
@@ -36,11 +37,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Create uploads directory if it doesn't exist
+// Create uploads directories if they don't exist
 const uploadsDir = path.join(__dirname, 'uploads', 'documents');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const profileUploadsDir = path.join(__dirname, 'uploads', 'profile');
+const tempUploadsDir = path.join(__dirname, 'uploads', 'temp');
+
+[uploadsDir, profileUploadsDir, tempUploadsDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -71,6 +77,7 @@ app.use('/api/class-facilities', classFacilityRoutes);
 app.use('/api/practical-facilities', practicalFacilityRoutes);
 app.use("/api/stakeholder-involvement", stakeholderInvolvementRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/profile-documents", profileDocumentRoutes);
 app.set('trust proxy', 1);
 const port = process.env.PORT || 5000;
 

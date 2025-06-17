@@ -205,10 +205,28 @@ const AcademyFacilities = () => {
     );
   }
 
-  if (!user || user.role !== 'institute') {
+  if (!user) {
     return (
-      <div className="alert alert-warning text-center" role="alert">
-        شما دسترسی لازم برای مشاهده این صفحه را ندارید
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
+    );
+  }
+
+  if (user.role !== 'institute') {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
       </div>
     );
   }

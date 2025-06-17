@@ -69,6 +69,24 @@ const darkTheme = createTheme({
 });
 
 const uploadLabels = [
+  "doc1_path",
+  "doc2_path",
+  "doc3_path",
+  "doc4_path",
+  "doc5_path",
+  "doc6_path",
+  "doc7_path",
+  "doc8_path",
+  "doc9_path",
+  "doc10_path",
+  "doc11_path",
+  "doc12_path",
+  "doc13_path",
+  "doc14_path",
+  "doc15_path"
+];
+
+const documentLabels = [
   "مکتوب منظوری دیدگاه، ماموریت و اهداف مرکز آموزشی",
   "مکتوب تائید پلان استراتیژیک",
   "پلان استراتیژیک مرکز آموزشی",
@@ -108,9 +126,6 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('Axios error:', error.response?.data || error.message);
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      window.location.href = '/login';
-    }
     return Promise.reject(error);
   }
 );
@@ -229,7 +244,7 @@ export default function FileUploadWizard() {
       for (const type of uploadLabels) {
         try {
           console.log(`Fetching documents for type: ${type}`);
-          const response = await axios.get('/api/documents', {
+          const response = await axios.get('/api/profile-documents', {
             params: { type }
           });
           
@@ -390,10 +405,11 @@ export default function FileUploadWizard() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('document_type', uploadLabels[index]);
+    formData.append('is_profile', true); // Add flag to indicate this is a profile document
 
     try {
       console.log('Uploading file to server');
-      const response = await axios.post('/api/documents/upload', formData, {
+      const response = await axios.post('/api/profile-documents/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -406,8 +422,11 @@ export default function FileUploadWizard() {
 
       if (response.data.success) {
         console.log('Fetching updated document list');
-        const docResponse = await axios.get('/api/documents', {
-          params: { type: uploadLabels[index] }
+        const docResponse = await axios.get('/api/profile-documents', {
+          params: { 
+            type: uploadLabels[index],
+            is_profile: true 
+          }
         });
 
         if (docResponse.data.success && docResponse.data.data.length > 0) {
@@ -452,7 +471,7 @@ export default function FileUploadWizard() {
 
     try {
       console.log('Sending delete request to server');
-      const response = await axios.delete(`/api/documents/${doc.id}`);
+      const response = await axios.delete(`/api/profile-documents/${doc.id}`);
 
       console.log('Delete response:', {
         success: response.data.success,
@@ -549,51 +568,35 @@ export default function FileUploadWizard() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <LinearProgress sx={{ width: '100%', maxWidth: '400px' }} />
-      </Box>
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+        <CircularProgress />
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <Box sx={{ maxWidth: '600px', mx: 'auto', mt: 4, p: 3 }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            دسترسی محدود
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            لطفاً ابتدا وارد حساب کاربری خود شوید.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate('/login')}
-            sx={{ mt: 2 }}
-          >
-            ورود به سیستم
-          </Button>
-        </Alert>
-      </Box>
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
     );
   }
 
   if (user.role !== 'institute') {
     return (
-      <Box sx={{ maxWidth: '600px', mx: 'auto', mt: 4, p: 3 }}>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            دسترسی محدود
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            برای بارگذاری اسناد، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="body2">
-            لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-          </Typography>
-        </Alert>
-      </Box>
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای بارگذاری اسناد، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
+      </div>
     );
   }
 
@@ -632,9 +635,9 @@ export default function FileUploadWizard() {
         )}
 
         {uploadLabels.map((label, index) => (
-          <Accordion key={index} sx={{ bgcolor: "background.paper", mb: 1 }} aria-label={`بارگذاری: ${label}`}>
+          <Accordion key={index} sx={{ bgcolor: "background.paper", mb: 1 }} aria-label={`بارگذاری: ${documentLabels[index]}`}>
             <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}>
-              <Typography>{`بارگذاری: ${label}`}</Typography>
+              <Typography>{`بارگذاری: ${documentLabels[index]}`}</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Stack spacing={2}>
@@ -645,14 +648,14 @@ export default function FileUploadWizard() {
                     color="primary"
                     startIcon={<CloudUploadIcon />}
                     disabled={uploading[index]}
-                    aria-label={`انتخاب فایل برای ${label}`}
+                    aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
                   >
-                  انتخاب فایل
+                    انتخاب فایل
                     <VisuallyHiddenInput
-                    type="file"
-                    onChange={(e) => handleFileChange(e, index)}
+                      type="file"
+                      onChange={(e) => handleFileChange(e, index)}
                       accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx"
-                      aria-label={`انتخاب فایل برای ${label}`}
+                      aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
                     />
                   </Button>
                 </Box>
@@ -705,7 +708,7 @@ export default function FileUploadWizard() {
                                 size="small"
                                 color="primary"
                                 onClick={() => handlePreview(documents[label])}
-                                aria-label={`مشاهده سند ${label}`}
+                                aria-label={`مشاهده سند ${documentLabels[index]}`}
                               >
                                 <VisibilityIcon />
                               </IconButton>
@@ -714,7 +717,7 @@ export default function FileUploadWizard() {
                                 color="error"
                                 onClick={() => handleDeleteClick(label, index)}
                                 disabled={uploading[index]}
-                                aria-label={`حذف سند ${label}`}
+                                aria-label={`حذف سند ${documentLabels[index]}`}
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -725,7 +728,7 @@ export default function FileUploadWizard() {
                                 href={getFileUrl(documents[label].file_path)}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label={`دانلود سند ${label}`}
+                                aria-label={`دانلود سند ${documentLabels[index]}`}
                               >
                                 <InsertDriveFileIcon />
                               </IconButton>

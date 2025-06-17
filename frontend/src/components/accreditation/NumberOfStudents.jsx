@@ -143,12 +143,6 @@ const NumberOfStudents = () => {
         <p className="mb-3">
           لطفاً ابتدا وارد حساب کاربری خود شوید.
         </p>
-        <button 
-          className="btn btn-primary mt-3"
-          onClick={() => navigate('/login')}
-        >
-          ورود به سیستم
-        </button>
       </div>
     );
   }

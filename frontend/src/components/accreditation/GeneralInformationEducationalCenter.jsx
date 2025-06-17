@@ -31,7 +31,8 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
   // Fetch existing center data
   useEffect(() => {
     const fetchCenterData = async () => {
-      if (!user) return;
+      // Only fetch data if user exists and is an institute
+      if (!user || user.role !== 'institute') return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/centers', {
@@ -70,6 +71,9 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
   }, [user]);
 
   useEffect(() => {
+    // Only update districts if user is an institute
+    if (!user || user.role !== 'institute') return;
+
     if (formData.province) {
       const provinceDistricts = districts[formData.province] || [];
       setAvailableDistricts(provinceDistricts);
@@ -80,7 +84,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
     } else {
       setAvailableDistricts([]);
     }
-  }, [formData.province]);
+  }, [formData.province, user]);
 
   if (loading) {
     return (
@@ -360,7 +364,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
               className={`form-control white-placeholder ${errors.phoneNumber ? 'is-invalid' : ''}`}
               value={formData.phoneNumber || ''}
               onChange={handleChange}
-              placeholder="شماره تماس (۱۰ رقم)"
+              placeholder="0772372972"
               maxLength="10"
               required
               style={{background: "transparent", color: "white"}}
