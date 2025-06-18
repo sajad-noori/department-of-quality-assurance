@@ -79,8 +79,38 @@ const deleteFacility = async (req, res) => {
   }
 };
 
+// Get academy facilities data by user ID (for admin/employee access)
+const getFacilitiesByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validate that userId is a number
+    if (!userId || isNaN(parseInt(userId))) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'شناسه کاربر نامعتبر است' 
+      });
+    }
+
+    const facilities = await AcademyFacility.findByUserId(userId);
+
+    res.status(200).json({
+      success: true,
+      data: facilities
+    });
+  } catch (error) {
+    console.error('Error fetching academy facilities by user ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching academy facilities data',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createFacility,
   getFacilities,
-  deleteFacility
+  deleteFacility,
+  getFacilitiesByUserId
 }; 

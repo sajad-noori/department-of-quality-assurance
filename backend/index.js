@@ -8,6 +8,7 @@ const visitorRoutes = require("./routes/visitorRoutes");
 const feedbackRoute = require('./routes/feedback.route');
 const commentsRoutes = require('./routes/comments.route');
 const docsRoutes = require("./routes/docs.route");
+const docsCenterPublicRoutes = require("./routes/docs_center_public.routes");
 const videosRoutes = require("./routes/video.route")
 const educational_centers = require("./routes/educational_centers.route")
 const usersRoutes = require("./routes/users.route");
@@ -66,6 +67,7 @@ app.use("/api/visitors", visitorRoutes);
 app.use('/api/feedback', feedbackRoute);
 app.use('/api/news/:newsId/comments', commentsRoutes);
 app.use("/api/docs", docsRoutes);
+app.use("/api/docs-center-and-uploads", docsCenterPublicRoutes);
 app.use("/api/educational-centers", educational_centers);
 app.use("/api/users", usersRoutes);
 app.use('/api/media', videosRoutes);

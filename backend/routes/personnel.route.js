@@ -10,6 +10,13 @@ router.get('/',
   personnelController.getPersonnel
 );
 
+// Get personnel data by user ID (for admin/employee access)
+router.get('/user/:userId', 
+  authenticate, 
+  checkRole(['admin', 'employee']), 
+  personnelController.getPersonnelByUserId
+);
+
 // Update personnel data
 router.post('/', 
   authenticate, 

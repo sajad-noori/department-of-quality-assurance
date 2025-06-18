@@ -78,6 +78,35 @@ const practicalFacilityController = {
         message: 'خطا در حذف امکانات'
       });
     }
+  },
+
+  // Get practical facilities data by user ID (for admin/employee access)
+  async getFacilitiesByUserId(req, res) {
+    try {
+      const { userId } = req.params;
+      
+      // Validate that userId is a number
+      if (!userId || isNaN(parseInt(userId))) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'شناسه کاربر نامعتبر است' 
+        });
+      }
+
+      const facilities = await PracticalFacility.findByUserId(userId);
+
+      res.status(200).json({
+        success: true,
+        data: facilities
+      });
+    } catch (error) {
+      console.error('Error fetching practical facilities by user ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching practical facilities data',
+        error: error.message
+      });
+    }
   }
 };
 

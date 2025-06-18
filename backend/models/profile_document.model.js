@@ -94,20 +94,56 @@ class ProfileDocument {
       const [rows] = await db.promise().execute(query, [userId]);
       
       // Transform the flat structure into a more usable format
-      const documents = {};
+      const documents = [];
       if (rows.length > 0) {
         const row = rows[0];
         for (let i = 1; i <= 15; i++) {
           const columnName = `doc${i}_path`;
           if (row[columnName]) {
-            documents[columnName] = {
+            // Extract file name from the path
+            const fileName = row[columnName].split('/').pop() || 'document';
+            // Determine file type from extension
+            const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
+            let fileType = 'application/octet-stream';
+            
+            switch (fileExt) {
+              case 'pdf':
+                fileType = 'application/pdf';
+                break;
+              case 'jpg':
+              case 'jpeg':
+                fileType = 'image/jpeg';
+                break;
+              case 'png':
+                fileType = 'image/png';
+                break;
+              case 'gif':
+                fileType = 'image/gif';
+                break;
+              case 'doc':
+                fileType = 'application/msword';
+                break;
+              case 'docx':
+                fileType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                break;
+              case 'xls':
+                fileType = 'application/vnd.ms-excel';
+                break;
+              case 'xlsx':
+                fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                break;
+            }
+            
+            documents.push({
               id: row.id,
               user_id: row.user_id,
               document_type: columnName,
               file_path: row[columnName],
+              file_name: fileName,
+              file_type: fileType,
               created_at: row.created_at,
               updated_at: row.updated_at
-            };
+            });
           }
         }
       }
@@ -134,11 +170,49 @@ class ProfileDocument {
       }
 
       const row = rows[0];
+      const filePath = row[documentType];
+      
+      // Extract file name from the path
+      const fileName = filePath.split('/').pop() || 'document';
+      // Determine file type from extension
+      const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
+      let fileType = 'application/octet-stream';
+      
+      switch (fileExt) {
+        case 'pdf':
+          fileType = 'application/pdf';
+          break;
+        case 'jpg':
+        case 'jpeg':
+          fileType = 'image/jpeg';
+          break;
+        case 'png':
+          fileType = 'image/png';
+          break;
+        case 'gif':
+          fileType = 'image/gif';
+          break;
+        case 'doc':
+          fileType = 'application/msword';
+          break;
+        case 'docx':
+          fileType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          break;
+        case 'xls':
+          fileType = 'application/vnd.ms-excel';
+          break;
+        case 'xlsx':
+          fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+      }
+      
       return {
         id: row.id,
         user_id: row.user_id,
         document_type: documentType,
-        file_path: row[documentType],
+        file_path: filePath,
+        file_name: fileName,
+        file_type: fileType,
         created_at: row.created_at,
         updated_at: row.updated_at
       };

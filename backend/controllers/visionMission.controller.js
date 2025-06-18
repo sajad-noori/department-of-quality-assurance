@@ -79,4 +79,44 @@ exports.createVisionMission = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// Get vision mission data by user ID (for admin/employee access)
+exports.getVisionMissionByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Validate that userId is a number
+        if (!userId || isNaN(parseInt(userId))) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'شناسه کاربر نامعتبر است' 
+            });
+        }
+
+        const visionMission = await VisionMission.findByUserId(userId);
+        
+        if (!visionMission) {
+            return res.json({
+                success: true,
+                data: {
+                    vision: '',
+                    mission: '',
+                    strategic_goals: ''
+                }
+            });
+        }
+
+        res.json({ 
+            success: true,
+            data: visionMission
+        });
+    } catch (error) {
+        console.error('Error fetching vision mission by user ID:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error fetching vision mission data',
+            error: error.message
+        });
+    }
 }; 

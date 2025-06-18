@@ -166,9 +166,39 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+// Get students data by user ID (for admin/employee access)
+const getStudentsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validate that userId is a number
+    if (!userId || isNaN(parseInt(userId))) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'شناسه کاربر نامعتبر است' 
+      });
+    }
+
+    const students = await Student.findAll(userId);
+
+    res.status(200).json({
+      success: true,
+      data: students
+    });
+  } catch (error) {
+    console.error('Error fetching students by user ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching student data',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   addStudent,
   getStudents,
   updateStudent,
-  deleteStudent
+  deleteStudent,
+  getStudentsByUserId
 }; 

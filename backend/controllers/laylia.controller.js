@@ -51,4 +51,26 @@ exports.deleteLaylia = async (req, res) => {
     console.error('Error in deleteLaylia:', error);
     res.status(500).json({ success: false, message: 'Error deleting laylia data' });
   }
+};
+
+// Get laylia data by user ID (for admin/employee access)
+exports.getLayliaByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validate that userId is a number
+    if (!userId || isNaN(parseInt(userId))) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'شناسه کاربر نامعتبر است' 
+      });
+    }
+
+    const laylia = await Laylia.findAll(userId);
+
+    res.json({ success: true, data: laylia });
+  } catch (error) {
+    console.error('Error fetching laylia by user ID:', error);
+    res.status(500).json({ success: false, message: 'Error fetching laylia data' });
+  }
 }; 

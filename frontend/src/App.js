@@ -19,10 +19,11 @@ import DocumentsPage from "./components/DocumentsPage";
 import VideosDashboard from './components/dashboard/VideosDashboard'
 import VideoGallery from './components/VideoGallery';
 import VideoPlayer from "./components/VideoPlayer";
-import Profile from './components/Profile';
+import ProfileRoute from './components/ProfileRoute';
 import NotFoundPage from './components/NotFoundPage';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import PublicRoute from './components/PublicRoute';
+import SpecificInstitute from './components/SpecificInstitute';
 
 function App() {
   return (
@@ -75,11 +76,20 @@ function App() {
           <Route
   path="/profile"
   element={
-    <RoleBasedRoute allowedRoles={['admin', 'institute', 'user']}>
-      <Profile />
+    <RoleBasedRoute allowedRoles={['admin', 'institute', 'user', 'employee']}>
+      <ProfileRoute />
     </RoleBasedRoute>
   }
 />
+
+          <Route
+            path="/institute/:userId"
+            element={
+              <RoleBasedRoute allowedRoles={['employee', 'admin']}>
+                <SpecificInstitute />
+              </RoleBasedRoute>
+            }
+          />
 
 
 

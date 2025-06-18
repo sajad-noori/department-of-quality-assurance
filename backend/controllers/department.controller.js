@@ -93,4 +93,33 @@ exports.deleteDepartment = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// Get departments data by user ID (for admin/employee access)
+exports.getDepartmentsByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Validate that userId is a number
+        if (!userId || isNaN(parseInt(userId))) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'شناسه کاربر نامعتبر است' 
+            });
+        }
+
+        const departments = await Department.findByUserId(userId);
+
+        res.status(200).json({
+            success: true,
+            data: departments
+        });
+    } catch (error) {
+        console.error('Error fetching departments by user ID:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching departments data',
+            error: error.message
+        });
+    }
 }; 

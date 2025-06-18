@@ -41,6 +41,49 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+exports.getUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const search = req.query.search || '';
+    const offset = (page - 1) * limit;
+
+    // Build the search condition with role filter
+    let searchCondition = 'WHERE role = ?';
+    let searchParams = [role];
+
+    if (search) {
+      searchCondition += ' AND (name LIKE ? OR email LIKE ?)';
+      searchParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    // Get total count for pagination
+    const [countResult] = await db.promise().query(
+      `SELECT COUNT(*) as total FROM users ${searchCondition}`,
+      searchParams
+    );
+    const total = countResult[0].total;
+
+    // Get paginated users by role
+    const [users] = await db.promise().query(
+      `SELECT id, name, email, role FROM users ${searchCondition} 
+       ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [...searchParams, limit, offset]
+    );
+
+    res.json({
+      users,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error('Error fetching users by role:', error);
+    res.status(500).json({ message: 'خطا در دریافت اطلاعات کاربران' });
+  }
+};
+
 exports.updateUserRole = async (req, res) => {
   try {
     const { userId } = req.params;

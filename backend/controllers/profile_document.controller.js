@@ -81,8 +81,7 @@ exports.getDocuments = async (req, res) => {
       const document = await ProfileDocument.findByType(req.user.id, type);
       documents = document ? [document] : [];
     } else {
-      const docs = await ProfileDocument.findByUserId(req.user.id);
-      documents = Object.values(docs);
+      documents = await ProfileDocument.findByUserId(req.user.id);
     }
 
     res.json({
@@ -94,6 +93,35 @@ exports.getDocuments = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error fetching documents'
+    });
+  }
+};
+
+// Get profile documents data by user ID (for admin/employee access)
+exports.getDocumentsByUserIdForAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validate that userId is a number
+    if (!userId || isNaN(parseInt(userId))) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'شناسه کاربر نامعتبر است' 
+      });
+    }
+
+    const documents = await ProfileDocument.findByUserId(userId);
+
+    res.status(200).json({
+      success: true,
+      data: documents
+    });
+  } catch (error) {
+    console.error('Error fetching profile documents by user ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching profile documents data',
+      error: error.message
     });
   }
 };
@@ -133,5 +161,112 @@ exports.deleteDocument = async (req, res) => {
       success: false,
       message: error.message || 'Error deleting document'
     });
+  }
+};
+
+// Download profile document
+exports.downloadDocument = async (req, res) => {
+  try {
+    const { filePath } = req.params;
+    
+    console.log('Download request for file path:', filePath);
+    
+    if (!filePath) {
+      return res.status(400).json({
+        success: false,
+        message: 'File path is required'
+      });
+    }
+
+    // Decode the file path
+    const decodedPath = decodeURIComponent(filePath);
+    console.log('Decoded file path:', decodedPath);
+
+    // Construct the full file path - the stored path is relative to the backend root
+    const fullPath = path.join(__dirname, '..', decodedPath);
+    console.log('Full file path:', fullPath);
+    
+    // Check if file exists
+    try {
+      await fs.access(fullPath);
+      console.log('File exists and is accessible');
+    } catch (error) {
+      console.error('File access error:', error);
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    // Get file stats
+    const stats = await fs.stat(fullPath);
+    console.log('File stats:', stats);
+    
+    // Determine content type based on file extension
+    const ext = path.extname(decodedPath).toLowerCase();
+    let contentType = 'application/octet-stream';
+    
+    switch (ext) {
+      case '.pdf':
+        contentType = 'application/pdf';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.gif':
+        contentType = 'image/gif';
+        break;
+      case '.doc':
+        contentType = 'application/msword';
+        break;
+      case '.docx':
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        break;
+      case '.xls':
+        contentType = 'application/vnd.ms-excel';
+        break;
+      case '.xlsx':
+        contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        break;
+    }
+    
+    console.log('Content type determined:', contentType);
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${path.basename(decodedPath)}"`);
+    res.setHeader('Content-Length', stats.size);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    console.log('Headers set, starting file stream');
+    
+    // Stream the file
+    const fileStream = require('fs').createReadStream(fullPath);
+    
+    fileStream.on('error', (error) => {
+      console.error('File stream error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: 'Error streaming file'
+        });
+      }
+    });
+    
+    fileStream.pipe(res);
+    
+    console.log('File stream started');
+  } catch (error) {
+    console.error('Error downloading document:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: 'Error downloading document'
+      });
+    }
   }
 }; 

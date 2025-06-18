@@ -17,6 +17,13 @@ router.get('/',
     departmentController.getDepartments
 );
 
+// Get departments data by user ID (for admin/employee access)
+router.get('/user/:userId', 
+    authenticate, 
+    checkRole(['admin', 'employee']),
+    departmentController.getDepartmentsByUserId
+);
+
 // Delete department
 router.delete('/:id', 
     authenticate, 

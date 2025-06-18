@@ -1,79 +1,12 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
 import { provinces, districts } from '../../data/afghanistan-locations';
-import axios from 'axios';
 
-export default function EducationalCenterForm({ formData, onChange, onSubmit }) {
+export default function EducationalCenterForm({ formData, onChange, onSubmit, hasExistingData = false }) {
   const [errors, setErrors] = useState({});
   const [availableDistricts, setAvailableDistricts] = useState([]);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [hasExistingData, setHasExistingData] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  // Fetch existing center data
-  useEffect(() => {
-    const fetchCenterData = async () => {
-      // Only fetch data if user exists and is an institute
-      if (!user || user.role !== 'institute') return;
-
-      try {
-        const response = await axios.get('http://localhost:5000/api/centers', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-
-        if (response.data && response.data.length > 0) {
-          const centerData = response.data[0];
-          setHasExistingData(true);
-          
-          // Update form with existing data
-          Object.entries(centerData).forEach(([key, value]) => {
-            if (formData[key] !== undefined) {
-              // Handle special cases for select fields
-              if (key === 'province') {
-                // Update available districts when province is loaded
-                const provinceDistricts = districts[value] || [];
-                setAvailableDistricts(provinceDistricts);
-              }
-              
-              // Update the form field
-              onChange({ target: { name: key, value: value } });
-            }
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching center data:', err);
-      }
-    };
-
-    fetchCenterData();
-  }, [user]);
-
-  useEffect(() => {
-    // Only update districts if user is an institute
-    if (!user || user.role !== 'institute') return;
-
     if (formData.province) {
       const provinceDistricts = districts[formData.province] || [];
       setAvailableDistricts(provinceDistricts);
@@ -84,41 +17,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit }) 
     } else {
       setAvailableDistricts([]);
     }
-  }, [formData.province, user]);
-
-  if (loading) {
-    return (
-      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        در حال بارگذاری...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
-      </div>
-    );
-  }
-
-  if (user.role !== 'institute') {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
-        <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
-      </div>
-    );
-  }
+  }, [formData.province, formData.district, onChange]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -417,7 +316,8 @@ EducationalCenterForm.propTypes = {
     email: PropTypes.string
   }).isRequired,
   onChange: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired
+  onSubmit: PropTypes.func.isRequired,
+  hasExistingData: PropTypes.bool
 };
 
 EducationalCenterForm.defaultProps = {
@@ -432,5 +332,6 @@ EducationalCenterForm.defaultProps = {
     contactName: '',
     phoneNumber: '',
     email: ''
-  }
+  },
+  hasExistingData: false
 };

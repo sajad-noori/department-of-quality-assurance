@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { saveCenter, getCenter } = require("../controllers/educational_centers.controller");
+const { saveCenter, updateCenter, getCenter, getEducationalCenters, updateStage, getStageCounts, getCenterById } = require("../controllers/educational_centers.controller");
 const { authenticate, checkRole } = require('../middleware/auth.middleware');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { body, validationResult } = require('express-validator');
@@ -67,5 +67,40 @@ router.get("/centers", [authenticate, checkRole('institute')], getCenter);
 
 // Protected route with authentication, role check, rate limiting, and validation
 router.post("/centers", [authenticate, checkRole('institute'), authLimiter, validateCenter], saveCenter);
+
+// Update educational center data
+router.put("/centers", [authenticate, checkRole('institute'), authLimiter, validateCenter], updateCenter);
+
+// Get all educational centers with user and stage data
+router.get('/', 
+  authenticate, 
+  checkRole(['admin', 'employee']), 
+  authLimiter, 
+  getEducationalCenters
+);
+
+// Update stage for a specific user
+router.put('/:userId/stage', 
+  authenticate, 
+  checkRole(['admin', 'employee']), 
+  authLimiter, 
+  updateStage
+);
+
+// Get stage counts for statistics
+router.get('/stats/stages', 
+  authenticate, 
+  checkRole(['admin', 'employee']), 
+  authLimiter, 
+  getStageCounts
+);
+
+// Get a specific educational center by user ID
+router.get('/user/:userId', 
+  authenticate, 
+  checkRole(['admin', 'employee']), 
+  authLimiter, 
+  getCenterById
+);
 
 module.exports = router;

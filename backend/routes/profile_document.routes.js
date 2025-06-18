@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, checkRole } = require('../middleware/auth.middleware');
 const profileDocumentController = require('../controllers/profile_document.controller');
 
 // Configure multer for file upload
@@ -51,6 +51,8 @@ if (!fs.existsSync(tempDir)) {
 // Routes
 router.post('/upload', authenticate, upload.single('file'), profileDocumentController.upload);
 router.get('/', authenticate, profileDocumentController.getDocuments);
+router.get('/user/:userId', authenticate, checkRole(['admin', 'employee']), profileDocumentController.getDocumentsByUserIdForAdmin);
+router.get('/download/:filePath', authenticate, checkRole(['admin', 'employee']), profileDocumentController.downloadDocument);
 router.delete('/:type', authenticate, profileDocumentController.deleteDocument);
 
 module.exports = router; 

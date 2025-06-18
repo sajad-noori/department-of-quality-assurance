@@ -9,6 +9,9 @@ router.post('/', authenticate, checkRole('institute'), practicalFacilityControll
 // Get all practical facilities for the current user
 router.get('/', authenticate, checkRole('institute'), practicalFacilityController.getFacilities);
 
+// Get practical facilities data by user ID (for admin/employee access)
+router.get('/user/:userId', authenticate, checkRole(['admin', 'employee']), practicalFacilityController.getFacilitiesByUserId);
+
 // Delete a practical facility
 router.delete('/:id', authenticate, checkRole('institute'), practicalFacilityController.deleteFacility);
 

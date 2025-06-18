@@ -69,6 +69,35 @@ const stakeholderInvolvementController = {
         message: "خطا در دریافت اطلاعات"
       });
     }
+  },
+
+  // Get stakeholder involvement data by user ID (for admin/employee access)
+  async getByUserIdForAdmin(req, res) {
+    try {
+      const { userId } = req.params;
+      
+      // Validate that userId is a number
+      if (!userId || isNaN(parseInt(userId))) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'شناسه کاربر نامعتبر است' 
+        });
+      }
+
+      const record = await StakeholderInvolvement.findByUserId(userId);
+
+      res.status(200).json({
+        success: true,
+        data: record || { description: "" }
+      });
+    } catch (error) {
+      console.error('Error fetching stakeholder involvement by user ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching stakeholder involvement data',
+        error: error.message
+      });
+    }
   }
 };
 

@@ -1,6 +1,8 @@
 const Standard = require('../models/standard.model');
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
+const db = require('../config/db');
 
 // Define upload directories
 const tempDir = path.join(__dirname, '../uploads/temp');
@@ -102,6 +104,97 @@ exports.deleteStandard = async (req, res) => {
         console.error('Error in deleteStandard:', error);
         res.status(500).json({
             message: 'Error deleting standard',
+            error: error.message
+        });
+    }
+};
+
+// Get standards data by user ID (for admin/employee access)
+exports.getStandardsByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Validate that userId is a number
+        if (!userId || isNaN(parseInt(userId))) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'شناسه کاربر نامعتبر است' 
+            });
+        }
+
+        const standards = await Standard.findByUserId(userId);
+
+        res.status(200).json({
+            success: true,
+            data: standards
+        });
+    } catch (error) {
+        console.error('Error fetching standards by user ID:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching standards data',
+            error: error.message
+        });
+    }
+};
+
+// Download standard file by ID (for admin/employee access)
+exports.downloadStandardFile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Validate that id is a number
+        if (!id || isNaN(parseInt(id))) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'شناسه فایل نامعتبر است' 
+            });
+        }
+
+        // Get the standard file information
+        const [standards] = await db.promise().execute(
+            'SELECT * FROM standards WHERE id = ?',
+            [id]
+        );
+
+        if (standards.length === 0) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'فایل یافت نشد' 
+            });
+        }
+
+        const standard = standards[0];
+        const filePath = standard.file_path;
+        const fileName = standard.original_file_name;
+
+        // Check if file exists
+        try {
+            await fs.access(filePath);
+        } catch (error) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'فایل در سرور یافت نشد' 
+            });
+        }
+
+        // Get file stats for content length
+        const stats = await fs.stat(filePath);
+
+        // Set headers for file download
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+        res.setHeader('Content-Length', stats.size);
+
+        // Stream the file
+        const fileStream = fsSync.createReadStream(filePath);
+        fileStream.pipe(res);
+
+    } catch (error) {
+        console.error('Error downloading standard file:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error downloading file',
             error: error.message
         });
     }

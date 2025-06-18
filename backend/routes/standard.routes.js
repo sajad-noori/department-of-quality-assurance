@@ -61,6 +61,20 @@ router.get('/',
     standardController.getStandards
 );
 
+// Get standards data by user ID (for admin/employee access)
+router.get('/user/:userId', 
+    authenticate, 
+    checkRole(['admin', 'employee']),
+    standardController.getStandardsByUserId
+);
+
+// Download standard file by ID (for admin/employee access)
+router.get('/download/:id', 
+    authenticate, 
+    checkRole(['admin', 'employee']),
+    standardController.downloadStandardFile
+);
+
 // Delete a standard
 router.delete('/:id', 
     authenticate, 

@@ -6,6 +6,9 @@ const { authenticate, checkRole } = require('../middleware/auth.middleware');
 // Get all laylia entries
 router.get('/', authenticate, checkRole('institute'), layliaController.getLaylia);
 
+// Get laylia data by user ID (for admin/employee access)
+router.get('/user/:userId', authenticate, checkRole(['admin', 'employee']), layliaController.getLayliaByUserId);
+
 // Add a new laylia entry
 router.post('/', authenticate, checkRole('institute'), layliaController.addLaylia);
 

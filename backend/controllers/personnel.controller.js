@@ -107,6 +107,47 @@ exports.getPersonnel = async (req, res) => {
     }
 };
 
+// Get personnel data by user ID (for admin/employee access)
+exports.getPersonnelByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Validate that userId is a number
+        if (!userId || isNaN(parseInt(userId))) {
+            return res.status(400).json({ message: 'شناسه کاربر نامعتبر است' });
+        }
+
+        const [rows] = await db.promise().query('SELECT * FROM personnel WHERE user_id = ?', [userId]);
+        if (rows.length === 0) {
+            return res.json({
+                teachers_phd: 0,
+                teachers_master: 0,
+                teachers_bachelor: 0,
+                technical_phd: 0,
+                technical_master: 0,
+                technical_bachelor: 0,
+                technical_above_baccalaureate: 0,
+                technical_baccalaureate: 0,
+                technical_elementary: 0,
+                admin_phd: 0,
+                admin_master: 0,
+                admin_bachelor: 0,
+                admin_above_baccalaureate: 0,
+                admin_baccalaureate: 0,
+                admin_elementary: 0,
+                service_bachelor: 0,
+                service_above_baccalaureate: 0,
+                service_baccalaureate: 0,
+                service_elementary: 0
+            });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error('Error fetching personnel data:', error);
+        res.status(500).json({ message: 'Error fetching personnel data' });
+    }
+};
+
 // Update personnel data
 exports.updatePersonnel = async (req, res) => {
     try {

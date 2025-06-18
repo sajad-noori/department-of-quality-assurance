@@ -17,6 +17,13 @@ router.get('/',
     academyFacilityController.getFacilities
 );
 
+// Get academy facilities data by user ID (for admin/employee access)
+router.get('/user/:userId', 
+    authenticate, 
+    checkRole(['admin', 'employee']),
+    academyFacilityController.getFacilitiesByUserId
+);
+
 // Delete facility
 router.delete('/:id', 
     authenticate, 

@@ -46,6 +46,69 @@ function Step1() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // Fetch existing center data
+  useEffect(() => {
+    const fetchCenterData = async () => {
+      // Only fetch data if user exists and is an institute
+      if (!user || user.role !== 'institute') return;
+
+      try {
+        const response = await axios.get('http://localhost:5000/api/educational-centers/centers', {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.data && response.data.length > 0) {
+          const centerData = response.data[0];
+          setHasExistingData(true);
+          
+          // Update form with existing data
+          setFormData({
+            centerName: centerData.centerName || "",
+            province: centerData.province || "",
+            district: centerData.district || "",
+            village: centerData.village || "",
+            centerType: centerData.centerType || "",
+            programType: centerData.programType || "",
+            foundingYear: centerData.foundingYear || "",
+            contactName: centerData.contactName || "",
+            phoneNumber: centerData.phoneNumber || "",
+            email: centerData.email || "",
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching center data:', err);
+      }
+    };
+
+    fetchCenterData();
+  }, [user]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -82,7 +145,7 @@ function Step1() {
     if (!formData.phoneNumber || !formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "شماره تماس الزامی است";
     } else if (!/^[0-9]{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "شماره تماس باید ۱۱ رقم باشد";
+      newErrors.phoneNumber = "شماره تماس باید ۱۰ رقم باشد";
     }
     if (!formData.email || !formData.email.trim()) {
       newErrors.email = "ایمیل الزامی است";
@@ -127,60 +190,74 @@ function Step1() {
     }
 
     try {
-      // First get the user info to ensure we're authenticated
-      const userResponse = await fetch("http://localhost:5000/api/auth/me", {
-        credentials: "include"
-      });
-
-      if (!userResponse.ok) {
-        if (userResponse.status === 401) {
-          alert("لطفاً ابتدا وارد شوید");
-          return;
-        }
-        throw new Error("خطا در دریافت اطلاعات کاربر");
-      }
-
-      const userData = await userResponse.json();
+      const url = 'http://localhost:5000/api/educational-centers/centers';
+      const method = hasExistingData ? 'PUT' : 'POST';
       
-      // Now submit the form with user ID
-      const response = await fetch("http://localhost:5000/api/centers", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          ...formData,
-          user_id: userData.id
-        }),
+      const response = await axios({
+        method: method,
+        url: url,
+        data: formData,
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        // Show specific error message from server if available
-        if (errorData.errors && Array.isArray(errorData.errors)) {
-          const errorMessages = errorData.errors.map(err => err.msg).join('\n');
-          alert(errorMessages);
-        } else {
-          alert(errorData.message || "خطا در ارسال اطلاعات");
-        }
-        return;
-      }
-
-      const data = await response.json();
-      alert("فرم با موفقیت ذخیره شد");
+      const message = hasExistingData ? "اطلاعات با موفقیت بروزرسانی شد" : "فرم با موفقیت ذخیره شد";
+      alert(message);
+      setHasExistingData(true);
     } catch (error) {
       console.error("Error:", error);
-      alert(error.message || "خطایی در ارسال اطلاعات رخ داد");
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const errorMessages = error.response.data.errors.map(err => err.msg).join('\n');
+        alert(errorMessages);
+      } else {
+        alert(error.response?.data?.message || "خطایی در ارسال اطلاعات رخ داد");
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        در حال بارگذاری...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          لطفاً ابتدا وارد حساب کاربری خود شوید.
+        </p>
+      </div>
+    );
+  }
+
+  if (user.role !== 'institute') {
+    return (
+      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
+        <p className="mb-3">
+          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+        </p>
+        <hr />
+        <p className="mb-0">
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <GeneralInformationEducationalCenter
       formData={formData}
       onChange={handleChange}
       onSubmit={handleSubmit}
-      errors={errors}
+      hasExistingData={hasExistingData}
     />
   );
 }
@@ -879,7 +956,7 @@ export default function MultiStepForm10() {
   return (
     <div className="page-container">
       <div className="main-content">
-        <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت برای پروسه اعتبار دهی</h1>
+        <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت  پروسه اعتبار دهی</h1>
 
         <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
           <div className="progress-bar-bg">

@@ -9,4 +9,7 @@ router.post("/", authenticate, checkRole("institute"), stakeholderInvolvementCon
 // Get stakeholder involvement for current user
 router.get("/", authenticate, checkRole("institute"), stakeholderInvolvementController.getByUserId);
 
+// Get stakeholder involvement data by user ID (for admin/employee access)
+router.get("/user/:userId", authenticate, checkRole(['admin', 'employee']), stakeholderInvolvementController.getByUserIdForAdmin);
+
 module.exports = router; 
