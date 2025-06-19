@@ -3,6 +3,7 @@ import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
 import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const ProfileSidebar = () => {
   const [user, setUser] = useState(null);
@@ -12,6 +13,15 @@ const ProfileSidebar = () => {
   const [hover, setHover] = useState(false);
   const [activeStage, setActiveStage] = useState(1);
   const [loggingOut, setLoggingOut] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Sync activeStage with the current route
+    if (location.pathname === '/profile') setActiveStage(1);
+    else if (location.pathname === '/step2') setActiveStage(2);
+    else if (location.pathname === '/step3') setActiveStage(3);
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -178,8 +188,13 @@ const ProfileSidebar = () => {
           {[1, 2, 3].map((stage) => (
             <motion.div 
               key={stage}
-              className={`stage ${activeStage === stage ? 'active' : ''} ${activeStage > stage ? 'completed' : ''}`}
-              onClick={() => setActiveStage(stage)}
+              className={`stage ${activeStage === stage ? 'active' : ''}`}
+              onClick={() => {
+                setActiveStage(stage);
+                if (stage === 1) navigate('/profile');
+                if (stage === 2) navigate('/step2');
+                if (stage === 3) navigate('/step3');
+              }}
               whileHover={{ x: -5 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -187,14 +202,12 @@ const ProfileSidebar = () => {
                 className="stage-number"
                 whileHover={{ scale: 1.1 }}
               >
-                {activeStage > stage ? (
-                  <i className="fas fa-check"></i>
-                ) : (
-                  stage
-                )}
+                {stage}
               </motion.div>
               <div className="stage-text">
-                {stage === 1 ? 'مرحله اول' : stage === 2 ? 'مرحله دوم' : 'مرحله سوم'}
+                <a href="#" onClick={e => e.preventDefault()}>
+                  {stage === 1 ? 'مرحله اول' : stage === 2 ? 'مرحله دوم' : 'مرحله سوم'}
+                </a>
               </div>
             </motion.div>
           ))}
@@ -363,14 +376,6 @@ const ProfileSidebar = () => {
           border-right: 3px solid #3b82f6;
         }
 
-        .stage.completed {
-          background: rgba(16, 185, 129, 0.08);
-        }
-
-        .stage.completed .stage-number {
-          background: linear-gradient(145deg, #10b981, #059669);
-        }
-
         .stage-number {
           width: 32px;
           height: 32px;
@@ -394,10 +399,6 @@ const ProfileSidebar = () => {
         .stage.active .stage-text {
           color: #3b82f6;
           font-weight: 600;
-        }
-
-        .stage.completed .stage-text {
-          color: #10b981;
         }
 
         .logout-container {

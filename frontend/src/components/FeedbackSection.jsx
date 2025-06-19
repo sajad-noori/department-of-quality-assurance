@@ -235,7 +235,8 @@ const FeedbackSection = () => {
                         formData.email.trim() && 
                         formData.message.trim();
     
-    const hasNoErrors = Object.keys(errors).length === 0;
+    // Only true if all error values are empty strings
+    const hasNoErrors = Object.values(errors).every(error => !error);
     
     return hasAllFields && hasNoErrors;
   };

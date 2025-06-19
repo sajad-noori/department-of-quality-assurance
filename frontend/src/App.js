@@ -24,6 +24,9 @@ import NotFoundPage from './components/NotFoundPage';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import PublicRoute from './components/PublicRoute';
 import SpecificInstitute from './components/SpecificInstitute';
+import Step2 from './components/Step2';
+import Step3 from './components/Step3';
+
 
 function App() {
   return (
@@ -78,6 +81,24 @@ function App() {
   element={
     <RoleBasedRoute allowedRoles={['admin', 'institute', 'user', 'employee']}>
       <ProfileRoute />
+    </RoleBasedRoute>
+  }
+/>
+
+<Route
+  path="/step2"
+  element={
+    <RoleBasedRoute allowedRoles={['admin', 'institute', 'user', 'employee']}>
+      <Step2 />
+    </RoleBasedRoute>
+  }
+/>
+
+<Route
+  path="/step3"
+  element={
+    <RoleBasedRoute allowedRoles={['admin', 'institute', 'user', 'employee']}>
+      <Step3 />
     </RoleBasedRoute>
   }
 />

@@ -1,86 +1,289 @@
-.container {
-  background-color: #121212;
-  color: #f0f0f0;
-  padding: 40px 20px;
+/* God Mode About Us Styles (scoped to .aboutUsRoot) */
+
+.aboutUsRoot {
+  /* CSS variables for AboutUs only */
+  --color-bg-light: #f6f8fb;
+  --color-bg-dark: #121212;
+  --color-card-light: rgba(255,255,255,0.65);
+  --color-card-dark: rgba(30,34,44,0.75);
+  --color-border-light: #e0e7ef;
+  --color-border-dark: #23283a;
+  --color-primary: #3b82f6;
+  --color-accent: #b388ff;
+  --color-glow: #6ec1e4;
+  --color-cta: #ff8a65;
+  --color-text-light: #1a2233;
+  --color-text-dark: #f6f8fb;
+  --shadow-card: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  --blur: 18px;
+  --transition: 0.35s cubic-bezier(.4,0,.2,1);
+
+  /* Always dark mode for AboutUs */
+  --color-bg: var(--color-bg-dark);
+  --color-card: var(--color-card-dark);
+  --color-border: var(--color-border-dark);
+  --color-text: var(--color-text-dark);
+
+  position: relative;
+  min-height: 100vh;
+  padding: 0 0.5rem 4rem 0.5rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  z-index: 1;
+  transition: background var(--transition), color var(--transition);
+}
+
+.aboutUsRoot .aboutUsAnimatedBg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background: transparent;
+}
+
+.aboutUsRoot .aboutUsFloatingSvg {
+  position: absolute;
+  z-index: 1;
+  animation: float 8s ease-in-out infinite alternate;
+}
+.aboutUsRoot .aboutUsFloatingSvg:nth-child(2) { animation-delay: 2s; }
+.aboutUsRoot .aboutUsFloatingSvg:nth-child(3) { animation-delay: 4s; }
+.aboutUsRoot .aboutUsFloatingSvg:nth-child(4) { animation-delay: 6s; }
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-30px) scale(1.08); }
+}
+
+.aboutUsRoot .aboutUsTitle {
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  text-align: center;
+  margin: 0 0 2.5rem 0;
+  letter-spacing: 0.01em;
+  z-index: 2;
+  position: relative;
+  text-shadow: 0 2px 24px var(--color-glow);
+}
+
+.aboutUsRoot .aboutUsSection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  margin: 0 auto 2.5rem auto;
+  max-width: 1100px;
+  min-height: 320px;
+  z-index: 2;
+  position: relative;
+  opacity: 0;
+  transform: translateY(60px) scale(0.98) rotateY(8deg);
+  transition: opacity 0.7s cubic-bezier(.4,0,.2,1),
+              transform 0.7s cubic-bezier(.4,0,.2,1);
+}
+.aboutUsRoot .aboutUsVisible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.aboutUsRoot .aboutUsCard {
+  background: var(--color-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: 2.2rem;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  padding: 2.2rem 2.2rem 2.2rem 2.2rem;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 260px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2.5rem;
   position: relative;
   overflow: hidden;
-  min-height: 100vh;
+  transition: background var(--transition), border var(--transition), box-shadow var(--transition);
 }
-
-.title {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 40px;
-  color: #40a9ff;
+.aboutUsRoot .aboutUsCardContent {
+  flex: 2 1 340px;
+  min-width: 0;
 }
-
-.section {
-  background-color: #1e1e1e;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.6s ease;
-}
-
-.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.heading {
-  font-size: 1.8rem;
-  margin-bottom: 16px;
+.aboutUsRoot .aboutUsCardImageWrap {
+  flex: 1 1 220px;
   display: flex;
   align-items: center;
-  color: #ffffff;
+  justify-content: center;
+  min-width: 120px;
+}
+.aboutUsRoot .aboutUsImage {
+  width: 100%;
+  max-width: 180px;
+  min-width: 80px;
+  filter: drop-shadow(0 4px 24px rgba(59,130,246,0.10));
+  border-radius: 1.2rem;
+  transition: transform 0.4s cubic-bezier(.4,0,.2,1), filter 0.4s;
+}
+.aboutUsRoot .aboutUsCard:hover .aboutUsImage,
+.aboutUsRoot .aboutUsCard:focus-within .aboutUsImage {
+  transform: scale(1.07) rotate(-2deg);
+  filter: drop-shadow(0 8px 32px rgba(59,130,246,0.18));
 }
 
-.paragraph {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
+.aboutUsRoot .aboutUsHeading {
+  font-size: clamp(1.3rem, 2.5vw, 2.1rem);
+  font-weight: 700;
+  margin-bottom: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--color-primary);
+  letter-spacing: 0.01em;
 }
-
-.list {
-  list-style-type: disc;
-  padding-right: 20px;
-  font-size: 1.1rem;
-}
-
-.svgIcon {
-  display: inline-block;
-  margin-left: 10px;
-  color: #40a9ff;
-  transition: transform 0.3s ease;
-}
-
-.svgIcon:hover {
-  transform: scale(1.2);
-  color: #1e90ff;
-}
-
-/* Background Blob */
-.backgroundBlob {
-  position: absolute;
-  top: -150px;
-  left: -150px;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle at center, #1e90ff33, #1e90ff00);
+.aboutUsRoot .aboutUsIconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  z-index: 0;
-  animation: pulse 6s infinite ease-in-out;
+  background: linear-gradient(135deg, var(--color-glow) 0%, var(--color-accent) 100%);
+  box-shadow: 0 2px 12px 0 var(--color-glow);
+  width: 2.7em;
+  height: 2.7em;
+  margin-left: 0.5em;
+  margin-right: 0.1em;
+  transition: box-shadow 0.3s, background 0.3s;
+  cursor: pointer;
+}
+.aboutUsRoot .aboutUsAnimatedIcon {
+  font-size: 1.5em;
+  color: #fff;
+  filter: drop-shadow(0 2px 8px var(--color-glow));
+  transition: transform 0.4s, filter 0.4s;
+}
+.aboutUsRoot .aboutUsIconWrapper:hover .aboutUsAnimatedIcon,
+.aboutUsRoot .aboutUsIconWrapper:focus .aboutUsAnimatedIcon {
+  transform: scale(1.18) rotate(-8deg);
+  filter: drop-shadow(0 4px 18px var(--color-accent));
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.6;
+.aboutUsRoot .aboutUsParagraph {
+  font-size: 1.13rem;
+  line-height: 1.9;
+  margin-bottom: 1.2rem;
+  color: var(--color-text);
+  font-weight: 400;
+}
+
+.aboutUsRoot .aboutUsList {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+.aboutUsRoot .aboutUsList li {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  font-size: 1.08rem;
+  margin-bottom: 0.7em;
+  color: var(--color-text);
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.aboutUsRoot .aboutUsListIcon {
+  font-size: 1.2em;
+  color: var(--color-primary);
+  filter: drop-shadow(0 2px 8px var(--color-glow));
+}
+
+/* CTA Section */
+.aboutUsRoot .aboutUsCtaSection {
+  margin: 3.5rem auto 0 auto;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+.aboutUsRoot .aboutUsCtaTitle {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  color: var(--color-accent);
+  letter-spacing: 0.01em;
+}
+.aboutUsRoot .aboutUsCtaButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  background: linear-gradient(90deg, var(--color-cta) 0%, var(--color-primary) 100%);
+  color: #fff;
+  font-size: 1.13rem;
+  font-weight: 700;
+  padding: 0.85em 2.2em;
+  border-radius: 2em;
+  box-shadow: 0 4px 24px 0 var(--color-cta), 0 1.5px 0 0 var(--color-primary);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+  outline: none;
+}
+.aboutUsRoot .aboutUsCtaButtonText {
+  z-index: 2;
+  position: relative;
+}
+.aboutUsRoot .aboutUsCtaIcon {
+  font-size: 1.3em;
+  filter: drop-shadow(0 2px 8px var(--color-glow));
+  transition: filter 0.3s, transform 0.3s;
+}
+.aboutUsRoot .aboutUsCtaButton:hover,
+.aboutUsRoot .aboutUsCtaButton:focus {
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-cta) 100%);
+  box-shadow: 0 8px 32px 0 var(--color-primary), 0 2px 0 0 var(--color-cta);
+  transform: scale(1.04) translateY(-2px);
+}
+.aboutUsRoot .aboutUsCtaButton:hover .aboutUsCtaIcon,
+.aboutUsRoot .aboutUsCtaButton:focus .aboutUsCtaIcon {
+  filter: drop-shadow(0 4px 18px var(--color-accent));
+  transform: scale(1.18) rotate(-8deg);
+}
+
+/* Responsive Design */
+@media (max-width: 900px) {
+  .aboutUsRoot .aboutUsCard {
+    flex-direction: column;
+    padding: 1.5rem 1.2rem;
+    gap: 1.5rem;
   }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.3;
+  .aboutUsRoot .aboutUsCardImageWrap {
+    justify-content: flex-start;
   }
+}
+@media (max-width: 600px) {
+  .aboutUsRoot {
+    padding: 0 0.1rem 2.5rem 0.1rem;
+  }
+  .aboutUsRoot .aboutUsCard {
+    padding: 1.1rem 0.5rem;
+    border-radius: 1.2rem;
+  }
+  .aboutUsRoot .aboutUsImage {
+    max-width: 120px;
+  }
+  .aboutUsRoot .aboutUsTitle {
+    font-size: 2rem;
+  }
+}
+
+.aboutUsRoot .sectionSvg {
+  width: 120px;
+  max-width: 90vw;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  background: none;
 }

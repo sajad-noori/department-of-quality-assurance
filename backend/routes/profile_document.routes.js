@@ -53,6 +53,6 @@ router.post('/upload', authenticate, upload.single('file'), profileDocumentContr
 router.get('/', authenticate, profileDocumentController.getDocuments);
 router.get('/user/:userId', authenticate, checkRole(['admin', 'employee']), profileDocumentController.getDocumentsByUserIdForAdmin);
 router.get('/download/:filePath', authenticate, checkRole(['admin', 'employee']), profileDocumentController.downloadDocument);
-router.delete('/:type', authenticate, profileDocumentController.deleteDocument);
+router.delete('/:id', authenticate, profileDocumentController.deleteDocument);
 
 module.exports = router; 

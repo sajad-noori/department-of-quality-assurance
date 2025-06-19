@@ -1,6 +1,7 @@
 const ProfileDocument = require('../models/profile_document.model');
 const fs = require('fs').promises;
 const path = require('path');
+const db = require('../config/db');
 
 const UPLOAD_DIR = path.join(__dirname, '../uploads/profile');
 
@@ -128,39 +129,41 @@ exports.getDocumentsByUserIdForAdmin = async (req, res) => {
 
 exports.deleteDocument = async (req, res) => {
   try {
-    const { type } = req.params;
-    
-    // Get the document first to get its file path
-    const document = await ProfileDocument.findByType(req.user.id, type);
-    if (!document) {
-      return res.status(404).json({
-        success: false,
-        message: 'Document not found'
-      });
+    const { id } = req.params;
+    const userId = req.user.id;
+    // Fetch the document row by ID and user
+    const [rows] = await db.promise().execute('SELECT * FROM profile_documents WHERE id = ? AND user_id = ?', [id, userId]);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
     }
-
+    const row = rows[0];
+    // Find which column is not null and get its name and value
+    let documentType = null, filePath = null;
+    for (let i = 1; i <= 15; i++) {
+      const col = `doc${i}_path`;
+      if (row[col]) {
+        documentType = col;
+        filePath = row[col];
+        break;
+      }
+    }
+    if (!documentType || !filePath) {
+      return res.status(404).json({ success: false, message: 'Document file not found' });
+    }
     // Delete the file from the filesystem
-    const filePath = path.join(__dirname, '..', document.file_path);
+    const pathModule = require('path');
+    const fs = require('fs/promises');
     try {
-      await fs.unlink(filePath);
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      // Continue with database deletion even if file deletion fails
+      await fs.unlink(pathModule.join(__dirname, '..', filePath));
+    } catch (e) {
+      console.error('Error deleting file:', e);
     }
-
-    // Delete from database
-    await ProfileDocument.delete(req.user.id, type);
-
-    res.json({
-      success: true,
-      message: 'Document deleted successfully'
-    });
+    // Set the column to null
+    await ProfileDocument.delete(userId, documentType);
+    res.json({ success: true, message: 'Document deleted successfully' });
   } catch (error) {
     console.error('Error deleting document:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Error deleting document'
-    });
+    res.status(500).json({ success: false, message: error.message || 'Error deleting document' });
   }
 };
 
