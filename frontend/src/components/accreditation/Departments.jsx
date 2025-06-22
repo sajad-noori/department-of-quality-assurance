@@ -8,17 +8,30 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
+import PropTypes from 'prop-types';
 
 const StyledButton = styled(Button)({
   textTransform: 'none',
+  fontWeight: 600,
+  borderRadius: 10,
+  fontSize: '1rem',
+  background: 'linear-gradient(135deg, #0dcaf0, #00b5d7)',
+  color: '#030305',
+  boxShadow: '0 6px 20px rgba(13, 202, 240, 0.2)',
+  transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
   '&:hover': {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+    background: 'linear-gradient(135deg, #00b5d7, #0dcaf0)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 10px 25px rgba(13, 202, 240, 0.3)',
   },
-  transition: 'all 0.2s ease-in-out',
+  '&:disabled': {
+    opacity: 0.7,
+    cursor: 'not-allowed',
+    transform: 'none',
+  },
 });
 
-const Departments = () => {
+const Departments = ({ onStepSubmit }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -36,10 +49,10 @@ const Departments = () => {
   const [user, setUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   const fetchDepartments = async () => {
     if (!user || user.role !== 'institute') return;
-
     try {
       const response = await axios.get('http://localhost:5000/api/departments', {
         withCredentials: true,
@@ -48,13 +61,11 @@ const Departments = () => {
           'Accept': 'application/json'
         }
       });
-      
       if (response.data.success) {
         setEntries(response.data.data);
       }
     } catch (err) {
-      console.error('Error fetching departments:', err);
-      setError('Error fetching department data');
+      setError('خطا در دریافت اطلاعات رشته‌ها');
     } finally {
       setLoading(false);
     }
@@ -68,13 +79,11 @@ const Departments = () => {
         });
         setUser(res.data.user);
       } catch (err) {
-        console.error('Error fetching user:', err);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
-
     fetchUser();
   }, []);
 
@@ -87,10 +96,12 @@ const Departments = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear any previous error/success messages when user starts typing
     setError(null);
     setSuccess(null);
   };
+
+  const handleFocus = (field) => setFocusedField(field);
+  const handleBlur = () => setFocusedField(null);
 
   const validateForm = () => {
     if (!formData.name.trim()) {
@@ -101,8 +112,7 @@ const Departments = () => {
       setError('لطفاً سال ایجاد را وارد کنید');
       return false;
     }
-    // Get current Persian year
-    const currentYear = new Date().getFullYear() - 621; // Convert Gregorian to Persian year
+    const currentYear = new Date().getFullYear() - 621;
     const year = parseInt(formData.newEnrollments);
     if (year < 1300 || year > currentYear) {
       setError(`سال ایجاد باید بین ۱۳۰۰ تا ${currentYear} باشد`);
@@ -131,15 +141,12 @@ const Departments = () => {
     if (!user || user.role !== 'institute') {
       return;
     }
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
     setError(null);
     setSuccess(null);
-
     try {
       const response = await axios.post('http://localhost:5000/api/departments', formData, {
         withCredentials: true,
@@ -148,9 +155,7 @@ const Departments = () => {
           'Accept': 'application/json'
         }
       });
-
       if (response.data.success) {
-        // Clear the form
         setFormData({
           name: '',
           newEnrollments: '',
@@ -160,12 +165,11 @@ const Departments = () => {
           numberOfStudents: '',
         });
         setSuccess('رشته با موفقیت اضافه شد');
-        // Trigger a refresh of the data
         setShouldRefresh(prev => !prev);
+        if (onStepSubmit) onStepSubmit(6);
       }
     } catch (err) {
-      console.error('Error adding department:', err);
-      setError(err.response?.data?.message || 'Error adding department data');
+      setError(err.response?.data?.message || 'خطا در افزودن رشته');
     } finally {
       setIsSubmitting(false);
     }
@@ -175,11 +179,9 @@ const Departments = () => {
     if (!user || user.role !== 'institute') {
       return;
     }
-
     if (!window.confirm('آیا از حذف این رشته اطمینان دارید؟')) {
       return;
     }
-
     try {
       const response = await axios.delete(`http://localhost:5000/api/departments/${id}`, {
         withCredentials: true,
@@ -188,22 +190,19 @@ const Departments = () => {
           'Accept': 'application/json'
         }
       });
-
       if (response.data.success) {
         setSuccess('رشته با موفقیت حذف شد');
-        // Trigger a refresh of the data
         setShouldRefresh(prev => !prev);
       }
     } catch (err) {
-      console.error('Error deleting department:', err);
-      setError('Error deleting department data');
+      setError('خطا در حذف رشته');
     }
   };
 
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress />
+        <CircularProgress style={{ color: '#0dcaf0' }} />
       </div>
     );
   }
@@ -212,9 +211,7 @@ const Departments = () => {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
@@ -223,192 +220,405 @@ const Departments = () => {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
+        <p className="mb-3">برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.</p>
         <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
+        <p className="mb-0">لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.</p>
       </div>
     );
   }
 
   return (
-    <div className="container p-4 rounded shadow-sm">
-      <label htmlFor="description" className="form-label small d-block mb-2">
-        در فورم ذیل اسامی رشته های موجود در نهاد آموزشی را با ذکر دوره، تعداد استاد و شاگرد آن درج نمایید.
-      </label>
-
-      {/* Status Messages */}
-      {error && (
-        <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
-          <ErrorIcon className="me-2" />
-          <div>{error}</div>
+    <div className="departments-form glass-bg" dir="rtl">
+      <div className="form-container">
+        <div className="form-header">
+          <h3 className="form-title">
+            <span className="form-icon">🏫</span>
+            رشته‌های موجود
+          </h3>
+          <p className="form-description">
+            در فورم ذیل اسامی رشته های موجود در نهاد آموزشی را با ذکر دوره، تعداد استاد و شاگرد آن درج نمایید.
+          </p>
         </div>
-      )}
-      {success && (
-        <div className="alert alert-success d-flex align-items-center mb-3" role="alert">
-          <CheckCircleIcon className="me-2" />
-          <div>{success}</div>
-        </div>
-      )}
 
-      <fieldset className="mb-3 border rounded p-2">
-        <legend className="float-none w-auto px-2 mb-2 small">فورم درج رشته ها</legend>
-        <div className="row g-3">
-          <div className="col-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="اسم رشته"
-              value={formData.name}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              disabled={isSubmitting}
-            />
+        {success && (
+          <div className="success-notification">
+            <div className="notification-content">
+              <span className="notification-icon">✅</span>
+              <span>{success}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+              ✕
+            </button>
           </div>
-
-          <div className="col-md-4">
-            <input
-              type="number"
-              name="newEnrollments"
-              placeholder="سال ایجاد"
-              value={formData.newEnrollments}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              min="1300"
-              max={new Date().getFullYear() - 621} // Current Persian year
-              disabled={isSubmitting}
-            />
+        )}
+        {error && (
+          <div className="error-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setError(null)}>
+              ✕
+            </button>
           </div>
+        )}
 
-          <div className="col-md-4">
-            <select
-              name="totalStudents"
-              value={formData.totalStudents}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{ background: "transparent", color: "white" }}
-              disabled={isSubmitting}
-            >
-              <option value="" style={{color: "black"}}>دوره آموزشی را انتخاب کنید</option>
-              <option value="دو ساله" style={{color: "black" }}>دو ساله</option>
-              <option value="سه ساله" style={{color: "black" }}>سه ساله</option>
-              <option value="پنج ساله" style={{color: "black" }}>پنج ساله</option>
-            </select>
+        <fieldset className="mb-3 border rounded p-2 form-section">
+          <legend className="float-none w-auto px-2 mb-2 small">فورم درج رشته ها</legend>
+          <div className="row g-3">
+            <div className="col-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="اسم رشته"
+                value={formData.name}
+                onChange={handleChange}
+                onFocus={() => handleFocus('name')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'name' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="number"
+                name="newEnrollments"
+                placeholder="سال ایجاد"
+                value={formData.newEnrollments}
+                onChange={handleChange}
+                onFocus={() => handleFocus('newEnrollments')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'newEnrollments' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                min="1300"
+                max={new Date().getFullYear() - 621}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-4">
+              <select
+                name="totalStudents"
+                value={formData.totalStudents}
+                onChange={handleChange}
+                onFocus={() => handleFocus('totalStudents')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'totalStudents' ? 'focused' : ''}`}
+                style={{ background: "transparent", color: "white" }}
+                disabled={isSubmitting}
+              >
+                <option value="" style={{color: "black"}}>دوره آموزشی را انتخاب کنید</option>
+                <option value="دو ساله" style={{color: "black" }}>دو ساله</option>
+                <option value="سه ساله" style={{color: "black" }}>سه ساله</option>
+                <option value="پنج ساله" style={{color: "black" }}>پنج ساله</option>
+              </select>
+            </div>
+            <div className="col-md-4">
+              <select 
+                name="graduationCycles"
+                value={formData.graduationCycles}
+                onChange={handleChange}
+                onFocus={() => handleFocus('graduationCycles')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'graduationCycles' ? 'focused' : ''}`}
+                style={{ background: "transparent", color: "white" }}
+                disabled={isSubmitting}
+              >
+                <option value="" style={{color: "black" }}>فعال / غیر فعال</option>
+                <option value="فعال" style={{color: "black" }}>فعال</option>
+                <option value="غیر فعال" style={{color: "black" }}>غیر فعال</option>
+              </select>
+            </div>
+            <div className="col-md-4">
+              <input
+                type="number"
+                name="establishmentYear"
+                placeholder="تعداد اساتید رشته"
+                value={formData.establishmentYear}
+                onChange={handleChange}
+                onFocus={() => handleFocus('establishmentYear')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'establishmentYear' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                min="0"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-4">
+              <input
+                type="number"
+                name="numberOfStudents"
+                placeholder="تعداد محصل رشته"
+                value={formData.numberOfStudents}
+                onChange={handleChange}
+                onFocus={() => handleFocus('numberOfStudents')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'numberOfStudents' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                min="0"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-12 text-center mt-3">
+              <StyledButton
+                variant="contained"
+                color="primary"
+                onClick={handleAddEntry}
+                disabled={isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+              >
+                {isSubmitting ? 'در حال افزودن...' : 'افزودن'}
+              </StyledButton>
+            </div>
           </div>
+        </fieldset>
 
-          <div className="col-md-4">
-            <select 
-              name="graduationCycles"
-              value={formData.graduationCycles}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{ background: "transparent", color: "white" }}
-              disabled={isSubmitting}
-            >
-              <option value="" style={{color: "black" }}>فعال / غیر فعال</option>
-              <option value="فعال" style={{color: "black" }}>فعال</option>
-              <option value="غیر فعال" style={{color: "black" }}>غیر فعال</option>
-            </select>
-          </div>
-
-          <div className="col-md-4">
-            <input
-              type="number"
-              name="establishmentYear"
-              placeholder="تعداد اساتید رشته"
-              value={formData.establishmentYear}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              min="0"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="col-md-4">
-            <input
-              type="number"
-              name="numberOfStudents"
-              placeholder="تعداد محصل رشته"
-              value={formData.numberOfStudents}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              min="0"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="col-12 text-center mt-3">
-            <StyledButton
-              variant="contained"
-              color="primary"
-              onClick={handleAddEntry}
-              disabled={isSubmitting}
-              startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-            >
-              {isSubmitting ? 'در حال افزودن...' : 'افزودن'}
-            </StyledButton>
-          </div>
-        </div>
-      </fieldset>
-
-      {entries.length > 0 && (
-        <div className="mt-5">
-          <h3 className="mb-3 fw-semibold">لیست رشته‌ها:</h3>
-          <div className="table-responsive">
-            <table className="table table-bordered text-center" style={{ backgroundColor: 'white' }}>
-              <thead className="table-dark">
-                <tr>
-                  <th className="text-white">اسم رشته</th>
-                  <th className="text-white">سال ایجاد</th>
-                  <th className="text-white">دوره آموزشی</th>
-                  <th className="text-white">فعال / غیر فعال</th>
-                  <th className="text-white">تعداد اساتید رشته</th>
-                  <th className="text-white">تعداد محصل</th>
-                  <th className="text-white">عملیات</th>
-                </tr>
-              </thead>
-              <tbody style={{ backgroundColor: 'white' }}>
-                {entries.map((entry, index) => (
-                  <tr 
-                    key={entry.id} 
-                    style={{ 
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8f9fa',
-                      color: '#000000'
-                    }}
-                  >
-                    <td>{entry.name}</td>
-                    <td>{entry.new_enrollments}</td>
-                    <td>{entry.total_students}</td>
-                    <td>{entry.graduation_cycles}</td>
-                    <td>{entry.establishment_year}</td>
-                    <td>{entry.number_of_students}</td>
-                    <td>
-                      <StyledButton
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(entry.id)}
-                        startIcon={<DeleteIcon />}
-                      >
-                        حذف
-                      </StyledButton>
-                    </td>
+        {entries.length > 0 && (
+          <div className="uploaded-files-section">
+            <div className="section-header">
+              <h4 className="section-title">
+                <span className="section-icon">📚</span>
+                لیست رشته‌ها
+              </h4>
+              <span className="file-count">({entries.length} رشته)</span>
+            </div>
+            <div className="table-container">
+              <table className="files-table">
+                <thead>
+                  <tr>
+                    <th>اسم رشته</th>
+                    <th>سال ایجاد</th>
+                    <th>دوره آموزشی</th>
+                    <th>فعال / غیر فعال</th>
+                    <th>تعداد اساتید رشته</th>
+                    <th>تعداد محصل</th>
+                    <th>عملیات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {entries.map((entry, index) => (
+                    <tr 
+                      key={entry.id} 
+                      style={{ 
+                        backgroundColor: index % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(13,202,240,0.05)',
+                        color: '#f0f0f0',
+                        transition: 'background 0.3s',
+                      }}
+                    >
+                      <td>{entry.name}</td>
+                      <td>{entry.new_enrollments}</td>
+                      <td>{entry.total_students}</td>
+                      <td>{entry.graduation_cycles}</td>
+                      <td>{entry.establishment_year}</td>
+                      <td>{entry.number_of_students}</td>
+                      <td>
+                        <StyledButton
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          onClick={() => handleDelete(entry.id)}
+                          startIcon={<DeleteIcon />}
+                        >
+                          حذف
+                        </StyledButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      <style>{`
+        .departments-form.glass-bg {
+          background: rgba(255,255,255,0.05);
+          border-radius: 20px;
+          padding: 2rem;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          margin-bottom: 2rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .form-container {
+          position: relative;
+          z-index: 1;
+        }
+        .form-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        .form-title {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        .form-icon {
+          font-size: 2rem;
+        }
+        .form-description {
+          color: #a9e5ff;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .success-notification,
+        .error-notification {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          animation: slideInDown 0.3s ease-out;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+          border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #28a745;
+          font-size: 0.9rem;
+        }
+        .error-notification .notification-content {
+          color: #dc3545;
+        }
+        .notification-icon {
+          font-size: 1.1rem;
+        }
+        .close-button {
+          background: none;
+          border: none;
+          color: inherit;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+        }
+        .close-button:hover {
+          background: rgba(255,255,255,0.1);
+          transform: scale(1.1);
+        }
+        .form-section {
+          background: rgba(13,202,240,0.05);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13,202,240,0.1);
+          margin-bottom: 1.5rem;
+        }
+        .focused {
+          border-color: #0dcaf0 !important;
+          box-shadow: 0 0 0 2px #0dcaf0333 !important;
+          background: rgba(13,202,240,0.08) !important;
+        }
+        .uploaded-files-section {
+          background: rgba(13,202,240,0.03);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13,202,240,0.1);
+          margin-top: 2rem;
+        }
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.5rem;
+        }
+        .section-title {
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #0dcaf0;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .section-icon {
+          font-size: 1.4rem;
+        }
+        .file-count {
+          font-size: 0.9rem;
+          color: #a9e5ff;
+          background: rgba(13,202,240,0.1);
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+        }
+        .table-container {
+          overflow-x: auto;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.02);
+        }
+        .files-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: transparent;
+        }
+        .files-table th {
+          background: rgba(13,202,240,0.1);
+          color: #0dcaf0;
+          font-weight: 600;
+          padding: 1rem;
+          text-align: center;
+          border-bottom: 1px solid rgba(13,202,240,0.2);
+        }
+        .files-table td {
+          padding: 1rem;
+          text-align: center;
+          color: #f0f0f0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .files-table tr:hover {
+          background: rgba(13,202,240,0.05);
+        }
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @media (max-width: 768px) {
+          .departments-form.glass-bg {
+            padding: 1rem;
+          }
+          .form-title {
+            font-size: 1.5rem;
+          }
+          .files-table th,
+          .files-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+          }
+        }
+      `}</style>
     </div>
   );
+};
+
+Departments.propTypes = {
+  onStepSubmit: PropTypes.func,
+};
+
+Departments.defaultProps = {
+  onStepSubmit: () => {},
 };
 
 export default Departments;

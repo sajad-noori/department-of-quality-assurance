@@ -31,7 +31,7 @@ const steps = [
 
 
 // Step components with Bootstrap classes
-function Step1() {
+function Step1({ onStepSubmit }) {
   const [formData, setFormData] = useState({
     centerName: "",
     province: "",
@@ -49,6 +49,7 @@ function Step1() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Fetch user data
   useEffect(() => {
@@ -69,11 +70,11 @@ function Step1() {
     fetchUser();
   }, []);
 
-  // Fetch existing center data
+  // Fetch existing center data - only once
   useEffect(() => {
     const fetchCenterData = async () => {
-      // Only fetch data if user exists and is an institute
-      if (!user || user.role !== 'institute') return;
+      // Only fetch data if user exists, is an institute, and data hasn't been loaded yet
+      if (!user || user.role !== 'institute' || dataLoaded) return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/educational-centers/centers', {
@@ -101,14 +102,21 @@ function Step1() {
             phoneNumber: centerData.phoneNumber || "",
             email: centerData.email || "",
           });
+          
+          // Mark step as submitted if data exists
+          if (onStepSubmit) {
+            onStepSubmit(1);
         }
+        }
+        setDataLoaded(true);
       } catch (err) {
         console.error('Error fetching center data:', err);
+        setDataLoaded(true);
       }
     };
 
     fetchCenterData();
-  }, [user]);
+  }, [user, onStepSubmit, dataLoaded]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -162,16 +170,11 @@ function Step1() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    setFormData((prev) => {
-      const newData = {
+    setFormData(prev => ({
         ...prev,
-        [name]: value,
-      };
-      return newData;
-    });
-    
-    // Clear error when user starts typing
+      [name]: value
+    }));
+    // Clear error for this specific field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -182,6 +185,7 @@ function Step1() {
 
   const handleSubmit = async () => {
     console.log('Submitting form with data:', formData);
+    console.log('Has existing data:', hasExistingData);
     
     if (!validateForm()) {
       console.log('Validation failed, errors:', errors);
@@ -192,6 +196,8 @@ function Step1() {
     try {
       const url = 'http://localhost:5000/api/educational-centers/centers';
       const method = hasExistingData ? 'PUT' : 'POST';
+      
+      console.log('Making request with method:', method);
       
       const response = await axios({
         method: method,
@@ -204,9 +210,16 @@ function Step1() {
         }
       });
 
-      const message = hasExistingData ? "اطلاعات با موفقیت بروزرسانی شد" : "فرم با موفقیت ذخیره شد";
+      console.log('Response received:', response.data);
+      
+      const message = hasExistingData ? "اطلاعات با موفقیت بروزرسانی شد" : "اطلاعات با موفقیت ثبت شد";
       alert(message);
       setHasExistingData(true);
+      
+      // Mark step as submitted
+      if (onStepSubmit) {
+        onStepSubmit(1);
+      }
     } catch (error) {
       console.error("Error:", error);
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
@@ -262,7 +275,15 @@ function Step1() {
   );
 }
 
-function Step2({ onNext }) {
+Step1.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step1.defaultProps = {
+  onStepSubmit: () => {}
+};
+
+function Step2({ onStepSubmit }) {
   const [formData, setFormData] = useState({});
 
   const handleChange = (e) => {
@@ -273,9 +294,12 @@ function Step2({ onNext }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = () => {
     console.log("Submitted Staff Data:", formData);
-    if (onNext) onNext(); // move to next step if using multi-step
+    // Mark step 2 as submitted when Personnel form is successfully submitted
+    if (onStepSubmit) {
+      onStepSubmit(2);
+    }
   };
 
   return (
@@ -291,35 +315,57 @@ function Step2({ onNext }) {
 }
 
 Step2.propTypes = {
-  onNext: PropTypes.func
+  onStepSubmit: PropTypes.func
 };
 
 Step2.defaultProps = {
-  onNext: () => {}
+  onStepSubmit: () => {}
 };
 
-function Step3() {
+function Step3({ onStepSubmit }) {
+  const [step3Submitted, setStep3Submitted] = useState(false);
+
+  const handleStep3Submit = () => {
+    console.log("Step 3 submitted - NumberOfStudents data added");
+    setStep3Submitted(true);
+    // Mark step 3 as submitted when NumberOfStudents form is successfully submitted
+    if (onStepSubmit) {
+      onStepSubmit(3);
+    }
+  };
+
   return (
     <>
     <label className="form-label-center"> {steps[2]}</label>
     <div className="d-flex">
-      <NumberOfStudents />
+      <NumberOfStudents onStepSubmit={handleStep3Submit} />
       <Laylia />
     </div>
     </>
   );
 }
 
-function Step4() {
+Step3.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step3.defaultProps = {
+  onStepSubmit: () => {}
+};
+
+function Step4({ onStepSubmit }) {
   const [formData, setFormData] = useState({
     vision: '',
     mission: '',
-    strategicGoals: ''
+    strategicGoals: '',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [focusedField, setFocusedField] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -359,15 +405,19 @@ function Step4() {
             strategicGoals: response.data.strategic_goals || ''
           });
           setHasExistingData(true);
+          // Don't mark as submitted when just loading existing data
+          // if (onStepSubmit) {
+          //   onStepSubmit(4);
+          // }
         }
       } catch (err) {
         console.error('Error fetching vision mission:', err);
-        setError('Error loading vision mission data');
+        setError('خطا در بارگذاری اطلاعات دیدگاه و ماموریت');
       }
     };
 
     fetchVisionMission();
-  }, [user]);
+  }, [user, onStepSubmit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -375,11 +425,17 @@ function Step4() {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
-    if (error) {
-      setError(null);
+    // Clear error for this specific field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
     }
   };
+
+  const handleFocus = (field) => setFocusedField(field);
+  const handleBlur = () => setFocusedField(null);
 
   const validateForm = () => {
     if (!formData.vision.trim()) {
@@ -398,13 +454,10 @@ function Step4() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
     setError(null);
-
+    setSuccess(null);
     try {
       const response = await axios.post('http://localhost:5000/api/vision-mission', formData, {
         withCredentials: true,
@@ -413,12 +466,13 @@ function Step4() {
           'Accept': 'application/json'
         }
       });
-
-      alert(response.data.message);
       setHasExistingData(true);
+      setSuccess(hasExistingData ? 'اطلاعات با موفقیت بروزرسانی شد' : 'اطلاعات با موفقیت ثبت شد');
+      if (onStepSubmit) {
+        onStepSubmit(4);
+      }
     } catch (err) {
-      console.error('Error saving vision mission:', err);
-      setError(err.response?.data?.message || 'Error saving vision mission data');
+      setError(err.response?.data?.message || 'خطا در ذخیره اطلاعات دیدگاه و ماموریت');
     } finally {
       setLoading(false);
     }
@@ -427,7 +481,7 @@ function Step4() {
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress />
+        <CircularProgress style={{ color: '#0dcaf0' }} />
       </div>
     );
   }
@@ -436,9 +490,7 @@ function Step4() {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
@@ -447,97 +499,401 @@ function Step4() {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
+        <p className="mb-3">برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.</p>
         <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
+        <p className="mb-0">لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.</p>
       </div>
     );
   }
 
   return (
-    <>
-      <label className="form-label-center">دیدگاه، ماموریت و اهداف استراتیژیک مرکز آموزشی</label>
-      <fieldset className="mb-3 border rounded p-2">
-        <legend className="float-none w-auto px-2 mb-2 small" style={{ fontSize: '0.85rem' }}>
-          فورم دیدگاه، ماموریت و اهداف استراتیژیک
+    <div className="vision-mission-form" dir="rtl">
+      <div className="form-container">
+        <div className="form-header">
+          <h3 className="form-title">
+            <span className="form-icon">🎯</span>
+            دیدگاه، ماموریت و اهداف استراتیژیک مرکز آموزشی
+          </h3>
           {hasExistingData && (
-            <span className="ms-2 text-info">
-              (اطلاعات قبلی شما نمایش داده شده است)
-            </span>
+            <div className="entries-badge">
+              <span className="badge-icon">📋</span>
+              اطلاعات قبلی شما نمایش داده شده است
+            </div>
           )}
-        </legend>
-        <div>
-          <div style={{height: '300px'}}>
-            <label htmlFor="vision" className="form-label small">دیدگاه مرکز آموزشی:</label>
+        </div>
+        
+        {success && (
+          <div className="success-notification">
+            <div className="notification-content">
+              <span className="notification-icon">✅</span>
+              <span>{success}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        {error && (
+          <div className="error-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setError(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        <div className="form-section">
+          <div className="form-group">
+            <label className="form-label">دیدگاه مرکز آموزشی <span className="required">*</span></label>
+            <div className="input-wrapper">
             <textarea
-              id="vision"
               name="vision"
               value={formData.vision}
               onChange={handleChange}
+                onFocus={() => handleFocus('vision')}
+                onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
               placeholder="دیدگاه مرکز آموزشی را بیان دارید."
-              className="form-control h-100 white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              required
+                className={`form-input ${error && formData.vision.trim() === '' ? 'error' : ''} ${focusedField === 'vision' ? 'focused' : ''}`}
+                rows={5}
             />
+              <div className="input-border"></div>
           </div>
-          <br />
-          <div style={{height: '300px'}}>
-            <label htmlFor="mission" className="form-label small">ماموریت مرکز آموزشی:</label>
+          </div>
+          <div className="form-group">
+            <label className="form-label">ماموریت مرکز آموزشی <span className="required">*</span></label>
+            <div className="input-wrapper">
             <textarea
-              id="mission"
               name="mission"
               value={formData.mission}
               onChange={handleChange}
-              placeholder="ماموریت مرکز آموزشی را بیان دارید"
-              className="form-control h-100 white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              required
-            />
+                onFocus={() => handleFocus('mission')}
+                onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="ماموریت مرکز آموزشی را بیان دارید."
+                className={`form-input ${error && formData.mission.trim() === '' ? 'error' : ''} ${focusedField === 'mission' ? 'focused' : ''}`}
+                rows={5}
+              />
+              <div className="input-border"></div>
           </div>
-          <br />
-          <div style={{height: '300px'}}>
-            <label htmlFor="strategicGoals" className="form-label small">اهداف استراتیژیک مرکز آموزشی</label>
+          </div>
+          <div className="form-group">
+            <label className="form-label">اهداف استراتیژیک مرکز آموزشی <span className="required">*</span></label>
+            <div className="input-wrapper">
             <textarea
-              id="strategicGoals"
               name="strategicGoals"
               value={formData.strategicGoals}
               onChange={handleChange}
-              placeholder="اهداف استراتیژیک مرکز آموزشی را بیان دارید
-              1.
-              2.
-              3.
-              4.
-              "
-              className="form-control h-100 white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              required
-            />
+                onFocus={() => handleFocus('strategicGoals')}
+                onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder={`اهداف استراتیژیک مرکز آموزشی را بیان دارید\n1.\n2.\n3.\n4.`}
+                className={`form-input ${error && formData.strategicGoals.trim() === '' ? 'error' : ''} ${focusedField === 'strategicGoals' ? 'focused' : ''}`}
+                rows={6}
+              />
+              <div className="input-border"></div>
           </div>
-          {error && (
-            <div className="alert alert-danger mt-3" role="alert">
-              {error}
             </div>
-          )}
+          <div className="submit-section">
           <button 
             type="button" 
-            className="btn btn-success w-100 mt-4"
-            disabled={loading}
             onClick={handleSubmit}
-          >
-            {loading ? 'در حال ذخیره...' : hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+              disabled={loading}
+              className={`submit-button ${loading ? 'loading' : ''}`}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  در حال ذخیره...
+                </>
+              ) : (
+                <>
+                  <span className="button-icon">💾</span>
+                  {hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+                </>
+              )}
           </button>
         </div>
-      </fieldset>
-      <br />
-    </>
+        </div>
+      </div>
+      <style>{`
+        .vision-mission-form {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 2rem;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          margin-bottom: 2rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .form-container {
+          position: relative;
+          z-index: 1;
+        }
+        .form-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        .form-title {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        .form-icon {
+          font-size: 2rem;
+        }
+        .entries-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+          color: #030305;
+          padding: 0.5rem 1rem;
+          border-radius: 25px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+        }
+        .badge-icon {
+          font-size: 1.1rem;
+        }
+        .success-notification,
+        .error-notification {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          animation: slideInDown 0.3s ease-out;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+          border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #28a745;
+          font-size: 0.9rem;
+        }
+        .error-notification .notification-content {
+          color: #dc3545;
+        }
+        .notification-icon {
+          font-size: 1.1rem;
+        }
+        .close-button {
+          background: none;
+          border: none;
+          color: inherit;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+        }
+        .close-button:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(1.1);
+        }
+        .form-section {
+          background: rgba(13, 202, 240, 0.05);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13, 202, 240, 0.1);
+          margin-bottom: 1.5rem;
+        }
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .form-label {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #a9e5ff;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .required {
+          color: #ff6b6b;
+          font-weight: bold;
+        }
+        .input-wrapper {
+          position: relative;
+        }
+        .form-input {
+          width: 100%;
+          padding: 0.8rem 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          color: #f0f0f0;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+        }
+        .form-input::placeholder {
+          color: rgba(240, 240, 240, 0.6);
+        }
+        .form-input:focus {
+          outline: none;
+          border-color: #0dcaf0;
+          background: rgba(13, 202, 240, 0.1);
+          box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.1);
+          transform: translateY(-1px);
+        }
+        .form-input.focused {
+          border-color: #0dcaf0;
+          background: rgba(13, 202, 240, 0.1);
+        }
+        .form-input.error {
+          border-color: #ff6b6b;
+          background: rgba(255, 107, 107, 0.1);
+          animation: shake 0.3s ease-in-out;
+        }
+        .input-border {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+          transition: width 0.3s ease;
+        }
+        .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .submit-section {
+          display: flex;
+          justify-content: center;
+          margin-top: 1rem;
+        }
+        .submit-button {
+          position: relative;
+          padding: 1rem 2.5rem;
+          font-size: 1.1rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #030305;
+          border: none;
+          border-radius: 14px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          overflow: hidden;
+          min-width: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          box-shadow: 0 6px 20px rgba(13, 202, 240, 0.3);
+        }
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(13, 202, 240, 0.4);
+        }
+        .submit-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .button-icon {
+          font-size: 1.2rem;
+        }
+        .spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: #ffffff;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-3px); }
+          75% { transform: translateX(3px); }
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .white-placeholder::placeholder {
+          color: #e0eaff;
+          opacity: 1;
+        }
+        
+        /* Ensure form inputs and textareas can be selected and edited */
+        textarea, input, .form-input {
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          -ms-user-select: text !important;
+        }
+        
+        /* Ensure the form container allows text selection */
+        .vision-mission-form {
+          user-select: text !important;
+        }
+        
+        .form-container {
+          user-select: text !important;
+        }
+      `}</style>
+    </div>
   );
 }
 
-function Step5() {
+Step4.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step4.defaultProps = {
+  onStepSubmit: () => {}
+};
+
+function Step5({ onStepSubmit }) {
   const [description, setDescription] = useState("");
 
   const handleDescriptionChange = (value) => {
@@ -548,48 +904,115 @@ function Step5() {
     <>
     <label className="form-label-center"> {steps[4]}</label>
     <div>
-      <Standard value={description} onChange={handleDescriptionChange} />
+      <Standard value={description} onChange={handleDescriptionChange} onStepSubmit={onStepSubmit} />
     </div>
     </>
   );
 }
 
-function Step6() {
+Step5.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step5.defaultProps = {
+  onStepSubmit: () => {}
+};
+
+function Step6({ onStepSubmit }) {
   return (
     <>
     <label className="form-label-center"> {steps[5]}</label>
     <div className="d-flex">
-      <Department />
+      <Department onStepSubmit={onStepSubmit} />
     </div>
     </>
   );
 }
 
-function Step7() {
+Step6.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step6.defaultProps = {
+  onStepSubmit: () => {}
+};
+
+function Step7({ onStepSubmit }) {
+  const [academySubmitted, setAcademySubmitted] = useState(false);
+  const [classSubmitted, setClassSubmitted] = useState(false);
+  const [practicalSubmitted, setPracticalSubmitted] = useState(false);
+
+  // Check if we can proceed to next step (Academy and Class are required, Practical is optional)
+  useEffect(() => {
+    if (academySubmitted && classSubmitted && onStepSubmit) {
+      onStepSubmit(7);
+    }
+  }, [academySubmitted, classSubmitted, onStepSubmit]);
+
   return (
     <>
     <label className="form-label-center"> {steps[6]}</label>
-    <div className="d-flex">
-      <AcademyFacilities />
-      <ClassFacilities />
-      <PracticalFacilities />
+    <div className="d-flex flex-column gap-4">
+      <div className="facility-section">
+        <h4 className="section-title mb-3">امکانات اکادمیک</h4>
+        <AcademyFacilities onStepSubmit={() => setAcademySubmitted(true)} />
+        {academySubmitted && (
+          <div className="submission-status success">
+            <span>✓ امکانات اکادمیک ثبت شد</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="facility-section">
+        <h4 className="section-title mb-3">امکانات صنفی</h4>
+        <ClassFacilities onStepSubmit={() => setClassSubmitted(true)} />
+        {classSubmitted && (
+          <div className="submission-status success">
+            <span>✓ امکانات صنفی ثبت شد</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="facility-section">
+        <h4 className="section-title mb-3">امکانات عملی (اختیاری)</h4>
+        <PracticalFacilities onStepSubmit={() => setPracticalSubmitted(true)} />
+        {practicalSubmitted && (
+          <div className="submission-status success">
+            <span>✓ امکانات عملی ثبت شد</span>
+          </div>
+        )}
+      </div>
+      
+      {academySubmitted && classSubmitted && (
+        <div className="step-completion-notice">
+          <div className="alert alert-success">
+            <strong>✓ مرحله ۷ تکمیل شد!</strong> شما می‌توانید به مرحله بعدی بروید.
+          </div>
+        </div>
+      )}
     </div>
     </>
   );
 }
 
-function Step8() {
+Step7.propTypes = {
+  onStepSubmit: PropTypes.func,
+};
+
+Step7.defaultProps = {
+  onStepSubmit: () => {},
+};
+
+function Step8({ onStepSubmit }) {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
+  const [focusedField, setFocusedField] = useState(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -601,11 +1024,6 @@ function Step8() {
       } catch (err) {
         console.error('Error fetching user:', err);
         setUser(null);
-        setSnackbar({
-          open: true,
-          message: 'خطا در دریافت اطلاعات کاربر',
-          severity: 'error'
-        });
       } finally {
         setLoading(false);
       }
@@ -616,7 +1034,7 @@ function Step8() {
 
   useEffect(() => {
     const fetchStakeholderInvolvement = async () => {
-      if (!user || user.role !== 'institute') return;
+      if (!user || user.role !== 'institute' || dataLoaded) return;
 
       try {
         const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
@@ -630,36 +1048,49 @@ function Step8() {
         if (response.data.success && response.data.data) {
           setDescription(response.data.data.description || '');
           setHasExistingData(true);
+          setDataLoaded(true);
+          // Mark step as submitted if data exists
+          if (onStepSubmit) {
+            onStepSubmit(8);
+          }
+        } else {
+          setDataLoaded(true);
         }
       } catch (err) {
         console.error('Error fetching stakeholder involvement:', err);
         setError('خطا در بارگذاری اطلاعات');
-        setSnackbar({
-          open: true,
-          message: 'خطا در بارگذاری اطلاعات',
-          severity: 'error'
-        });
+        setDataLoaded(true);
       }
     };
 
     fetchStakeholderInvolvement();
-  }, [user]);
+  }, [user, onStepSubmit, dataLoaded]);
 
   const handleChange = (e) => {
     setDescription(e.target.value);
     if (error) {
       setError(null);
     }
+    if (success) {
+      setSuccess(null);
+    }
+  };
+
+  const handleFocus = (fieldName) => {
+    setFocusedField(fieldName);
+  };
+
+  const handleBlur = () => {
+    setFocusedField(null);
   };
 
   const validateForm = () => {
     if (!description.trim()) {
       setError('توضیحات الزامی است');
-      setSnackbar({
-        open: true,
-        message: 'لطفاً توضیحات را وارد کنید',
-        severity: 'error'
-      });
+      return false;
+    }
+    if (description.trim().length < 50) {
+      setError('توضیحات باید حداقل ۵۰ کاراکتر باشد');
       return false;
     }
     return true;
@@ -672,6 +1103,7 @@ function Step8() {
 
     setIsSubmitting(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const response = await axios.post('http://localhost:5000/api/stakeholder-involvement', 
@@ -685,33 +1117,25 @@ function Step8() {
         }
       );
 
-      setSnackbar({
-        open: true,
-        message: response.data.message,
-        severity: 'success'
-      });
+      setSuccess(hasExistingData ? 'اطلاعات با موفقیت بروزرسانی شد' : 'اطلاعات با موفقیت ثبت شد');
       setHasExistingData(true);
+      
+      // Mark step as submitted
+      if (onStepSubmit) {
+        onStepSubmit(8);
+      }
     } catch (err) {
       console.error('Error saving stakeholder involvement:', err);
       setError(err.response?.data?.message || 'خطا در ذخیره اطلاعات');
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || 'خطا در ذخیره اطلاعات',
-        severity: 'error'
-      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
-
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress />
+        <CircularProgress style={{ color: '#0dcaf0' }} />
       </div>
     );
   }
@@ -743,99 +1167,512 @@ function Step8() {
   }
 
   return (
-    <>
-      <label className="form-label-center">دخیل سازی ذینفعان در پروسه آموزشی</label>
-      <fieldset className="mb-3 border rounded p-4" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
-        <legend className="float-none w-auto px-3 mb-3" style={{ fontSize: '1rem', color: '#8db8ff' }}>
-          فورم دخیل سازی ذینفعان
+    <div className="stakeholder-form" dir="rtl">
+      <div className="form-container">
+        <div className="form-header">
+          <h3 className="form-title">
+            <span className="form-icon">🤝</span>
+            دخیل سازی ذینفعان در پروسه آموزشی
+          </h3>
+          <p className="form-description">
+            در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت ذینفعان را واضح سازد.
+          </p>
           {hasExistingData && (
-            <span className="ms-2 text-info">
-              (اطلاعات قبلی شما نمایش داده شده است)
-            </span>
-          )}
-        </legend>
-        <div>
-          <div style={{height: '300px'}}>
-            <label htmlFor="description" className="form-label small mb-2" style={{ color: '#8db8ff' }}>
-              در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت ذینفعان را واضح سازد.
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={handleChange}
-              placeholder="شیوع دخیل سازی ذینفعان را در اینجا درج نمایید.."
-              className="form-control h-100 white-placeholder"
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                color: "white",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "8px",
-                padding: "12px",
-                fontSize: "0.95rem",
-                transition: "all 0.3s ease"
-              }}
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-          {error && (
-            <div className="alert alert-danger mt-3" role="alert" style={{ borderRadius: "8px" }}>
-              <i className="fas fa-exclamation-circle me-2"></i>
-              {error}
+            <div className="entries-badge">
+              <span className="badge-icon">📋</span>
+              اطلاعات قبلی شما نمایش داده شده است
             </div>
           )}
-          <button 
-            type="button" 
-            className="btn btn-success w-100 mt-4"
-            disabled={isSubmitting}
-            onClick={handleSubmit}
-            style={{
-              borderRadius: "8px",
-              padding: "12px",
-              fontSize: "1rem",
-              transition: "all 0.3s ease",
-              background: isSubmitting ? "#2c3e50" : "#28a745",
-              border: "none",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-            }}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                در حال ذخیره...
-              </>
-            ) : hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
-          </button>
         </div>
-      </fieldset>
-
-      {/* Snackbar for feedback */}
-      <div 
-        className={`alert alert-${snackbar.severity === 'success' ? 'success' : 'danger'} position-fixed bottom-0 end-0 m-3`}
-        role="alert"
-        style={{
-          display: snackbar.open ? 'block' : 'none',
-          minWidth: '300px',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          zIndex: 1000
-        }}
-      >
-        <div className="d-flex align-items-center">
-          <i className={`fas fa-${snackbar.severity === 'success' ? 'check-circle' : 'exclamation-circle'} me-2`}></i>
-          {snackbar.message}
-          <button 
-            type="button" 
-            className="btn-close ms-auto" 
-            onClick={handleCloseSnackbar}
-            aria-label="Close"
-          ></button>
+        
+        {success && (
+          <div className="success-notification">
+            <div className="notification-content">
+              <span className="notification-icon">✅</span>
+              <span>{success}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        
+        {error && (
+          <div className="error-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setError(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        
+        <div className="form-section">
+          <div className="form-group">
+            <label className="form-label">
+              توضیحات دخیل سازی ذینفعان <span className="required">*</span>
+            </label>
+            <div className="input-wrapper">
+              <textarea
+                name="description"
+                value={description}
+                onChange={handleChange}
+                onFocus={() => handleFocus('description')}
+                onBlur={handleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="در این بخش توضیح دهید که چگونه ذینفعان (مانند والدین، کارفرمایان، جامعه محلی) در پروسه آموزشی دخیل می‌شوند. مثال‌ها:
+• جلسات منظم با والدین
+• مشارکت کارفرمایان در طراحی برنامه‌ها
+• همکاری با جامعه محلی
+• بازخورد از فارغ‌التحصیلان
+• مشارکت در تصمیم‌گیری‌های آموزشی"
+                className={`form-input ${error && description.trim() === '' ? 'error' : ''} ${focusedField === 'description' ? 'focused' : ''}`}
+                rows={10}
+                disabled={isSubmitting}
+                maxLength={2000}
+              />
+              <div className="input-border"></div>
+            </div>
+            <div className={`character-count ${description.length > 1800 ? 'warning' : ''} ${description.length >= 2000 ? 'error' : ''}`}>
+              {description.length} / 2000 کاراکتر
+              {description.length < 50 && description.length > 0 && (
+                <span className="min-chars-warning"> (حداقل ۵۰ کاراکتر نیاز است)</span>
+              )}
+            </div>
+          </div>
+          
+          <div className="form-tips">
+            <h5 className="tips-title">💡 نکات مهم:</h5>
+            <ul className="tips-list">
+              <li>شیوه‌های مختلف مشارکت ذینفعان را توضیح دهید</li>
+              <li>فرکانس و نوع تعاملات را مشخص کنید</li>
+              <li>نحوه استفاده از بازخوردها را بیان کنید</li>
+              <li>مثال‌های عملی ارائه دهید</li>
+            </ul>
+          </div>
+          
+          <div className="submit-section">
+            <button 
+              type="button" 
+              onClick={handleSubmit}
+              disabled={isSubmitting || description.trim().length < 50}
+              className={`submit-button ${isSubmitting ? 'loading' : ''} ${description.trim().length < 50 ? 'disabled' : ''}`}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="spinner"></span>
+                  در حال ذخیره...
+                </>
+              ) : (
+                <>
+                  <span className="button-icon">💾</span>
+                  {hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+                </>
+              )}
+            </button>
+            <div className="submit-hint">
+              برای ذخیره سریع، از کلیدهای <kbd>Ctrl + Enter</kbd> استفاده کنید
+            </div>
+          </div>
         </div>
       </div>
-      <br />
-    </>
+      
+      <style>{`
+        .stakeholder-form {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 2rem;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          margin-bottom: 2rem;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .form-container {
+          position: relative;
+          z-index: 1;
+        }
+        
+        .form-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        
+        .form-title {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        
+        .form-icon {
+          font-size: 2rem;
+        }
+        
+        .form-description {
+          color: #a9e5ff;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          max-width: 800px;
+          margin: 0 auto 1rem;
+        }
+        
+        .entries-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+          color: #030305;
+          padding: 0.5rem 1rem;
+          border-radius: 25px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+        }
+        
+        .badge-icon {
+          font-size: 1.1rem;
+        }
+        
+        .success-notification,
+        .error-notification {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          animation: slideInDown 0.3s ease-out;
+        }
+        
+        .error-notification {
+          background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+          border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #28a745;
+          font-size: 0.9rem;
+        }
+        
+        .error-notification .notification-content {
+          color: #dc3545;
+        }
+        
+        .notification-icon {
+          font-size: 1.1rem;
+        }
+        
+        .close-button {
+          background: none;
+          border: none;
+          color: inherit;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+        }
+        
+        .close-button:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(1.1);
+        }
+        
+        .form-section {
+          background: rgba(13, 202, 240, 0.05);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13, 202, 240, 0.1);
+          margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: #a9e5ff;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        .required {
+          color: #ff6b6b;
+          font-weight: bold;
+        }
+        
+        .input-wrapper {
+          position: relative;
+        }
+        
+        .form-input {
+          width: 100%;
+          padding: 0.8rem 1rem;
+          background: rgba(255, 255, 255, 0.05);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          color: #f0f0f0;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+          resize: vertical;
+          min-height: 200px;
+        }
+        
+        .form-input::placeholder {
+          color: rgba(240, 240, 240, 0.6);
+        }
+        
+        .form-input:focus {
+          outline: none;
+          border-color: #0dcaf0;
+          background: rgba(13, 202, 240, 0.1);
+          box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.1);
+          transform: translateY(-1px);
+        }
+        
+        .form-input.focused {
+          border-color: #0dcaf0;
+          background: rgba(13, 202, 240, 0.1);
+        }
+        
+        .form-input.error {
+          border-color: #ff6b6b;
+          background: rgba(255, 107, 107, 0.1);
+          animation: shake 0.3s ease-in-out;
+        }
+        
+        .form-input:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        
+        .input-border {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+          transition: width 0.3s ease;
+        }
+        
+        .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        
+        .character-count {
+          text-align: left;
+          font-size: 0.8rem;
+          color: #a9e5ff;
+          margin-top: 0.5rem;
+          opacity: 0.8;
+          transition: all 0.3s ease;
+        }
+        
+        .character-count.warning {
+          color: #ffc107;
+        }
+        
+        .character-count.error {
+          color: #ff6b6b;
+        }
+        
+        .min-chars-warning {
+          color: #ff6b6b;
+          font-weight: 600;
+        }
+        
+        .form-tips {
+          background: rgba(13, 202, 240, 0.05);
+          border: 1px solid rgba(13, 202, 240, 0.1);
+          border-radius: 12px;
+          padding: 1rem;
+          margin: 1.5rem 0;
+        }
+        
+        .tips-title {
+          color: #0dcaf0;
+          font-size: 1rem;
+          font-weight: 600;
+          margin-bottom: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .tips-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        
+        .tips-list li {
+          color: #a9e5ff;
+          font-size: 0.9rem;
+          margin-bottom: 0.5rem;
+          padding-right: 1.5rem;
+          position: relative;
+        }
+        
+        .tips-list li:before {
+          content: "•";
+          color: #0dcaf0;
+          font-weight: bold;
+          position: absolute;
+          right: 0;
+        }
+        
+        .tips-list li:last-child {
+          margin-bottom: 0;
+        }
+        
+        .submit-hint {
+          text-align: center;
+          font-size: 0.8rem;
+          color: #a9e5ff;
+          margin-top: 1rem;
+          opacity: 0.8;
+        }
+        
+        .submit-hint kbd {
+          background: rgba(13, 202, 240, 0.2);
+          border: 1px solid rgba(13, 202, 240, 0.3);
+          border-radius: 4px;
+          padding: 0.2rem 0.4rem;
+          font-size: 0.75rem;
+          color: #0dcaf0;
+          font-family: monospace;
+        }
+        
+        .submit-section {
+          display: flex;
+          justify-content: center;
+          margin-top: 2rem;
+        }
+        
+        .submit-button {
+          position: relative;
+          padding: 1rem 2.5rem;
+          font-size: 1.1rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #030305;
+          border: none;
+          border-radius: 14px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          overflow: hidden;
+          min-width: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          box-shadow: 0 6px 20px rgba(13, 202, 240, 0.3);
+        }
+        
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 25px rgba(13, 202, 240, 0.4);
+        }
+        
+        .submit-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+        }
+        
+        .button-icon {
+          font-size: 1.2rem;
+        }
+        
+        .spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50%;
+          border-top-color: #ffffff;
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-3px); }
+          75% { transform: translateX(3px); }
+        }
+        
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .stakeholder-form {
+            padding: 1.5rem;
+          }
+          
+          .form-title {
+            font-size: 1.5rem;
+          }
+          
+          .form-description {
+            font-size: 0.9rem;
+          }
+          
+          .submit-button {
+            padding: 0.9rem 2rem;
+            font-size: 1rem;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
+
+Step8.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step8.defaultProps = {
+  onStepSubmit: () => {}
+};
 
 function Step9() {
   const [description, setDescription] = useState("");
@@ -885,10 +1722,29 @@ export default function MultiStepForm10() {
   });
 
   const [formData, setFormData] = useState({});
+  const [stepSubmissionStatus, setStepSubmissionStatus] = useState(() => {
+    const savedStatus = localStorage.getItem("stepSubmissionStatus");
+    return savedStatus ? JSON.parse(savedStatus) : {
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      6: false,
+      7: false,
+      8: false,
+      9: false,
+      10: false
+    };
+  });
 
   useEffect(() => {
     localStorage.setItem("currentStep", currentStep);
   }, [currentStep]);
+
+  useEffect(() => {
+    localStorage.setItem("stepSubmissionStatus", JSON.stringify(stepSubmissionStatus));
+  }, [stepSubmissionStatus]);
 
   const StepComponent = stepComponents[currentStep];
 
@@ -900,6 +1756,22 @@ export default function MultiStepForm10() {
   };
 
   const handleNext = () => {
+    // Check if current step is submitted before allowing next
+    if (currentStep === 1 && !stepSubmissionStatus[1]) {
+      alert("لطفاً ابتدا فرم مرحله اول را تکمیل و ثبت کنید");
+      return;
+    }
+    
+    if (currentStep === 2 && !stepSubmissionStatus[2]) {
+      alert("لطفاً ابتدا فرم مرحله دوم را تکمیل و ثبت کنید");
+      return;
+    }
+    
+    if (currentStep === 3 && !stepSubmissionStatus[3]) {
+      alert("لطفاً ابتدا فرم مرحله سوم را تکمیل و ثبت کنید");
+      return;
+    }
+    
     if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
@@ -946,6 +1818,12 @@ export default function MultiStepForm10() {
     }
 
     alert(`مرحله ${currentStep} ثبت شد`);
+    
+    // Mark current step as submitted
+    setStepSubmissionStatus(prev => ({
+      ...prev,
+      [currentStep]: true
+    }));
 
     if (currentStep < steps.length) setCurrentStep(currentStep + 1);
     else alert("تمام مراحل تکمیل شد!");
@@ -971,31 +1849,81 @@ export default function MultiStepForm10() {
               const stepNum = idx + 1;
               const isActive = currentStep === stepNum;
               const isCompleted = currentStep > stepNum;
+              const isSubmitted = stepSubmissionStatus[stepNum];
+              const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
 
               return (
                 <li
                   key={stepNum}
                   className={`step-item ${isActive ? "active" : ""} ${
                     isCompleted ? "completed" : ""
-                  }`}
-                  onClick={() => setCurrentStep(stepNum)}
-                  tabIndex={0}
+                  } ${isSubmitted ? "submitted" : ""} ${!canNavigate ? "disabled" : ""}`}
+                  onClick={() => {
+                    if (canNavigate) {
+                      setCurrentStep(stepNum);
+                    } else {
+                      alert("لطفاً ابتدا مرحله قبلی را تکمیل کنید");
+                    }
+                  }}
+                  tabIndex={canNavigate ? 0 : -1}
                   role="button"
                   aria-current={isActive ? "step" : undefined}
                   aria-label={`مرحله ${stepNum} - ${title}`}
+                  aria-disabled={!canNavigate}
                 >
                   <span className="step-circle">{stepNum}</span>
                   <span className="step-label">{title}</span>
+                  {isSubmitted && <span className="step-check">✓</span>}
                 </li>
               );
             })}
           </ul>
         </div>
 
+        <div className="form">
+          {[1, 2, 3, 4, 5, 6, 7].includes(currentStep) ? (
+            <div className="form">
+              <StepComponent
+                onStepSubmit={(stepNumber) => {
+                  setStepSubmissionStatus(prev => ({
+                    ...prev,
+                    [stepNumber]: true
+                  }));
+                }}
+              />
+
+              <div className="buttons d-flex justify-content-between">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  disabled={currentStep === 1}
+                  aria-disabled={currentStep === 1}
+                  className="btn btn-primary"
+                >
+                  قبلی
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={currentStep === steps.length}
+                  aria-disabled={currentStep === steps.length}
+                  className="btn btn-primary"
+                >
+                  بعدی
+                </button>
+              </div>
+            </div>
+          ) : (
         <form className="form" onSubmit={handleSubmitStep}>
           <StepComponent
             value={formData[`step${currentStep}Input`] || ""}
             onChange={handleInputChange}
+                onStepSubmit={(stepNumber) => {
+                  setStepSubmissionStatus(prev => ({
+                    ...prev,
+                    [stepNumber]: true
+                  }));
+                }}
           />
 
           <div className="buttons d-flex justify-content-between">
@@ -1019,6 +1947,8 @@ export default function MultiStepForm10() {
             </button>
           </div>
         </form>
+          )}
+        </div>
       </div>
 
       <ProfileSidebar />
@@ -1090,7 +2020,7 @@ export default function MultiStepForm10() {
           bottom: 0;
           right: 0;
           left: auto;
-          background: linear-gradient(90deg, #3b82f6, #60a5fa);
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
           border-radius: 14px;
           box-shadow: none;
           transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1116,23 +2046,34 @@ export default function MultiStepForm10() {
           transition: color 0.3s ease;
           outline: none;
           user-select: none;
+          position: relative;
         }
 
-        .step-item:hover,
-        .step-item:focus {
+        .step-item:hover:not(.disabled),
+        .step-item:focus:not(.disabled) {
           color: #9aa9c7;
           text-shadow: none;
           outline: none;
         }
 
+        .step-item.disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+          color: #5a6b8f;
+        }
+
         .step-item.active {
           font-weight: 700;
-          color: #8db8ff;
-          text-shadow: 0 0 4px #92afff;
+          color: #0dcaf0;
+          text-shadow: 0 0 4px #0dcaf0;
         }
 
         .step-item.completed {
-          color: #5f7fc7;
+          color: #00b5d7;
+        }
+
+        .step-item.submitted {
+          color: #a9e5ff;
         }
 
         .step-circle {
@@ -1149,13 +2090,37 @@ export default function MultiStepForm10() {
           margin-bottom: 6px;
           box-shadow: inset 0 0 6px #2e3a66;
           user-select: none;
+          position: relative;
         }
 
         .step-item.active .step-circle {
-          background: #7c98ff;
-          color: #e0eaff;
-          box-shadow: 0 0 12px #7c98ff;
+          background: #0dcaf0;
+          color: #030305;
+          box-shadow: 0 0 12px #0dcaf0;
         }
+
+        .step-item.submitted .step-circle {
+          background: #00b5d7;
+          color: #030305;
+          box-shadow: 0 0 8px #00b5d7;
+        }
+
+        .step-check {
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          background: #a9e5ff;
+          color: #030305;
+          border-radius: 50%;
+          width: 16px;
+          height: 16px;
+          font-size: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+        }
+
         .form-label-center {
             text-align: center;
             font-size: 2rem;
@@ -1171,6 +2136,84 @@ export default function MultiStepForm10() {
         .white-placeholder::placeholder {
           color: #e0eaff;
           opacity: 1;
+        }
+
+        /* Step 7 specific styles */
+        .facility-section {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          margin-bottom: 1rem;
+        }
+
+        .section-title {
+          color: #0dcaf0;
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          text-align: center;
+        }
+
+        .submission-status {
+          margin-top: 1rem;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          text-align: center;
+          font-weight: 600;
+          animation: fadeInUp 0.3s ease-out;
+        }
+
+        .submission-status.success {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          color: #28a745;
+        }
+
+        .step-completion-notice {
+          margin-top: 2rem;
+          animation: slideInDown 0.5s ease-out;
+        }
+
+        .step-completion-notice .alert {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          color: #28a745;
+          border-radius: 12px;
+          text-align: center;
+          font-weight: 600;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 768px) {
+          .facility-section {
+            padding: 1rem;
+          }
+          
+          .section-title {
+            font-size: 1.1rem;
+          }
         }
       `}</style>
     </div>

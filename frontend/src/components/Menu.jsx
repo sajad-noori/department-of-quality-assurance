@@ -6,34 +6,34 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const menuItems = [
-  {
-    label: "معیار ها و رهنمود ها",
-    submenu: [
-      "رهنمود ارزیابی موؤسسات TVET",
-      "رهنمود ارزیابی برنامههای آموزشی",
-      "رهنمود ارزیابی استادان و مربیان",
-      "رهنمود گزارش خودارزیابی",
-      "رهنمود کارآموزی و آموزش عملی",
-      "رهنمود اعتباردهی موؤسسات",
-      "پلان استراتیژیک کیفیت",
-      "فورمها و چکلیستها",
-      "مفاهیم اساسی تضمین کیفیت",
-      "معیارهای ملی تضمین کیفیت",
-    ],
-  },
-  {
-    label: "گزارش ها و نشرات",
-    submenu: [
-      "گزارشهای سالانه کیفیت",
-      "گزارشهای ارزیابی موؤسسات",
-      "گزارشهای خودارزیابی (Self-Assessment)",
-      "نشرات علمی و تخنیکی",
-      "بولتنها و خبرنامها",
-      "راپورهای بازدید و نظارت",
-      "تحلیلها و یافتههای آماری",
-      "کتبچهها و بروشورهای آموزشی",
-    ],
-  },
+  // {
+  //   label: "معیار ها و رهنمود ها",
+  //   submenu: [
+  //     "رهنمود ارزیابی موؤسسات TVET",
+  //     "رهنمود ارزیابی برنامههای آموزشی",
+  //     "رهنمود ارزیابی استادان و مربیان",
+  //     "رهنمود گزارش خودارزیابی",
+  //     "رهنمود کارآموزی و آموزش عملی",
+  //     "رهنمود اعتباردهی موؤسسات",
+  //     "پلان استراتیژیک کیفیت",
+  //     "فورمها و چکلیستها",
+  //     "مفاهیم اساسی تضمین کیفیت",
+  //     "معیارهای ملی تضمین کیفیت",
+  //   ],
+  // },
+  // {
+  //   label: "گزارش ها و نشرات",
+  //   submenu: [
+  //     "گزارشهای سالانه کیفیت",
+  //     "گزارشهای ارزیابی موؤسسات",
+  //     "گزارشهای خودارزیابی (Self-Assessment)",
+  //     "نشرات علمی و تخنیکی",
+  //     "بولتنها و خبرنامها",
+  //     "راپورهای بازدید و نظارت",
+  //     "تحلیلها و یافتههای آماری",
+  //     "کتبچهها و بروشورهای آموزشی",
+  //   ],
+  // },
   {
     label: "آموزش و ارتقای ظرفیت",
     submenu: [
@@ -64,29 +64,71 @@ export default function MenuWithUtilityBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const translateInitialized = useRef(false);
 
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (window.google && window.google.translate) return;
+    // Only initialize once
+    if (translateInitialized.current) {
+      return;
+    }
 
-    window.googleTranslateElementInit = () => {
-      new window.google.translate.TranslateElement(
-        {
-          pageLanguage: "fa",
-          includedLanguages: "en,fa,ps",
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-        },
-        "google_translate_element"
-      );
+    console.log('Setting up Google Translate...');
+
+    // Clear the container element gently
+    const existingElement = document.getElementById('google_translate_element');
+    if (existingElement) {
+      existingElement.innerHTML = '';
+    }
+
+    // Define the initialization function
+    window.googleTranslateElementInit = function() {
+      console.log('Google Translate callback executed');
+      try {
+        if (window.google && window.google.translate) {
+          console.log('Creating TranslateElement with languages: ar,ar-SA,fa,ps');
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'fa',
+            includedLanguages: 'ar,ar-SA,fa,ps',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+          }, 'google_translate_element');
+          console.log('TranslateElement created successfully');
+          translateInitialized.current = true;
+          
+          // Debug: Check what languages are available after a short delay
+          setTimeout(() => {
+            const selectElement = document.querySelector('.goog-te-combo');
+            if (selectElement) {
+              console.log('Available languages in dropdown:', selectElement.innerHTML);
+            }
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error creating TranslateElement:', error);
+      }
     };
 
-    const script = document.createElement("script");
-    script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-    script.async = true;
-    document.body.appendChild(script);
+    // Check if Google Translate is already loaded
+    if (window.google && window.google.translate) {
+      console.log('Google Translate already available, calling init directly');
+      window.googleTranslateElementInit();
+      return;
+    }
+
+    // Only add script if it doesn't exist
+    const existingScript = document.querySelector('script[src*="translate.google.com"]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.head.appendChild(script);
+      console.log('Google Translate script added');
+    } else {
+      console.log('Google Translate script already exists');
+    }
   }, []);
 
   useEffect(() => {

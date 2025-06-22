@@ -10,17 +10,30 @@ import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
+import PropTypes from 'prop-types';
 
 const StyledButton = styled(Button)({
   textTransform: 'none',
+  fontWeight: 600,
+  borderRadius: 10,
+  fontSize: '1rem',
+  background: 'linear-gradient(135deg, #0dcaf0, #00b5d7)',
+  color: '#030305',
+  boxShadow: '0 6px 20px rgba(13, 202, 240, 0.2)',
+  transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
   '&:hover': {
-    transform: 'translateY(-1px)',
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+    background: 'linear-gradient(135deg, #00b5d7, #0dcaf0)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 10px 25px rgba(13, 202, 240, 0.3)',
   },
-  transition: 'all 0.2s ease-in-out',
+  '&:disabled': {
+    opacity: 0.7,
+    cursor: 'not-allowed',
+    transform: 'none',
+  },
 });
 
-const PracticalFacilities = () => {
+const PracticalFacilities = ({ onStepSubmit }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -28,7 +41,6 @@ const PracticalFacilities = () => {
     equipment_count: '',
     equipment_status: '',
   });
-
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,19 +48,10 @@ const PracticalFacilities = () => {
   const [user, setUser] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
-  };
+  const [focusedField, setFocusedField] = useState(null);
 
   const fetchFacilities = async () => {
     if (!user || user.role !== 'institute') return;
-
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/practical-facilities', {
@@ -58,14 +61,11 @@ const PracticalFacilities = () => {
           'Accept': 'application/json'
         }
       });
-      
       if (response.data.success) {
         setEntries(response.data.data);
       }
     } catch (err) {
-      console.error('Error fetching facilities:', err);
-      setError('Error fetching facility data');
-      showSnackbar('Error fetching facility data', 'error');
+      setError('خطا در دریافت اطلاعات تجهیزات عملی');
     } finally {
       setLoading(false);
     }
@@ -79,14 +79,11 @@ const PracticalFacilities = () => {
         });
         setUser(res.data.user);
       } catch (err) {
-        console.error('Error fetching user:', err);
         setUser(null);
-        showSnackbar('Error fetching user data', 'error');
       } finally {
         setLoading(false);
       }
     };
-
     fetchUser();
   }, []);
 
@@ -100,27 +97,27 @@ const PracticalFacilities = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setError(null);
+    setSuccess(null);
   };
+
+  const handleFocus = (field) => setFocusedField(field);
+  const handleBlur = () => setFocusedField(null);
 
   const validateForm = () => {
     if (!formData.name.trim()) {
       setError('لطفاً اسم رشته را وارد کنید');
-      showSnackbar('لطفاً اسم رشته را وارد کنید', 'error');
       return false;
     }
     if (!formData.equipment_name.trim()) {
       setError('لطفاً نام وسیله کار عملی را وارد کنید');
-      showSnackbar('لطفاً نام وسیله کار عملی را وارد کنید', 'error');
       return false;
     }
     if (!formData.equipment_count) {
       setError('لطفاً تعداد وسیله را وارد کنید');
-      showSnackbar('لطفاً تعداد وسیله را وارد کنید', 'error');
       return false;
     }
     if (!formData.equipment_status) {
       setError('لطفاً وضعیت وسیله را وارد کنید');
-      showSnackbar('لطفاً وضعیت وسیله را وارد کنید', 'error');
       return false;
     }
     return true;
@@ -128,17 +125,14 @@ const PracticalFacilities = () => {
 
   const handleAddEntry = async () => {
     if (!user || user.role !== 'institute') {
-      showSnackbar('شما دسترسی لازم برای این عملیات را ندارید', 'error');
       return;
     }
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
     setError(null);
-
+    setSuccess(null);
     try {
       const response = await axios.post('http://localhost:5000/api/practical-facilities', formData, {
         withCredentials: true,
@@ -147,7 +141,6 @@ const PracticalFacilities = () => {
           'Accept': 'application/json'
         }
       });
-
       if (response.data.success) {
         setFormData({
           name: '',
@@ -155,14 +148,12 @@ const PracticalFacilities = () => {
           equipment_count: '',
           equipment_status: '',
         });
-        showSnackbar('امکانات با موفقیت اضافه شد');
+        setSuccess('امکانات با موفقیت اضافه شد');
         setShouldRefresh(prev => !prev);
+        if (onStepSubmit) onStepSubmit(7);
       }
     } catch (err) {
-      console.error('Error adding facility:', err);
-      const errorMessage = err.response?.data?.message || 'Error adding facility data';
-      setError(errorMessage);
-      showSnackbar(errorMessage, 'error');
+      setError(err.response?.data?.message || 'خطا در افزودن تجهیزات عملی');
     } finally {
       setIsSubmitting(false);
     }
@@ -170,14 +161,11 @@ const PracticalFacilities = () => {
 
   const handleDelete = async (id) => {
     if (!user || user.role !== 'institute') {
-      showSnackbar('شما دسترسی لازم برای این عملیات را ندارید', 'error');
       return;
     }
-
-    if (!window.confirm('آیا از حذف این امکانات اطمینان دارید؟')) {
+    if (!window.confirm('آیا از حذف این تجهیزات اطمینان دارید؟')) {
       return;
     }
-
     try {
       const response = await axios.delete(`http://localhost:5000/api/practical-facilities/${id}`, {
         withCredentials: true,
@@ -186,21 +174,19 @@ const PracticalFacilities = () => {
           'Accept': 'application/json'
         }
       });
-
       if (response.data.success) {
-        showSnackbar('امکانات با موفقیت حذف شد');
+        setSuccess('امکانات با موفقیت حذف شد');
         setShouldRefresh(prev => !prev);
       }
     } catch (err) {
-      console.error('Error deleting facility:', err);
-      showSnackbar('Error deleting facility data', 'error');
+      setError('خطا در حذف تجهیزات عملی');
     }
   };
 
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress />
+        <CircularProgress style={{ color: '#0dcaf0' }} />
       </div>
     );
   }
@@ -209,9 +195,7 @@ const PracticalFacilities = () => {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
@@ -220,160 +204,371 @@ const PracticalFacilities = () => {
     return (
       <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
+        <p className="mb-3">برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.</p>
         <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
+        <p className="mb-0">لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mt-4 p-4 rounded shadow-sm" style={{ maxWidth: '700px' }}>
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      <label htmlFor="description" className="form-label small d-block mb-2">
-        میزان تجهیزات موجود در ورکشاپ، لارم، لابراتوار و کتابخانه را بصورت رشته وار طی جدول ذیل درج نموده و وضعیت موجود آنرا بیان دارید.
-      </label>
-
-      <fieldset className="mb-3 mt-4 border rounded p-2">
-        <legend className="float-none w-auto px-2 mb-2 small">تسهیلات و تجهیزات کار عملی</legend>
-        <div className="row g-3">
-          <div className="col-md-6">
-            <input
-              type="text"
-              name="name"
-              placeholder="اسم رشته"
-              value={formData.name}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="col-md-6">
-            <input
-              type="text"
-              name="equipment_name"
-              placeholder="وسیله کار عملی"
-              value={formData.equipment_name}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="col-md-6">
-            <input
-              type="number"
-              name="equipment_count"
-              placeholder="تعداد وسیله"
-              value={formData.equipment_count}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{background: "transparent", color: "white"}}
-              min="0"
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="col-md-6">
-            <select
-              name="equipment_status"
-              value={formData.equipment_status}
-              onChange={handleChange}
-              className="form-control white-placeholder"
-              style={{ background: "transparent", color: "white" }}
-              disabled={isSubmitting}
-            >
-              <option value="" style={{color: "black"}}>وضعیت وسیله را انتخاب کنید</option>
-              <option value="excellent" style={{color: "black"}}>عالی</option>
-              <option value="good" style={{color: "black"}}>خوب</option>
-              <option value="average" style={{color: "black"}}>متوسط</option>
-              <option value="poor" style={{color: "black"}}>ضعیف</option>
-            </select>
-          </div>
-
-          <div className="col-12 text-center mt-3">
-            <StyledButton
-              variant="contained"
-              color="primary"
-              onClick={handleAddEntry}
-              disabled={isSubmitting}
-              startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-            >
-              {isSubmitting ? 'در حال افزودن...' : 'افزودن'}
-            </StyledButton>
-          </div>
+    <div className="academy-facilities-form glass-bg" dir="rtl">
+      <div className="form-container">
+        <div className="form-header">
+          <h3 className="form-title">
+            <span className="form-icon">🛠️</span>
+            تجهیزات عملی مرکز آموزشی
+          </h3>
+          <p className="form-description">
+            میزان تجهیزات موجود در ورکشاپ، لابراتوار و کتابخانه را بصورت رشته وار طی جدول ذیل درج نموده و وضعیت موجود آنرا بیان دارید.
+          </p>
         </div>
-      </fieldset>
-
-      {entries.length > 0 && (
-        <div className="mt-5">
-          <h3 className="mb-3 fw-semibold">امکانات مرکز آموزشی:</h3>
-          <div className="table-responsive">
-            <table className="table table-bordered text-center" style={{ backgroundColor: 'white' }}>
-              <thead className="table-dark">
-                <tr>
-                  <th className="text-white">اسم رشته</th>
-                  <th className="text-white">وسیله کار عملی</th>
-                  <th className="text-white">تعداد وسیله</th>
-                  <th className="text-white">وضعیت وسیله</th>
-                  <th className="text-white">عملیات</th>
-                </tr>
-              </thead>
-              <tbody style={{ backgroundColor: 'white' }}>
-                {entries.map((entry, index) => (
-                  <tr 
-                    key={entry.id} 
-                    style={{ 
-                      backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8f9fa',
-                      color: '#000000'
-                    }}
-                  >
-                    <td>{entry.name}</td>
-                    <td>{entry.equipment_name}</td>
-                    <td>{entry.equipment_count}</td>
-                    <td>
-                      {entry.equipment_status === 'excellent' && 'عالی'}
-                      {entry.equipment_status === 'good' && 'خوب'}
-                      {entry.equipment_status === 'average' && 'متوسط'}
-                      {entry.equipment_status === 'poor' && 'ضعیف'}
-                    </td>
-                    <td>
-                      <StyledButton
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(entry.id)}
-                        startIcon={<DeleteIcon />}
-                      >
-                        حذف
-                      </StyledButton>
-                    </td>
+        {success && (
+          <div className="success-notification">
+            <div className="notification-content">
+              <span className="notification-icon">✅</span>
+              <span>{success}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        {error && (
+          <div className="error-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+            <button type="button" className="close-button" onClick={() => setError(null)}>
+              ✕
+            </button>
+          </div>
+        )}
+        <fieldset className="mb-3 border rounded p-2 form-section">
+          <legend className="float-none w-auto px-2 mb-2 small">تجهیزات عملی مرکز آموزشی</legend>
+          <div className="row g-3">
+            <div className="col-md-6">
+              <input
+                type="text"
+                name="name"
+                placeholder="اسم رشته"
+                value={formData.name}
+                onChange={handleChange}
+                onFocus={() => handleFocus('name')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'name' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-6">
+              <input
+                type="text"
+                name="equipment_name"
+                placeholder="وسیله کار عملی"
+                value={formData.equipment_name}
+                onChange={handleChange}
+                onFocus={() => handleFocus('equipment_name')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'equipment_name' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-6">
+              <input
+                type="number"
+                name="equipment_count"
+                placeholder="تعداد وسیله"
+                value={formData.equipment_count}
+                onChange={handleChange}
+                onFocus={() => handleFocus('equipment_count')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'equipment_count' ? 'focused' : ''}`}
+                style={{background: "transparent", color: "white"}}
+                min="0"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="col-md-6">
+              <select
+                name="equipment_status"
+                value={formData.equipment_status}
+                onChange={handleChange}
+                onFocus={() => handleFocus('equipment_status')}
+                onBlur={handleBlur}
+                className={`form-control white-placeholder ${focusedField === 'equipment_status' ? 'focused' : ''}`}
+                style={{ background: "transparent", color: "white" }}
+                disabled={isSubmitting}
+              >
+                <option value="" style={{color: "black"}}>وضعیت وسیله را انتخاب کنید</option>
+                <option value="excellent" style={{color: "black"}}>عالی</option>
+                <option value="good" style={{color: "black"}}>خوب</option>
+                <option value="average" style={{color: "black"}}>متوسط</option>
+                <option value="poor" style={{color: "black"}}>ضعیف</option>
+              </select>
+            </div>
+            <div className="col-12 text-center mt-3">
+              <StyledButton
+                variant="contained"
+                color="primary"
+                onClick={handleAddEntry}
+                disabled={isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+              >
+                {isSubmitting ? 'در حال افزودن...' : 'افزودن'}
+              </StyledButton>
+            </div>
+          </div>
+        </fieldset>
+        {entries.length > 0 && (
+          <div className="uploaded-files-section">
+            <div className="section-header">
+              <h4 className="section-title">
+                <span className="section-icon">🛠️</span>
+                لیست تجهیزات عملی مرکز آموزشی
+              </h4>
+              <span className="file-count">({entries.length} مورد)</span>
+            </div>
+            <div className="table-container">
+              <table className="files-table">
+                <thead>
+                  <tr>
+                    <th>اسم رشته</th>
+                    <th>وسیله کار عملی</th>
+                    <th>تعداد وسیله</th>
+                    <th>وضعیت وسیله</th>
+                    <th>عملیات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {entries.map((entry, index) => (
+                    <tr 
+                      key={entry.id} 
+                      style={{ 
+                        backgroundColor: index % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(13,202,240,0.05)',
+                        color: '#f0f0f0',
+                        transition: 'background 0.3s',
+                      }}
+                    >
+                      <td>{entry.name}</td>
+                      <td>{entry.equipment_name}</td>
+                      <td>{entry.equipment_count}</td>
+                      <td>
+                        {entry.equipment_status === 'excellent' && 'عالی'}
+                        {entry.equipment_status === 'good' && 'خوب'}
+                        {entry.equipment_status === 'average' && 'متوسط'}
+                        {entry.equipment_status === 'poor' && 'ضعیف'}
+                      </td>
+                      <td>
+                        <StyledButton
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          onClick={() => handleDelete(entry.id)}
+                          startIcon={<DeleteIcon />}
+                        >
+                          حذف
+                        </StyledButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      <style>{`
+        .academy-facilities-form.glass-bg {
+          background: rgba(255,255,255,0.05);
+          border-radius: 20px;
+          padding: 2rem;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          margin-bottom: 2rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .form-container {
+          position: relative;
+          z-index: 1;
+        }
+        .form-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+        .form-title {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+        .form-icon {
+          font-size: 2rem;
+        }
+        .form-description {
+          color: #a9e5ff;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .success-notification,
+        .error-notification {
+          background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+          border: 1px solid rgba(40, 167, 69, 0.2);
+          border-radius: 12px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          animation: slideInDown 0.3s ease-out;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+          border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #28a745;
+          font-size: 0.9rem;
+        }
+        .error-notification .notification-content {
+          color: #dc3545;
+        }
+        .notification-icon {
+          font-size: 1.1rem;
+        }
+        .close-button {
+          background: none;
+          border: none;
+          color: inherit;
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+        }
+        .close-button:hover {
+          background: rgba(255,255,255,0.1);
+          transform: scale(1.1);
+        }
+        .form-section {
+          background: rgba(13,202,240,0.05);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13,202,240,0.1);
+          margin-bottom: 1.5rem;
+        }
+        .focused {
+          border-color: #0dcaf0 !important;
+          box-shadow: 0 0 0 2px #0dcaf0333 !important;
+          background: rgba(13,202,240,0.08) !important;
+        }
+        .uploaded-files-section {
+          background: rgba(13,202,240,0.03);
+          border-radius: 16px;
+          padding: 1.5rem;
+          border: 1px solid rgba(13,202,240,0.1);
+          margin-top: 2rem;
+        }
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.5rem;
+        }
+        .section-title {
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #0dcaf0;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .section-icon {
+          font-size: 1.4rem;
+        }
+        .file-count {
+          font-size: 0.9rem;
+          color: #a9e5ff;
+          background: rgba(13,202,240,0.1);
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+        }
+        .table-container {
+          overflow-x: auto;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.02);
+        }
+        .files-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: transparent;
+        }
+        .files-table th {
+          background: rgba(13,202,240,0.1);
+          color: #0dcaf0;
+          font-weight: 600;
+          padding: 1rem;
+          text-align: center;
+          border-bottom: 1px solid rgba(13,202,240,0.2);
+        }
+        .files-table td {
+          padding: 1rem;
+          text-align: center;
+          color: #f0f0f0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .files-table tr:hover {
+          background: rgba(13,202,240,0.05);
+        }
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @media (max-width: 768px) {
+          .academy-facilities-form.glass-bg {
+            padding: 1rem;
+          }
+          .form-title {
+            font-size: 1.5rem;
+          }
+          .files-table th,
+          .files-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+          }
+        }
+      `}</style>
     </div>
   );
+};
+
+PracticalFacilities.propTypes = {
+  onStepSubmit: PropTypes.func,
+};
+
+PracticalFacilities.defaultProps = {
+  onStepSubmit: () => {},
 };
 
 export default PracticalFacilities;

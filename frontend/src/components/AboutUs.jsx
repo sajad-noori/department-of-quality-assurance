@@ -157,10 +157,10 @@ export default function AboutUs() {
 
   // Floating SVG shapes
   const floatingSVGs = [
-    <svg key="float1" className={styles.floatingSvg} style={{ top: '10%', left: '8%' }} width="60" height="60"><circle cx="30" cy="30" r="28" fill="#6ec1e4" opacity="0.18" /></svg>,
-    <svg key="float2" className={styles.floatingSvg} style={{ top: '70%', left: '80%' }} width="80" height="80"><rect x="10" y="10" width="60" height="60" rx="18" fill="#f7b267" opacity="0.13" /></svg>,
-    <svg key="float3" className={styles.floatingSvg} style={{ top: '50%', left: '20%' }} width="50" height="50"><polygon points="25,5 45,45 5,45" fill="#b388ff" opacity="0.15" /></svg>,
-    <svg key="float4" className={styles.floatingSvg} style={{ top: '20%', left: '70%' }} width="70" height="70"><ellipse cx="35" cy="35" rx="30" ry="18" fill="#ff8a65" opacity="0.12" /></svg>,
+    <svg key="float1" className={styles.floatingSvg} style={{ top: '10%', left: '8%' }} width="60" height="60"><circle cx="30" cy="30" r="28" fill="#0dcaf0" opacity="0.18" /></svg>,
+    <svg key="float2" className={styles.floatingSvg} style={{ top: '70%', left: '80%' }} width="80" height="80"><rect x="10" y="10" width="60" height="60" rx="18" fill="#00b5d7" opacity="0.13" /></svg>,
+    <svg key="float3" className={styles.floatingSvg} style={{ top: '50%', left: '20%' }} width="50" height="50"><polygon points="25,5 45,45 5,45" fill="#a9e5ff" opacity="0.15" /></svg>,
+    <svg key="float4" className={styles.floatingSvg} style={{ top: '20%', left: '70%' }} width="70" height="70"><ellipse cx="35" cy="35" rx="30" ry="18" fill="#00c7ff" opacity="0.12" /></svg>,
   ];
 
   // SVG illustrations for each section
@@ -169,34 +169,34 @@ export default function AboutUs() {
     <svg key="svg-shield" className={styles.sectionSvg} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="shieldBg" cx="50%" cy="50%" r="60%">
-          <stop offset="0%" stopColor="#6ec1e4" stopOpacity="0.7"/>
+          <stop offset="0%" stopColor="#0dcaf0" stopOpacity="0.7"/>
           <stop offset="100%" stopColor="#23283a" stopOpacity="0.2"/>
         </radialGradient>
       </defs>
-      <path d="M40 10 L70 20 Q70 50 40 70 Q10 50 10 20 Z" fill="url(#shieldBg)" stroke="#3b82f6" strokeWidth="2.5"/>
-      <circle cx="40" cy="35" r="10" fill="#b388ff" stroke="#fff" strokeWidth="2"/>
-      <path d="M40 45 L40 62" stroke="#ff8a65" strokeWidth="3" strokeLinecap="round"/>
-      <circle cx="40" cy="65" r="3" fill="#ff8a65"/>
+      <path d="M40 10 L70 20 Q70 50 40 70 Q10 50 10 20 Z" fill="url(#shieldBg)" stroke="#0dcaf0" strokeWidth="2.5"/>
+      <circle cx="40" cy="35" r="10" fill="#00b5d7" stroke="#fff" strokeWidth="2"/>
+      <path d="M40 45 L40 62" stroke="#a9e5ff" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="40" cy="65" r="3" fill="#a9e5ff"/>
     </svg>,
     // Mission (Target/Arrow)
     <svg key="svg-target" className={styles.sectionSvg} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="40" cy="40" r="30" fill="#23283a" stroke="#6ec1e4" strokeWidth="3"/>
-      <circle cx="40" cy="40" r="18" fill="#181c24" stroke="#b388ff" strokeWidth="2"/>
-      <circle cx="40" cy="40" r="7" fill="#ff8a65"/>
-      <path d="M60 20 L75 5" stroke="#ff8a65" strokeWidth="3" strokeLinecap="round"/>
-      <polygon points="75,5 70,18 62,10" fill="#ff8a65"/>
+      <circle cx="40" cy="40" r="30" fill="#23283a" stroke="#0dcaf0" strokeWidth="3"/>
+      <circle cx="40" cy="40" r="18" fill="#181c24" stroke="#00b5d7" strokeWidth="2"/>
+      <circle cx="40" cy="40" r="7" fill="#a9e5ff"/>
+      <path d="M60 20 L75 5" stroke="#a9e5ff" strokeWidth="3" strokeLinecap="round"/>
+      <polygon points="75,5 70,18 62,10" fill="#a9e5ff"/>
     </svg>,
     // Goals (Star/Trophy)
     <svg key="svg-star" className={styles.sectionSvg} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="40,15 47,35 68,35 51,48 58,68 40,56 22,68 29,48 12,35 33,35" fill="#b388ff" stroke="#fff" strokeWidth="2"/>
+      <polygon points="40,15 47,35 68,35 51,48 58,68 40,56 22,68 29,48 12,35 33,35" fill="#00b5d7" stroke="#fff" strokeWidth="2"/>
       <ellipse cx="40" cy="73" rx="18" ry="4" fill="#23283a" opacity="0.3"/>
     </svg>,
     // Values (Hands/Heart/Globe)
     <svg key="svg-values" className={styles.sectionSvg} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="40" cy="40" rx="30" ry="18" fill="#6ec1e4" opacity="0.18"/>
-      <path d="M25 50 Q40 70 55 50" stroke="#b388ff" strokeWidth="3" fill="none"/>
-      <path d="M32 45 Q40 60 48 45" stroke="#ff8a65" strokeWidth="2.5" fill="none"/>
-      <circle cx="40" cy="38" r="7" fill="#ff8a65" stroke="#fff" strokeWidth="2"/>
+      <ellipse cx="40" cy="40" rx="30" ry="18" fill="#0dcaf0" opacity="0.18"/>
+      <path d="M25 50 Q40 70 55 50" stroke="#00b5d7" strokeWidth="3" fill="none"/>
+      <path d="M32 45 Q40 60 48 45" stroke="#a9e5ff" strokeWidth="2.5" fill="none"/>
+      <circle cx="40" cy="38" r="7" fill="#a9e5ff" stroke="#fff" strokeWidth="2"/>
       <path d="M40 31 Q38 35 40 38 Q42 35 40 31 Z" fill="#fff"/>
     </svg>
   ];

@@ -3,21 +3,312 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
+const containerStyle = {
+  backgroundColor: '#1a1a1a',
+  borderRadius: '8px',
+  padding: '1.5rem',
+  border: '1px solid #333333',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+  marginTop: '2rem',
+};
+
+const titleStyle = {
+  fontSize: '1.5rem',
+  fontWeight: '600',
+  color: '#ffffff',
+  marginBottom: '1.5rem',
+  borderBottom: '2px solid #00d4ff',
+  paddingBottom: '0.5rem',
+};
+
+const commentsListStyle = {
+  listStyle: 'none',
+  padding: 0,
+  margin: 0,
+  marginBottom: '2rem',
+};
+
+const commentItemStyle = {
+  backgroundColor: '#2a2a2a',
+  border: '1px solid #333333',
+  borderRadius: '8px',
+  padding: '1rem',
+  marginBottom: '1rem',
+  transition: 'all 0.2s ease',
+};
+
+const commentItemHoverStyle = {
+  borderColor: '#00d4ff',
+  transform: 'translateY(-1px)',
+  boxShadow: '0 4px 12px rgba(0, 212, 255, 0.1)',
+};
+
+const commentHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '0.75rem',
+  flexWrap: 'wrap',
+  gap: '0.5rem',
+};
+
+const authorStyle = {
+  fontSize: '0.95rem',
+  fontWeight: '600',
+  color: '#00d4ff',
+  backgroundColor: 'rgba(0, 212, 255, 0.1)',
+  padding: '0.25rem 0.75rem',
+  borderRadius: '4px',
+};
+
+const dateStyle = {
+  fontSize: '0.75rem',
+  color: '#666666',
+  backgroundColor: '#1a1a1a',
+  padding: '0.25rem 0.5rem',
+  borderRadius: '4px',
+};
+
+const commentTextStyle = {
+  fontSize: '0.95rem',
+  color: '#ffffff',
+  lineHeight: '1.6',
+  margin: 0,
+};
+
+const formContainerStyle = {
+  borderTop: '1px solid #333333',
+  paddingTop: '1.5rem',
+};
+
+const textareaStyle = {
+  width: '100%',
+  padding: '0.75rem',
+  fontSize: '0.875rem',
+  border: '1px solid #333333',
+  borderRadius: '6px',
+  backgroundColor: '#1a1a1a',
+  color: '#ffffff',
+  outline: 'none',
+  transition: 'border-color 0.2s ease',
+  resize: 'vertical',
+  minHeight: '100px',
+  fontFamily: 'inherit',
+};
+
+const textareaFocusStyle = {
+  borderColor: '#00d4ff',
+  boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.1)',
+};
+
+const buttonStyle = {
+  backgroundColor: '#00d4ff',
+  border: 'none',
+  color: '#000000',
+  padding: '0.75rem 1.5rem',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontWeight: '500',
+  fontSize: '0.875rem',
+  transition: 'all 0.2s ease',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  marginTop: '1rem',
+};
+
+const buttonHoverStyle = {
+  backgroundColor: '#00b8e6',
+  transform: 'translateY(-1px)',
+  boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
+};
+
+const buttonDisabledStyle = {
+  ...buttonStyle,
+  backgroundColor: '#666666',
+  color: '#999999',
+  cursor: 'not-allowed',
+  transform: 'none',
+};
+
+const loadingStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '2rem',
+  color: '#999999',
+};
+
+const spinnerStyle = {
+  width: '20px',
+  height: '20px',
+  border: '2px solid #333333',
+  borderTop: '2px solid #00d4ff',
+  borderRadius: '50%',
+  animation: 'spin 1s linear infinite',
+  marginRight: '0.5rem',
+};
+
+const errorStyle = {
+  color: '#dc3545',
+  fontSize: '0.875rem',
+  padding: '0.75rem',
+  backgroundColor: 'rgba(220, 53, 69, 0.1)',
+  border: '1px solid rgba(220, 53, 69, 0.2)',
+  borderRadius: '6px',
+  marginBottom: '1rem',
+};
+
+const emptyStateStyle = {
+  textAlign: 'center',
+  padding: '2rem',
+  color: '#999999',
+};
+
+const emptyStateIconStyle = {
+  fontSize: '2rem',
+  marginBottom: '0.5rem',
+  opacity: 0.5,
+};
+
+const loginPromptStyle = {
+  backgroundColor: 'rgba(0, 212, 255, 0.1)',
+  border: '1px solid rgba(0, 212, 255, 0.2)',
+  borderRadius: '6px',
+  padding: '1rem',
+  marginBottom: '1rem',
+  textAlign: 'center',
+};
+
+const loginPromptTextStyle = {
+  color: '#00d4ff',
+  fontSize: '0.875rem',
+  margin: 0,
+  marginBottom: '0.5rem',
+};
+
+const loginButtonStyle = {
+  backgroundColor: '#00d4ff',
+  border: 'none',
+  color: '#000000',
+  padding: '0.5rem 1rem',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontSize: '0.75rem',
+  fontWeight: '500',
+  transition: 'all 0.2s ease',
+};
+
+const loginButtonHoverStyle = {
+  backgroundColor: '#00b8e6',
+  transform: 'translateY(-1px)',
+};
+
+const paginationContainerStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginTop: '1.5rem',
+  padding: '1rem',
+  backgroundColor: '#2a2a2a',
+  borderRadius: '6px',
+  border: '1px solid #333333',
+};
+
+const paginationInfoStyle = {
+  fontSize: '0.875rem',
+  color: '#999999',
+};
+
+const paginationControlsStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+};
+
+const pageButtonStyle = {
+  backgroundColor: '#1a1a1a',
+  border: '1px solid #333333',
+  color: '#ffffff',
+  padding: '0.5rem 0.75rem',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+  transition: 'all 0.2s ease',
+  minWidth: '40px',
+  textAlign: 'center',
+};
+
+const pageButtonHoverStyle = {
+  backgroundColor: '#00d4ff',
+  borderColor: '#00d4ff',
+  color: '#000000',
+};
+
+const pageButtonActiveStyle = {
+  backgroundColor: '#00d4ff',
+  borderColor: '#00d4ff',
+  color: '#000000',
+  fontWeight: '600',
+};
+
+const pageButtonDisabledStyle = {
+  ...pageButtonStyle,
+  backgroundColor: '#333333',
+  color: '#666666',
+  cursor: 'not-allowed',
+};
+
+const itemsPerPageStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  fontSize: '0.875rem',
+  color: '#999999',
+};
+
+const selectStyle = {
+  backgroundColor: '#1a1a1a',
+  border: '1px solid #333333',
+  color: '#ffffff',
+  padding: '0.25rem 0.5rem',
+  borderRadius: '4px',
+  fontSize: '0.875rem',
+  outline: 'none',
+};
+
 const Comments = ({ newsId }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [textareaFocused, setTextareaFocused] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [totalComments, setTotalComments] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Calculate pagination
+  const totalPages = Math.ceil(totalComments / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentComments = comments.slice(startIndex, endIndex);
 
   useEffect(() => {
     setLoading(true);
     axios
       .get(`/api/news/${newsId}/comments`)
-      .then((res) => setComments(res.data))
+      .then((res) => {
+        setComments(res.data);
+        setTotalComments(res.data.length);
+        setCurrentPage(1); // Reset to first page when comments change
+      })
       .catch(() => setError("خطا در بارگذاری نظرات"))
       .finally(() => setLoading(false));
   }, [newsId]);
@@ -41,85 +332,281 @@ const Comments = ({ newsId }) => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     axios
       .post(
         `/api/news/${newsId}/comments`,
         { comment: newComment },
-        { withCredentials: true } // ✅ send cookie with JWT
+        { withCredentials: true }
       )
       .then((res) => {
-        setComments((prev) => [...prev, res.data]);
+        setComments((prev) => [res.data, ...prev]); // Add new comment at the beginning
+        setTotalComments((prev) => prev + 1);
         setNewComment("");
+        setCurrentPage(1); // Go to first page to see the new comment
       })
       .catch(() => alert("خطا در ارسال نظر"))
-      .finally(() => setLoading(false));
+      .finally(() => setSubmitting(false));
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleButtonHover = (e) => {
+    if (!submitting) {
+      Object.assign(e.currentTarget.style, buttonHoverStyle);
+    }
+  };
+
+  const handleButtonLeave = (e) => {
+    if (!submitting) {
+      const style = submitting ? buttonDisabledStyle : buttonStyle;
+      Object.assign(e.currentTarget.style, style);
+    }
+  };
+
+  const handleCommentHover = (e) => {
+    Object.assign(e.currentTarget.style, commentItemHoverStyle);
+  };
+
+  const handleCommentLeave = (e) => {
+    Object.assign(e.currentTarget.style, commentItemStyle);
+  };
+
+  const handlePageButtonHover = (e) => {
+    const isDisabled = e.currentTarget.disabled;
+    const isActive = e.currentTarget.classList.contains('active');
+    
+    if (!isDisabled && !isActive) {
+      Object.assign(e.currentTarget.style, pageButtonHoverStyle);
+    }
+  };
+
+  const handlePageButtonLeave = (e) => {
+    const isDisabled = e.currentTarget.disabled;
+    const isActive = e.currentTarget.classList.contains('active');
+    
+    if (isDisabled) {
+      Object.assign(e.currentTarget.style, pageButtonDisabledStyle);
+    } else if (isActive) {
+      Object.assign(e.currentTarget.style, pageButtonActiveStyle);
+    } else {
+      Object.assign(e.currentTarget.style, pageButtonStyle);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fa-IR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  // Generate page numbers
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
   };
 
   return (
-    <section className="comments-section" style={{ marginTop: "50px" }}>
-      <h3>نظرات</h3>
+    <div style={containerStyle}>
+      <h3 style={titleStyle}>💬 نظرات</h3>
 
-      {loading && <p>در حال بارگذاری...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {loading && (
+        <div style={loadingStyle}>
+          <div style={spinnerStyle}></div>
+          <span>در حال بارگذاری نظرات...</span>
+        </div>
+      )}
 
-      {comments.length === 0 && !loading && <p>هنوز نظری ثبت نشده است.</p>}
+      {error && <div style={errorStyle}>❌ {error}</div>}
 
-      <ul style={{ listStyle: "none", paddingRight: 0 }}>
-        {comments.map((c) => (
+      {comments.length === 0 && !loading && (
+        <div style={emptyStateStyle}>
+          <div style={emptyStateIconStyle}>💭</div>
+          <p>هنوز نظری ثبت نشده است.</p>
+        </div>
+      )}
+
+      <ul style={commentsListStyle}>
+        {currentComments.map((c) => (
           <li
             key={c.id}
-            style={{
-              borderBottom: "1px solid #ddd",
-              marginBottom: "12px",
-              paddingBottom: "12px",
-              direction: "rtl",
-              textAlign: "right",
-            }}
+            style={commentItemStyle}
+            onMouseEnter={handleCommentHover}
+            onMouseLeave={handleCommentLeave}
           >
-            <p>
-              <strong>{c.author || "کاربر ناشناس"}</strong>{" "}
-              <small style={{ color: "#666" }}>
-                {new Date(c.created_at).toLocaleString()}
-              </small>
-            </p>
-            <p>{c.comment}</p>
+            <div style={commentHeaderStyle}>
+              <span style={authorStyle}>
+                👤 {c.author || "کاربر ناشناس"}
+              </span>
+              <span style={dateStyle}>
+                📅 {formatDate(c.created_at)}
+              </span>
+            </div>
+            <p style={commentTextStyle}>{c.comment}</p>
           </li>
         ))}
       </ul>
 
-      <div style={{ marginTop: "20px", direction: "rtl" }}>
+      {/* Pagination */}
+      {totalComments > 0 && (
+        <div style={paginationContainerStyle}>
+          <div style={paginationInfoStyle}>
+            نمایش {startIndex + 1} تا {Math.min(endIndex, totalComments)} از {totalComments} نظر
+          </div>
+          
+          <div style={paginationControlsStyle}>
+            <div style={itemsPerPageStyle}>
+              <span>نمایش:</span>
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                style={selectStyle}
+              >
+                <option value={3}>3</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+              </select>
+              <span>نظر در هر صفحه</span>
+            </div>
+            
+            <div style={paginationControlsStyle}>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={currentPage === 1 ? pageButtonDisabledStyle : pageButtonStyle}
+                onMouseEnter={handlePageButtonHover}
+                onMouseLeave={handlePageButtonLeave}
+              >
+                ‹
+              </button>
+              
+              {getPageNumbers().map((page, index) => (
+                <button
+                  key={index}
+                  onClick={() => typeof page === 'number' && handlePageChange(page)}
+                  disabled={page === '...'}
+                  className={page === currentPage ? 'active' : ''}
+                  style={
+                    page === '...' 
+                      ? pageButtonDisabledStyle 
+                      : page === currentPage 
+                        ? pageButtonActiveStyle 
+                        : pageButtonStyle
+                  }
+                  onMouseEnter={handlePageButtonHover}
+                  onMouseLeave={handlePageButtonLeave}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={currentPage === totalPages ? pageButtonDisabledStyle : pageButtonStyle}
+                onMouseEnter={handlePageButtonHover}
+                onMouseLeave={handlePageButtonLeave}
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={formContainerStyle}>
+        {!user && (
+          <div style={loginPromptStyle}>
+            <p style={loginPromptTextStyle}>
+              برای ارسال نظر ابتدا وارد شوید
+            </p>
+            <button
+              onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
+              style={loginButtonStyle}
+              onMouseEnter={(e) => Object.assign(e.currentTarget.style, loginButtonHoverStyle)}
+              onMouseLeave={(e) => Object.assign(e.currentTarget.style, loginButtonStyle)}
+            >
+              ورود به سیستم
+            </button>
+          </div>
+        )}
+
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="نظر خود را اینجا بنویسید..."
           rows={4}
           style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            resize: "vertical",
+            ...textareaStyle,
+            ...(textareaFocused ? textareaFocusStyle : {})
           }}
-          disabled={loading}
+          onFocus={() => setTextareaFocused(true)}
+          onBlur={() => setTextareaFocused(false)}
+          disabled={submitting || !user}
         />
+        
         <button
           onClick={handleAddComment}
-          disabled={loading}
-          style={{
-            marginTop: "10px",
-            backgroundColor: "#007BFF",
-            color: "#fff",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
+          disabled={submitting || !user || !newComment.trim()}
+          style={submitting || !user || !newComment.trim() ? buttonDisabledStyle : buttonStyle}
+          onMouseEnter={handleButtonHover}
+          onMouseLeave={handleButtonLeave}
         >
-          ارسال نظر
+          <span>{submitting ? '⏳' : '📤'}</span>
+          <span>{submitting ? 'در حال ارسال...' : 'ارسال نظر'}</span>
         </button>
       </div>
-    </section>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 };
 

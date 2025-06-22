@@ -238,7 +238,7 @@ const ProfileSidebar = () => {
         </motion.div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .profile-sidebar {
           width: 300px;
           padding: 3rem 2rem;
