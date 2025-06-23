@@ -305,11 +305,8 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
               required
                 >
                   <option value="">انتخاب نوع مرکز</option>
-                  <option value="مکتب">مکتب</option>
-                  <option value="لیسه">لیسه</option>
-                  <option value="پوهنتون">پوهنتون</option>
-                  <option value="موسسه تحصیلات عالی">موسسه تحصیلات عالی</option>
-                  <option value="مرکز تعلیمات تخنیکی">مرکز تعلیمات تخنیکی</option>
+                  <option value="دولتی">دولتی</option>
+                  <option value="خصوصی">خصوصی</option>
             </select>
                 <div className="input-border"></div>
               </div>
@@ -332,10 +329,9 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
               required
                 >
                   <option value="">انتخاب نوع برنامه</option>
-                  <option value="روزانه">روزانه</option>
-                  <option value="شبانه">شبانه</option>
-                  <option value="نیمه وقت">نیمه وقت</option>
-                  <option value="آنلاین">آنلاین</option>
+                  <option value="دوساله">دوساله</option>
+                  <option value="سه ساله">سه ساله</option>
+                  <option value="هر دو برنامه">هر دو برنامه</option>
             </select>
                 <div className="input-border"></div>
               </div>
@@ -863,6 +859,11 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
           .reset-button {
             align-self: flex-end;
           }
+        }
+
+        .form-select:focus, .form-select:active, .form-select option, .form-select optgroup {
+          background: #111 !important;
+          color: #f0f0f0;
         }
       `}</style>
     </div>

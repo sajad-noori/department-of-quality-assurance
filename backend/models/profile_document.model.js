@@ -1,15 +1,21 @@
 const db = require("../config/db");
 
-const VALID_FILE_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-];
+const getValidFileTypes = (index) => {
+  if (index < 3) {
+    return [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+  } else {
+    return ['application/zip', 'application/x-zip-compressed'];
+  }
+};
 
 class ProfileDocument {
   static async create(data) {
@@ -24,9 +30,11 @@ class ProfileDocument {
         file_size: data.file_size
       });
       
-      // Validate file type
-      if (!VALID_FILE_TYPES.includes(data.file_type)) {
-        throw new Error('Invalid file type');
+      const match = data.document_type.match(/doc(\d+)_path/);
+      const index = match ? parseInt(match[1], 10) - 1 : -1;
+      const validTypes = getValidFileTypes(index);
+      if (!validTypes.includes(data.file_type)) {
+        throw new Error(index < 3 ? 'Invalid file type' : 'Only zip files are allowed for this field');
       }
 
       // Get the column name from document_type (e.g., doc1_path)

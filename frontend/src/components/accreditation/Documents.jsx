@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -44,6 +44,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { styled } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import PropTypes from 'prop-types';
 
 const darkTheme = createTheme({
   direction: "rtl",
@@ -54,18 +55,41 @@ const darkTheme = createTheme({
       paper: "#1d1d1d",
     },
     primary: {
-      main: "#90caf9",
+      main: "#0dcaf0",
+    },
+    secondary: {
+      main: "#a9e5ff",
+    },
+    info: {
+      main: "#a9e5ff",
     },
     success: {
-      main: "#66bb6a",
+      main: "#4caf50",
     },
     error: {
       main: "#f44336",
     },
+    text: {
+      primary: 'rgba(255, 255, 255, 0.9)',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+    }
   },
   typography: {
     fontFamily: "sans-serif",
   },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        containedPrimary: {
+          color: '#030305',
+          fontWeight: 'bold',
+          '&:hover': {
+            backgroundColor: '#00b5d7',
+          },
+        },
+      },
+    },
+  }
 });
 
 const uploadLabels = [
@@ -102,17 +126,6 @@ const documentLabels = [
   "مکاتیب تدویر کورس های حمایوی آموزشی",
   "مکاتیب ارسال شاگردان به دوره پرکتیک",
   "اسناد و مدارک فعالیت شاگردان روی پروژی های کار عملی",
-];
-
-const ALLOWED_FILE_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -164,11 +177,68 @@ const FilePreview = styled('div')({
   }
 });
 
-export default function FileUploadWizard() {
+const getAllowedFileTypes = (index) => {
+  if (index < 3) {
+    return [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+  } else {
+    // Accept both common zip mimetypes and empty string (for browsers that don't set it)
+    return ['application/zip', 'application/x-zip-compressed', ''];
+  }
+};
+
+const getAcceptString = (index) => {
+  if (index < 3) {
+    return '.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx';
+  } else {
+    return '.zip';
+  }
+};
+
+// ErrorBoundary component to catch runtime errors
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    // You can log errorInfo to an error reporting service here
+    // console.error('ErrorBoundary caught:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ color: 'red', padding: 24, textAlign: 'center' }}>
+          <h2>خطای غیرمنتظره رخ داد</h2>
+          <p>{this.state.error?.message || 'مشکلی پیش آمده است.'}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node
+};
+
+export default function FileUploadWizard({ onStepChange }) {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState({});
+  const [uploadProgress, setUploadProgress] = useState({});
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [snackbar, setSnackbar] = useState({
@@ -187,6 +257,10 @@ export default function FileUploadWizard() {
   const [previewError, setPreviewError] = useState(null);
   const [tempFiles, setTempFiles] = useState({});
   const [success, setSuccess] = useState(null);
+  const clearMsgTimeout = useRef(null);
+  const [step10Triggered, setStep10Triggered] = useState(false);
+  // Count how many fields are filled (uploaded)
+  const filledCount = Object.values(documents).filter(Boolean).length;
 
   useEffect(() => {
     console.log('=== Documents Component Mounted ===');
@@ -327,57 +401,38 @@ export default function FileUploadWizard() {
     setSnackbar(prev => ({ ...prev, open: false }));
   };
 
-  const validateFile = (file) => {
-    console.log('=== Validating File ===', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
-
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      console.warn('File validation failed: Invalid file type', {
-        fileType: file.type,
-        allowedTypes: ALLOWED_FILE_TYPES
-      });
-      setError('نوع فایل مجاز نیست. فقط فایل‌های تصویر، PDF، Word و Excel مجاز هستند.');
-      return false;
+  const validateFile = (file, index) => {
+    const allowedTypes = getAllowedFileTypes(index);
+    if (index >= 3) {
+      const isZip = (
+        allowedTypes.includes(file.type) ||
+        (file.type === '' && file.name.toLowerCase().endsWith('.zip'))
+      );
+      if (!isZip) {
+        setError('فقط فایل zip مجاز است.');
+        return false;
+      }
+    } else {
+      if (!allowedTypes.includes(file.type)) {
+        setError('نوع فایل مجاز نیست. فقط فایل‌های تصویر، PDF، Word و Excel مجاز هستند.');
+        return false;
+      }
     }
-
     if (file.size > MAX_FILE_SIZE) {
-      console.warn('File validation failed: File too large', {
-        fileSize: file.size,
-        maxSize: MAX_FILE_SIZE
-      });
       setError('حجم فایل نباید بیشتر از 10 مگابایت باشد');
       return false;
     }
-
-    console.log('File validation passed');
     return true;
   };
 
   const handleFileChange = (e, index) => {
-    console.log('=== File Change Event ===', {
-      index,
-      documentType: uploadLabels[index]
-    });
-
     const file = e.target.files[0];
-    if (!file) {
-      console.log('No file selected');
-      return;
-    }
-
-    if (!validateFile(file)) {
-      console.log('File validation failed, clearing input');
+    if (!file) return;
+    if (!validateFile(file, index)) {
       e.target.value = null;
       return;
     }
-
-    setTempFiles(prev => ({
-      ...prev,
-      [index]: file
-    }));
+    setTempFiles(prev => ({ ...prev, [index]: file }));
     setError(null);
     setSuccess('فایل با موفقیت انتخاب شد');
   };
@@ -397,23 +452,28 @@ export default function FileUploadWizard() {
       return;
     }
 
-    console.log('Starting file upload process');
     setUploading(prev => ({ ...prev, [index]: true }));
+    setUploadProgress(prev => ({ ...prev, [index]: 0 }));
     setError(null);
     setSuccess(null);
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('document_type', uploadLabels[index]);
-    formData.append('is_profile', true); // Add flag to indicate this is a profile document
+    formData.append('is_profile', true);
 
     try {
-      console.log('Uploading file to server');
-      const response = await axios.post('/api/profile-documents/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const response = await axios.post(
+        `/api/profile-documents/upload?document_type=${uploadLabels[index]}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(prev => ({ ...prev, [index]: percent }));
+          }
         }
-      });
+      );
 
       console.log('Upload response:', {
         success: response.data.success,
@@ -438,6 +498,7 @@ export default function FileUploadWizard() {
         setSuccess('فایل با موفقیت بارگذاری شد');
         removeTempFile(index);
       }
+      setUploadProgress(prev => ({ ...prev, [index]: 100 }));
     } catch (err) {
       console.error('=== Error Uploading File ===');
       console.error('Error details:', {
@@ -452,6 +513,7 @@ export default function FileUploadWizard() {
       } else {
         setError(err.response?.data?.message || 'خطا در بارگذاری فایل');
       }
+      setUploadProgress(prev => ({ ...prev, [index]: 0 }));
     } finally {
       setUploading(prev => ({ ...prev, [index]: false }));
     }
@@ -482,7 +544,7 @@ export default function FileUploadWizard() {
         console.log('Updating documents state after deletion');
         setDocuments(prev => {
           const newDocs = { ...prev };
-          delete newDocs[documentType];
+          newDocs[documentType] = null;
           return newDocs;
         });
         setInlineFeedback(prev => ({ 
@@ -566,6 +628,38 @@ export default function FileUploadWizard() {
     return `http://localhost:5000/${filePath.replace(/\\/g, '/')}`;
   };
 
+  // Auto-clear success/error messages after 3 seconds, with robust handling
+  useEffect(() => {
+    try {
+      if (success || error) {
+        if (clearMsgTimeout.current) clearTimeout(clearMsgTimeout.current);
+        clearMsgTimeout.current = setTimeout(() => {
+          setSuccess(null);
+          setError(null);
+        }, 3000);
+      }
+      return () => {
+        if (clearMsgTimeout.current) clearTimeout(clearMsgTimeout.current);
+      };
+    } catch (e) {
+      // Fallback: just clear messages
+      setSuccess(null);
+      setError(null);
+    }
+  }, [success, error]);
+
+  useEffect(() => {
+    // When 5 or more documents are uploaded, call onStepChange to mark the step as complete
+    if (onStepChange && filledCount >= 5 && !step10Triggered) {
+      setStep10Triggered(true);
+      onStepChange(); // Signal completion without forcing navigation
+    }
+    // Reset if the count drops below 5
+    if (filledCount < 5 && step10Triggered) {
+      setStep10Triggered(false);
+    }
+  }, [filledCount, onStepChange, step10Triggered]);
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
@@ -601,283 +695,319 @@ export default function FileUploadWizard() {
   }
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <Box
-        sx={{
-          mx: "auto",
-          p: 3,
-          borderRadius: 2,
-          direction: "rtl",
-          bgcolor: "background.default",
-          color: "text.primary",
-        }}
-        aria-label="مدیریت اسناد و مدارک"
-      >
-        <Typography
-          variant="body2"
-          align="center"
-          color="text.secondary"
-          mb={3}
-          sx={{ fontSize: 14 }}
+    <ErrorBoundary>
+      <ThemeProvider theme={darkTheme}>
+        <CssBaseline />
+        <Box
+          sx={{
+            mx: "auto",
+            p: 3,
+            borderRadius: 2,
+            direction: "rtl",
+            bgcolor: "background.default",
+            color: "text.primary",
+            maxWidth: 900
+          }}
+          aria-label="مدیریت اسناد و مدارک"
         >
-          یاداشت: از ارسال اسناد و مدارک بی ربط و خارج از موارد ذکر شده جلوگیری نمائید. در
-          صورت عدم رعایت این مسئله امکان دارد در خواست شما برای اعتباردهی از سوی بورد رد گردد.
-        </Typography>
+          <Typography
+            variant="body2"
+            align="center"
+            color="text.secondary"
+            mb={3}
+            sx={{ fontSize: 14 }}
+          >
+            یاداشت: از ارسال اسناد و مدارک بی ربط و خارج از موارد ذکر شده جلوگیری نمائید. در
+            صورت عدم رعایت این مسئله امکان دارد در خواست شما برای اعتباردهی از سوی بورد رد گردد.
+          </Typography>
 
-        {uploadLabels.length === 0 && (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <InsertDriveFileIcon sx={{ fontSize: 60, color: 'grey.600' }} />
-            <Typography variant="h6" color="text.secondary" mt={2}>
-              هیچ سندی برای بارگذاری وجود ندارد.
-            </Typography>
-          </Box>
-        )}
+          {uploadLabels.length === 0 && (
+            <Box sx={{ textAlign: 'center', mt: 4 }}>
+              <InsertDriveFileIcon sx={{ fontSize: 60, color: 'grey.600' }} />
+              <Typography variant="h6" color="text.secondary" mt={2}>
+                هیچ سندی برای بارگذاری وجود ندارد.
+              </Typography>
+            </Box>
+          )}
 
-        {uploadLabels.map((label, index) => (
-          <Accordion key={index} sx={{ bgcolor: "background.paper", mb: 1 }} aria-label={`بارگذاری: ${documentLabels[index]}`}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}>
-              <Typography>{`بارگذاری: ${documentLabels[index]}`}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Stack spacing={2}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Button
-                    variant="contained"
-                    component="label"
-                    color="primary"
-                    startIcon={<CloudUploadIcon />}
-                    disabled={uploading[index]}
-                    aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
-                  >
-                    انتخاب فایل
-                    <VisuallyHiddenInput
-                      type="file"
-                      onChange={(e) => handleFileChange(e, index)}
-                      accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx"
-                      aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
-                    />
-                  </Button>
-                </Box>
-
-                {tempFiles[index] && (
-                  <FilePreview>
-                    <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                      {tempFiles[index].name}
-                        </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => removeTempFile(index)}
-                      disabled={uploading[index]}
-                      aria-label="حذف فایل موقت"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+          {uploadLabels.map((label, index) => (
+            <Accordion key={index} sx={{ bgcolor: "background.paper", mb: 1 }} aria-label={`بارگذاری: ${documentLabels[index]}`}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}>
+                <Typography>{`بارگذاری: ${documentLabels[index]}`}</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={2}>
+                  <Box sx={{ textAlign: 'center' }}>
                     <Button
                       variant="contained"
+                      component="label"
                       color="primary"
-                      size="small"
-                      onClick={() => handleUpload(index)}
-                      disabled={uploading[index]}
-                      startIcon={uploading[index] ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                      startIcon={<CloudUploadIcon />}
+                      disabled={uploading[index] || !!documents[label]}
+                      aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
                     >
-                      {uploading[index] ? 'در حال بارگذاری...' : 'بارگذاری'}
+                      انتخاب فایل
+                      <VisuallyHiddenInput
+                        type="file"
+                        onChange={(e) => handleFileChange(e, index)}
+                        accept={getAcceptString(index)}
+                        aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
+                      />
                     </Button>
-                  </FilePreview>
-                )}
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                      {index < 3
+                        ? "فرمت‌های مجاز: jpg, png, gif, pdf, doc, docx, xls, xlsx | حداکثر ۱۰ مگابایت"
+                        : "فقط فایل zip | حداکثر ۱۰ مگابایت"}
+                    </Typography>
+                    <Typography variant="caption" color="info.main" sx={{ mt: 1, display: 'block' }}>
+                      {`راهنما: ${documentLabels[index]}`}
+                    </Typography>
+                  </Box>
 
-                {documents[label] && (
-                  <TableContainer component={Paper} sx={{ bgcolor: 'background.paper' }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>نوع فایل</TableCell>
-                          <TableCell>نام فایل</TableCell>
-                          <TableCell>عملیات</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>
-                            {getFileIcon(documents[label].file_type)}
-                          </TableCell>
-                          <TableCell>{documents[label].file_name}</TableCell>
-                          <TableCell>
-                            <Stack direction="row" spacing={1}>
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => handlePreview(documents[label])}
-                                aria-label={`مشاهده سند ${documentLabels[index]}`}
-                              >
-                                <VisibilityIcon />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleDeleteClick(label, index)}
-                                disabled={uploading[index]}
-                                aria-label={`حذف سند ${documentLabels[index]}`}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                component="a"
-                                href={getFileUrl(documents[label].file_path)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`دانلود سند ${documentLabels[index]}`}
-                              >
-                                <InsertDriveFileIcon />
-                              </IconButton>
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
+                  {tempFiles[index] && (
+                    <FilePreview>
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                        {getFileIcon(tempFiles[index].type)}
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          {tempFiles[index].name} ({(tempFiles[index].size / 1024 / 1024).toFixed(2)} MB)
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => removeTempFile(index)}
+                        disabled={uploading[index]}
+                        aria-label="حذف فایل موقت"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleUpload(index)}
+                        disabled={uploading[index]}
+                        startIcon={uploading[index] ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                      >
+                        {uploading[index] ? 'در حال بارگذاری...' : 'بارگذاری'}
+                      </Button>
+                    </FilePreview>
+                  )}
 
-                {error && (
-                  <Alert severity="error" sx={{ width: '100%' }}>
-                    <ErrorIcon className="me-2" />
-                    {error}
-                  </Alert>
-                )}
+                  {documents[label] && (
+                    <TableContainer component={Paper} sx={{ bgcolor: 'background.paper' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>نوع فایل</TableCell>
+                            <TableCell>نام فایل</TableCell>
+                            <TableCell>عملیات</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>
+                              {getFileIcon(documents[label].file_type)}
+                            </TableCell>
+                            <TableCell>{documents[label].file_name}</TableCell>
+                            <TableCell>
+                              <Stack direction="row" spacing={1}>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handlePreview(documents[label])}
+                                  aria-label={`مشاهده سند ${documentLabels[index]}`}
+                                >
+                                  <VisibilityIcon />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteClick(label, index)}
+                                  disabled={uploading[index]}
+                                  aria-label={`حذف سند ${documentLabels[index]}`}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  component="a"
+                                  href={getFileUrl(documents[label].file_path)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`دانلود سند ${documentLabels[index]}`}
+                                >
+                                  <InsertDriveFileIcon />
+                                </IconButton>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
 
-                {success && (
-                  <Alert severity="success" sx={{ width: '100%' }}>
-                    <CheckCircleIcon className="me-2" />
-                    {success}
-                  </Alert>
-                )}
+                  {uploading[index] && (
+                    <Box sx={{ width: '100%' }}>
+                      <LinearProgress variant={uploadProgress[index] ? 'determinate' : 'indeterminate'} value={uploadProgress[index] || 0} />
+                      {uploadProgress[index] !== undefined && (
+                        <Typography variant="caption" color="text.secondary">
+                          {uploadProgress[index]}%
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
 
-                {uploading[index] && (
-                  <LinearProgress sx={{ width: '100%' }} aria-label="در حال بارگذاری..." />
-                )}
-              </Stack>
-            </AccordionDetails>
-          </Accordion>
-        ))}
+                  {inlineFeedback[index]?.type === 'error' && (
+                    <Alert severity="error" sx={{ width: '100%' }}>
+                      <ErrorIcon className="me-2" />
+                      {inlineFeedback[index].message}
+                    </Alert>
+                  )}
+                  {inlineFeedback[index]?.type === 'success' && (
+                    <Alert severity="success" sx={{ width: '100%' }}>
+                      <CheckCircleIcon className="me-2" />
+                      {inlineFeedback[index].message}
+                    </Alert>
+                  )}
+                  {error && (
+                    <Alert severity="error" sx={{ width: '100%' }}>
+                      <ErrorIcon className="me-2" />
+                      {error}
+                    </Alert>
+                  )}
+                  {success && (
+                    <Alert severity="success" sx={{ width: '100%' }}>
+                      <CheckCircleIcon className="me-2" />
+                      {success}
+                    </Alert>
+                  )}
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+          ))}
 
-        {/* File Preview Dialog */}
-        <Dialog
-          open={!!previewFile}
-          onClose={handleClosePreview}
-          maxWidth="md"
-          fullWidth
-          aria-labelledby="file-preview-dialog-title"
-        >
-          <DialogTitle id="file-preview-dialog-title">
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6">
-                {previewFile?.file_name}
-              </Typography>
-              <IconButton
-                edge="end"
-                color="inherit"
-                onClick={handleClosePreview}
-                aria-label="بستن"
-              >
-                <CloseIcon />
-              </IconButton>
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            {previewLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : previewError ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body1" color="error" gutterBottom>
-                  {previewError}
-                </Typography>
-              </Box>
-            ) : previewFile?.file_type?.startsWith('image/') ? (
-              <img
-                src={getFileUrl(previewFile.file_path)}
-                alt={previewFile.file_name}
-                style={{ maxWidth: '100%', height: 'auto' }}
-                onError={(e) => {
-                  console.error('Error loading image:', e);
-                  setPreviewError('خطا در بارگذاری تصویر');
-                }}
-              />
-            ) : previewFile?.file_type === 'application/pdf' ? (
-              <iframe
-                src={getFileUrl(previewFile.file_path)}
-                style={{ width: '100%', height: '80vh', border: 'none' }}
-                title={previewFile.file_name}
-              />
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                  پیش‌نمایش برای این نوع فایل در دسترس نیست
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  component="a"
-                  href={getFileUrl(previewFile?.file_path)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  startIcon={<InsertDriveFileIcon />}
-                >
-                  دانلود فایل
-                </Button>
-              </Box>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialog.open}
-          onClose={handleDeleteCancel}
-          aria-labelledby="delete-dialog-title"
-          aria-describedby="delete-dialog-description"
-        >
-          <DialogTitle id="delete-dialog-title">
-            حذف سند
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="delete-dialog-description">
-              آیا از حذف این سند اطمینان دارید؟ این عمل قابل بازگشت نیست.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDeleteCancel} color="primary">
-              انصراف
-            </Button>
-            <Button 
-              onClick={handleDeleteConfirm} 
-              color="error" 
-              autoFocus
-              variant="contained"
-            >
-              حذف
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
+          {/* File Preview Dialog */}
+          <Dialog
+            open={!!previewFile}
+            onClose={handleClosePreview}
+            maxWidth="md"
+            fullWidth
+            aria-labelledby="file-preview-dialog-title"
           >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </ThemeProvider>
+            <DialogTitle id="file-preview-dialog-title">
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">
+                  {previewFile?.file_name}
+                </Typography>
+                <IconButton
+                  edge="end"
+                  color="inherit"
+                  onClick={handleClosePreview}
+                  aria-label="بستن"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              {previewLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : previewError ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="error" gutterBottom>
+                    {previewError}
+                  </Typography>
+                </Box>
+              ) : previewFile?.file_type?.startsWith('image/') ? (
+                <img
+                  src={getFileUrl(previewFile.file_path)}
+                  alt={previewFile.file_name}
+                  style={{ maxWidth: '100%', height: 'auto' }}
+                  onError={(e) => {
+                    console.error('Error loading image:', e);
+                    setPreviewError('خطا در بارگذاری تصویر');
+                  }}
+                />
+              ) : previewFile?.file_type === 'application/pdf' ? (
+                <iframe
+                  src={getFileUrl(previewFile.file_path)}
+                  style={{ width: '100%', height: '80vh', border: 'none' }}
+                  title={previewFile.file_name}
+                />
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="text.secondary" gutterBottom>
+                    پیش‌نمایش برای این نوع فایل در دسترس نیست
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    component="a"
+                    href={getFileUrl(previewFile?.file_path)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    startIcon={<InsertDriveFileIcon />}
+                  >
+                    دانلود فایل
+                  </Button>
+                </Box>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog
+            open={deleteDialog.open}
+            onClose={handleDeleteCancel}
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+          >
+            <DialogTitle id="delete-dialog-title">
+              حذف سند
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="delete-dialog-description">
+                آیا از حذف این سند اطمینان دارید؟ این عمل قابل بازگشت نیست.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleDeleteCancel} color="primary">
+                انصراف
+              </Button>
+              <Button 
+                onClick={handleDeleteConfirm} 
+                color="error" 
+                autoFocus
+                variant="contained"
+              >
+                حذف
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert
+              onClose={handleCloseSnackbar}
+              severity={snackbar.severity}
+              sx={{ width: '100%' }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Box>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
+
+FileUploadWizard.propTypes = {
+  onStepChange: PropTypes.func
+};

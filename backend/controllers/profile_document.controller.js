@@ -153,8 +153,12 @@ exports.deleteDocument = async (req, res) => {
     // Delete the file from the filesystem
     const pathModule = require('path');
     const fs = require('fs/promises');
+    // Remove any leading slashes from filePath
+    let safeFilePath = filePath.replace(/^\\+|^\/+/, '');
+    const fullPath = pathModule.join(__dirname, '..', safeFilePath);
+    console.log('Attempting to delete file at:', fullPath);
     try {
-      await fs.unlink(pathModule.join(__dirname, '..', filePath));
+      await fs.unlink(fullPath);
     } catch (e) {
       console.error('Error deleting file:', e);
     }
@@ -271,5 +275,54 @@ exports.downloadDocument = async (req, res) => {
         message: 'Error downloading document'
       });
     }
+  }
+};
+
+exports.uploadProfileDocument = async (req, res) => {
+  try {
+    const { document_type, is_profile } = req.body;
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).send({ success: false, message: 'No file uploaded.' });
+    }
+
+    // Check for and delete the old file if it exists
+    const existingDoc = await ProfileDocument.findOne({ 
+      where: { user_id: userId, document_type } 
+    });
+
+    if (existingDoc && existingDoc.file_path) {
+      const oldFilePath = path.join(__dirname, '..', existingDoc.file_path);
+      try {
+        await fs.unlink(oldFilePath);
+        console.log(`Successfully deleted old file: ${oldFilePath}`);
+      } catch (err) {
+        console.error(`Failed to delete old file, but proceeding with upload: ${oldFilePath}`, err);
+      }
+      // Remove the old database entry to be replaced by the new one
+      await existingDoc.destroy();
+    }
+
+    const newDocument = await ProfileDocument.create({
+      user_id: userId,
+      document_type,
+      file_name: req.file.originalname,
+      file_path: req.file.path,
+      file_type: req.file.mimetype,
+      is_profile,
+    });
+
+    res.status(201).send({
+      success: true,
+      message: 'Document uploaded successfully',
+      data: newDocument
+    });
+  } catch (error) {
+    console.error('Error uploading document:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error uploading document'
+    });
   }
 }; 

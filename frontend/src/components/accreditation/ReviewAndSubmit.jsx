@@ -1,176 +1,166 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { FaCheckCircle, FaEnvelope, FaHeadset, FaExclamationTriangle } from 'react-icons/fa';
-import axios from 'axios';
-import { CircularProgress } from '@mui/material';
+import { FaCheckCircle, FaEnvelope, FaHeadset } from 'react-icons/fa';
 
 const ReviewAndSubmit = () => {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [stepsCompleted, setStepsCompleted] = useState(false);
-  const [completionData, setCompletionData] = useState(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const checkStepsCompletion = async () => {
-      if (!user || user.role !== 'institute') return;
-
-      try {
-        const response = await axios.get('http://localhost:5000/api/accreditation/check-completion', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        
-        setCompletionData(response.data);
-        setStepsCompleted(response.data.completed);
-      } catch (err) {
-        console.error('Error checking steps completion:', err);
-        setStepsCompleted(false);
-      }
-    };
-
-    if (user) {
-      checkStepsCompletion();
-    }
-  }, [user]);
-
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
-      </div>
-    );
-  }
-
-  if (user.role !== 'institute') {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
-        <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
-      </div>
-    );
-  }
-
-  if (!stepsCompleted) {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <div className="mb-3">
-          <FaExclamationTriangle className="text-warning" style={{ fontSize: '2rem' }} />
-        </div>
-        <h4 className="alert-heading mb-3">مراحل تکمیل نشده</h4>
-        <p className="mb-3">
-          لطفاً تمام مراحل نه‌گانه را تکمیل کنید.
-        </p>
-        {completionData && completionData.incompleteSteps && (
-          <div className="mt-3">
-            <p className="mb-2">مراحل باقی‌مانده:</p>
-            <ul className="list-unstyled">
-              {completionData.incompleteSteps.map((step, index) => (
-                <li key={index} className="text-muted">• {step}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8 col-lg-6">
-          <motion.div 
-            className="card border-0 shadow-lg"
+    <>
+      <div className="review-submit-container" dir="rtl">
+        <motion.div
+          className="review-card"
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <motion.div
+            className="icon-wrapper"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 220, damping: 20 }}
+          >
+            <FaCheckCircle className="icon" />
+          </motion.div>
+          
+          <h2 className="title">درخواست شما با موفقیت ثبت شد</h2>
+          
+          <p className="description">
+            از شما سپاسگزاریم. درخواست اعتباردهی شما برای بررسی ارسال شده است. نتیجه از طریق ایمیل به شما اطلاع داده خواهد شد.
+          </p>
+
+          <motion.div
+            className="alert-info"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ delay: 0.4 }}
           >
-            <div className="card-body p-5">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="text-center mb-4"
-              >
-                <div className="success-icon-wrapper mb-4">
-                  <FaCheckCircle className="text-success" style={{ fontSize: '4rem' }} />
-                </div>
-                <h2 className="h3 mb-4 text-success fw-bold">مراحل با موفقیت تکمیل شد</h2>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="alert alert-info d-flex align-items-center mb-4"
-                role="alert"
-              >
-                <FaEnvelope className="me-3" style={{ fontSize: '1.5rem' }} />
-                <div>
-                  لطفاً منتظر بمانید. درخواست شما در حال بررسی است و به‌زودی پاسخ را در ایمیل خود دریافت خواهید کرد.
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="support-section text-center"
-              >
-                <div className="d-flex align-items-center justify-content-center mb-2">
-                  <FaHeadset className="text-primary me-2" />
-                  <h5 className="mb-0">پشتیبانی</h5>
-                </div>
-                <p className="text-muted mb-0">
-                  برای هرگونه سوال می‌توانید با پشتیبانی تماس بگیرید
-                </p>
-              </motion.div>
+            <FaEnvelope className="alert-icon" />
+            <div>
+              لطفاً منتظر بمانید. بررسی درخواست شما ممکن است چند روز کاری طول بکشد.
             </div>
           </motion.div>
-        </div>
+
+          <motion.div
+            className="support-section"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="support-header">
+              <FaHeadset className="support-icon" />
+              <h5 className="support-title">نیاز به پشتیبانی دارید؟</h5>
+            </div>
+            <p className="support-text">
+              برای هرگونه سوال می‌توانید با ما در تماس باشید.
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
-    </div>
+
+      <style>{`
+        .review-submit-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          background-color: #121212;
+          min-height: 60vh;
+          font-family: sans-serif;
+        }
+
+        .review-card {
+          background: #1d1d1d;
+          border: 1px solid rgba(13, 202, 240, 0.2);
+          border-radius: 20px;
+          padding: 2.5rem;
+          max-width: 600px;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          color: #eee;
+        }
+
+        .icon-wrapper {
+          margin: 0 auto 1.5rem;
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(13, 202, 240, 0.05));
+          border: 2px solid rgba(13, 202, 240, 0.3);
+        }
+
+        .icon {
+          font-size: 3rem;
+          color: #0dcaf0;
+          text-shadow: 0 0 15px rgba(13, 202, 240, 0.5);
+        }
+
+        .title {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          margin-bottom: 1rem;
+        }
+
+        .description {
+          font-size: 1.1rem;
+          line-height: 1.7;
+          color: #a9e5ff;
+          margin-bottom: 2rem;
+        }
+
+        .alert-info {
+          display: flex;
+          align-items: center;
+          padding: 1rem;
+          margin-bottom: 2rem;
+          border-radius: 12px;
+          background: rgba(13, 202, 240, 0.08);
+          border: 1px solid rgba(13, 202, 240, 0.15);
+          color: #a9e5ff;
+          text-align: right;
+        }
+
+        .alert-icon {
+          font-size: 1.5rem;
+          margin-left: 1rem;
+          flex-shrink: 0;
+          color: #0dcaf0;
+        }
+
+        .support-section {
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .support-header {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .support-icon {
+          font-size: 1.2rem;
+          color: #0dcaf0;
+        }
+
+        .support-title {
+          margin-bottom: 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #eee;
+        }
+
+        .support-text {
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.7);
+        }
+      `}</style>
+    </>
   );
 };
 

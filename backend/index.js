@@ -86,6 +86,7 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/profile-documents", profileDocumentRoutes);
 app.use('/api/stages', stageRoutes);
 
+
 // Trust proxy for rate limiting
 app.set('trust proxy', 1);
 

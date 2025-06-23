@@ -22,21 +22,38 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-    
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
+    // Try to get document_type from body or query
+    let docType = req.body && req.body.document_type;
+    if (!docType && req.query && req.query.document_type) {
+      docType = req.query.document_type;
+    }
+    let index = -1;
+    if (docType) {
+      const match = docType.match(/doc(\d+)_path/);
+      if (match) index = parseInt(match[1], 10) - 1;
+    }
+    if (index >= 3) {
+      if (file.mimetype === 'application/zip' || file.mimetype === 'application/x-zip-compressed') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only zip files are allowed for this field.'));
+      }
     } else {
-      cb(new Error('Invalid file type. Only images, PDFs, Word and Excel files are allowed.'));
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only images, PDFs, Word and Excel files are allowed.'));
+      }
     }
   }
 });

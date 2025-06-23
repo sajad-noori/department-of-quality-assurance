@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CircularProgress from '@mui/material/CircularProgress';
 import PropTypes from 'prop-types';
+import { FaExclamationTriangle } from 'react-icons/fa';
 import ProfileSidebar from './ProfileSidebar';
 
 import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter"
@@ -29,9 +30,108 @@ const steps = [
   "تکمیل پروسه سطح اول",
 ];
 
+function RestrictedAccessAlert() {
+  return (
+    <>
+      <div className="restricted-access-container">
+        <div className="restricted-access-card">
+          <div className="restricted-icon-wrapper">
+            <FaExclamationTriangle className="restricted-icon" />
+          </div>
+          <h2 className="restricted-title">دسترسی محدود</h2>
+          <p className="restricted-description">
+            برای دسترسی به این بخش، حساب کاربری شما باید به عنوان یک مرکز آموزشی معتبر ثبت شده باشد.
+          </p>
+          <div className="restricted-contact-info">
+            <p>برای راهنمایی و فعال‌سازی حساب، لطفاً با ما تماس بگیرید:</p>
+            <a href="tel:0778558968" className="restricted-phone-number">۰۷۷۸۵۵۸۹۶۸</a>
+          </div>
+        </div>
+      </div>
+      <style>{`
+        .restricted-access-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          margin: 2rem auto;
+          max-width: 600px;
+        }
+
+        .restricted-access-card {
+          background: #1d1d1d;
+          border: 1px solid rgba(255, 193, 7, 0.3);
+          border-radius: 20px;
+          padding: 2.5rem;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+          color: #eee;
+        }
+
+        .restricted-icon-wrapper {
+          margin: 0 auto 1.5rem;
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+          border: 2px solid rgba(255, 193, 7, 0.4);
+        }
+
+        .restricted-icon {
+          font-size: 2.5rem;
+          color: #ffc107;
+          text-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+        }
+
+        .restricted-title {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: #ffc107;
+          margin-bottom: 1rem;
+        }
+
+        .restricted-description {
+          font-size: 1.05rem;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.85);
+          margin-bottom: 2rem;
+        }
+
+        .restricted-contact-info {
+          padding: 1.5rem;
+          border-radius: 12px;
+          background: rgba(13, 202, 240, 0.08);
+          border: 1px solid rgba(13, 202, 240, 0.15);
+        }
+        
+        .restricted-contact-info p {
+          color: #a9e5ff;
+          margin-bottom: 0.5rem;
+        }
+
+        .restricted-phone-number {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0dcaf0;
+          text-decoration: none;
+          transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        
+        .restricted-phone-number:hover {
+          color: #fff;
+          text-shadow: 0 0 10px #0dcaf0;
+        }
+      `}</style>
+    </>
+  );
+}
 
 // Step components with Bootstrap classes
-function Step1({ onStepSubmit }) {
+function Step1({ onStepSubmit, user }) {
   const [formData, setFormData] = useState({
     centerName: "",
     province: "",
@@ -47,35 +147,18 @@ function Step1({ onStepSubmit }) {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
-
-  // Fetch user data
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
 
   // Fetch existing center data - only once
   useEffect(() => {
     const fetchCenterData = async () => {
       // Only fetch data if user exists, is an institute, and data hasn't been loaded yet
-      if (!user || user.role !== 'institute' || dataLoaded) return;
-
+      if (!user || user.role !== 'institute' || dataLoaded) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
       try {
         const response = await axios.get('http://localhost:5000/api/educational-centers/centers', {
           withCredentials: true,
@@ -108,9 +191,10 @@ function Step1({ onStepSubmit }) {
             onStepSubmit(1);
         }
         }
-        setDataLoaded(true);
       } catch (err) {
         console.error('Error fetching center data:', err);
+      } finally {
+        setLoading(false);
         setDataLoaded(true);
       }
     };
@@ -251,18 +335,7 @@ function Step1({ onStepSubmit }) {
   }
 
   if (user.role !== 'institute') {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
-        <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
-      </div>
-    );
+    return <RestrictedAccessAlert />;
   }
 
   return (
@@ -276,11 +349,13 @@ function Step1({ onStepSubmit }) {
 }
 
 Step1.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
+  user: PropTypes.object
 };
 
 Step1.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
+  user: null
 };
 
 function Step2({ onStepSubmit }) {
@@ -353,7 +428,7 @@ Step3.defaultProps = {
   onStepSubmit: () => {}
 };
 
-function Step4({ onStepSubmit }) {
+function Step4({ onStepSubmit, user }) {
   const [formData, setFormData] = useState({
     vision: '',
     mission: '',
@@ -361,34 +436,18 @@ function Step4({ onStepSubmit }) {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [focusedField, setFocusedField] = useState(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     const fetchVisionMission = async () => {
-      if (!user || user.role !== 'institute') return;
-
+      if (!user || user.role !== 'institute') {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
       try {
         const response = await axios.get('http://localhost:5000/api/vision-mission', {
           withCredentials: true,
@@ -413,6 +472,8 @@ function Step4({ onStepSubmit }) {
       } catch (err) {
         console.error('Error fetching vision mission:', err);
         setError('خطا در بارگذاری اطلاعات دیدگاه و ماموریت');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -496,14 +557,7 @@ function Step4({ onStepSubmit }) {
   }
 
   if (user.role !== 'institute') {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.</p>
-        <hr />
-        <p className="mb-0">لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.</p>
-      </div>
-    );
+    return <RestrictedAccessAlert />;
   }
 
   return (
@@ -886,11 +940,13 @@ function Step4({ onStepSubmit }) {
 }
 
 Step4.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
+  user: PropTypes.object
 };
 
 Step4.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
+  user: null
 };
 
 function Step5({ onStepSubmit }) {
@@ -1003,39 +1059,23 @@ Step7.defaultProps = {
   onStepSubmit: () => {},
 };
 
-function Step8({ onStepSubmit }) {
+function Step8({ onStepSubmit, user }) {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [user, setUser] = useState(null);
   const [hasExistingData, setHasExistingData] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
-          withCredentials: true,
-        });
-        setUser(res.data.user);
-      } catch (err) {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     const fetchStakeholderInvolvement = async () => {
-      if (!user || user.role !== 'institute' || dataLoaded) return;
-
+      if (!user || user.role !== 'institute' || dataLoaded) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
       try {
         const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
           withCredentials: true,
@@ -1060,6 +1100,8 @@ function Step8({ onStepSubmit }) {
         console.error('Error fetching stakeholder involvement:', err);
         setError('خطا در بارگذاری اطلاعات');
         setDataLoaded(true);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -1152,18 +1194,7 @@ function Step8({ onStepSubmit }) {
   }
 
   if (user.role !== 'institute') {
-    return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
-        <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          برای پر کردن این فرم، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
-        </p>
-        <hr />
-        <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
-        </p>
-      </div>
-    );
+    return <RestrictedAccessAlert />;
   }
 
   return (
@@ -1667,29 +1698,41 @@ function Step8({ onStepSubmit }) {
 }
 
 Step8.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
+  user: PropTypes.object
 };
 
 Step8.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
+  user: null
 };
 
-function Step9() {
-  const [description, setDescription] = useState("");
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
+function Step9({ onStepSubmit }) {
+  // When the Documents component signals completion, mark this step as submitted
+  // without automatically navigating to the next step.
+  const handleDocumentsComplete = () => {
+    if (onStepSubmit) {
+      onStepSubmit(9); // Just pass the current step number
+    }
   };
 
   return (
     <>
-    <label className="form-label-center"> {steps[4]}</label>
-    <div>
-      <Documents value={description} onChange={handleDescriptionChange} />
-    </div>
+      <label className="form-label-center">{steps[8]}</label>
+      <div>
+        <Documents onStepChange={handleDocumentsComplete} />
+      </div>
     </>
   );
 }
+
+Step9.propTypes = {
+  onStepSubmit: PropTypes.func
+};
+
+Step9.defaultProps = {
+  onStepSubmit: () => {}
+};
 
 function Step10() {
   return (
@@ -1716,237 +1759,176 @@ const stepComponents = {
 
 
 export default function MultiStepForm10() {
-  const [currentStep, setCurrentStep] = useState(() => {
-    const savedStep = localStorage.getItem("currentStep");
-    return savedStep ? Number(savedStep) : 1;
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [stepSubmissionStatus, setStepSubmissionStatus] = useState({
+    1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false
   });
 
-  const [formData, setFormData] = useState({});
-  const [stepSubmissionStatus, setStepSubmissionStatus] = useState(() => {
-    const savedStatus = localStorage.getItem("stepSubmissionStatus");
-    return savedStatus ? JSON.parse(savedStatus) : {
-      1: false,
-      2: false,
-      3: false,
-      4: false,
-      5: false,
-      6: false,
-      7: false,
-      8: false,
-      9: false,
-      10: false
+  // Fetch user and initialize per-user localStorage
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      } finally {
+        setUserLoading(false);
+      }
     };
-  });
+    fetchUser();
+  }, []);
 
+  // Load per-user progress from localStorage when user changes
   useEffect(() => {
-    localStorage.setItem("currentStep", currentStep);
-  }, [currentStep]);
+    if (user && user.id) {
+      const stepStatusKey = `stepSubmissionStatus_user_${user.id}`;
+      const currentStepKey = `currentStep_user_${user.id}`;
+      const savedStatus = localStorage.getItem(stepStatusKey);
+      const savedStep = localStorage.getItem(currentStepKey);
+      setStepSubmissionStatus(savedStatus ? JSON.parse(savedStatus) : {
+        1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false
+      });
+      setCurrentStep(savedStep ? Number(savedStep) : 1);
+    }
+  }, [user]);
 
+  // Save per-user progress to localStorage
   useEffect(() => {
-    localStorage.setItem("stepSubmissionStatus", JSON.stringify(stepSubmissionStatus));
-  }, [stepSubmissionStatus]);
+    if (user && user.id) {
+      const stepStatusKey = `stepSubmissionStatus_user_${user.id}`;
+      const currentStepKey = `currentStep_user_${user.id}`;
+      localStorage.setItem(stepStatusKey, JSON.stringify(stepSubmissionStatus));
+      localStorage.setItem(currentStepKey, String(currentStep));
+    }
+  }, [stepSubmissionStatus, currentStep, user]);
 
-  const StepComponent = stepComponents[currentStep];
+  const isInstitute = user && user.role === 'institute';
+  const displayStep = isInstitute ? currentStep : 1;
+  const StepComponent = stepComponents[displayStep];
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [`step${currentStep}Input`]: e.target.value,
-    });
+  const handleMarkStepAsSubmitted = (stepNumber, nextStep) => {
+    setStepSubmissionStatus(prev => ({
+      ...prev,
+      [stepNumber]: true,
+    }));
+    if (nextStep && nextStep <= steps.length) {
+      setCurrentStep(nextStep);
+    }
   };
 
+  // Only allow navigation to a step if all previous steps are completed
   const handleNext = () => {
-    // Check if current step is submitted before allowing next
-    if (currentStep === 1 && !stepSubmissionStatus[1]) {
-      alert("لطفاً ابتدا فرم مرحله اول را تکمیل و ثبت کنید");
-      return;
+    if (currentStep < steps.length) {
+      let canGo = true;
+      for (let i = 1; i <= currentStep; i++) {
+        if (!stepSubmissionStatus[i]) {
+          canGo = false;
+          break;
+        }
+      }
+      if (canGo) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        alert(`لطفاً ابتدا مرحله ${steps[currentStep - 1]} را تکمیل و ثبت کنید`);
+      }
     }
-    
-    if (currentStep === 2 && !stepSubmissionStatus[2]) {
-      alert("لطفاً ابتدا فرم مرحله دوم را تکمیل و ثبت کنید");
-      return;
-    }
-    
-    if (currentStep === 3 && !stepSubmissionStatus[3]) {
-      alert("لطفاً ابتدا فرم مرحله سوم را تکمیل و ثبت کنید");
-      return;
-    }
-    
-    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmitStep = async (e) => {
-    e.preventDefault();
-
-    // Define required fields for each step
-    const requiredFieldsByStep = {
-      1: [
-        "centerName",
-        "province",
-        "district",
-        "village",
-        "centerType",
-        "programType",
-        "foundingYear",
-        "contactName",
-        "phoneNumber",
-        "email",
-      ],
-      // Add step 2, 3, etc. if needed
-    };
-
-    const requiredFields = requiredFieldsByStep[currentStep] || [];
-
-    const missingField = requiredFields.find((key) => {
-      const val = formData[key];
-      return !val || val.toString().trim() === "";
-    });
-
-    if (missingField) {
-      alert(`لطفاً فیلدهای ضروری مرحله ${steps[currentStep - 1]} را پر کنید.`);
-      return;
-    }
-
-    // If validation passes
-    if (currentStep === 4) {
-      // For Step4, we'll let the component handle its own submission
-      return;
-    }
-
-    alert(`مرحله ${currentStep} ثبت شد`);
-    
-    // Mark current step as submitted
-    setStepSubmissionStatus(prev => ({
-      ...prev,
-      [currentStep]: true
-    }));
-
-    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
-    else alert("تمام مراحل تکمیل شد!");
-  };
-
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
+  
+  if (userLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <CircularProgress />
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
       <div className="main-content">
         <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت  پروسه اعتبار دهی</h1>
 
-        <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
-          <div className="progress-bar-bg">
-            <div
-              className="progress-bar-fill"
-              style={{ width: `${progressPercent}%`, right: 0, left: "auto" }}
-            />
+        {isInstitute && (
+          <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
+            <div className="progress-bar-bg">
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${progressPercent}%`, right: 0, left: "auto" }}
+              />
+            </div>
+
+            <ul className="steps-list">
+              {steps.map((title, idx) => {
+                const stepNum = idx + 1;
+                const isActive = currentStep === stepNum;
+                const isCompleted = currentStep > stepNum;
+                const isSubmitted = stepSubmissionStatus[stepNum];
+                const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
+
+                return (
+                  <li
+                    key={stepNum}
+                    className={`step-item ${isActive ? "active" : ""} ${
+                      isCompleted ? "completed" : ""
+                    } ${isSubmitted ? "submitted" : ""} ${!canNavigate ? "disabled" : ""}`}
+                    onClick={() => {
+                      if (canNavigate) {
+                        setCurrentStep(stepNum);
+                      } else {
+                        alert("لطفاً ابتدا مرحله قبلی را تکمیل کنید");
+                      }
+                    }}
+                    tabIndex={canNavigate ? 0 : -1}
+                    role="button"
+                    aria-current={isActive ? "step" : undefined}
+                    aria-label={`مرحله ${stepNum} - ${title}`}
+                    aria-disabled={!canNavigate}
+                  >
+                    <span className="step-circle">{stepNum}</span>
+                    <span className="step-label">{title}</span>
+                    {isSubmitted && <span className="step-check">✓</span>}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
-
-          <ul className="steps-list">
-            {steps.map((title, idx) => {
-              const stepNum = idx + 1;
-              const isActive = currentStep === stepNum;
-              const isCompleted = currentStep > stepNum;
-              const isSubmitted = stepSubmissionStatus[stepNum];
-              const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
-
-              return (
-                <li
-                  key={stepNum}
-                  className={`step-item ${isActive ? "active" : ""} ${
-                    isCompleted ? "completed" : ""
-                  } ${isSubmitted ? "submitted" : ""} ${!canNavigate ? "disabled" : ""}`}
-                  onClick={() => {
-                    if (canNavigate) {
-                      setCurrentStep(stepNum);
-                    } else {
-                      alert("لطفاً ابتدا مرحله قبلی را تکمیل کنید");
-                    }
-                  }}
-                  tabIndex={canNavigate ? 0 : -1}
-                  role="button"
-                  aria-current={isActive ? "step" : undefined}
-                  aria-label={`مرحله ${stepNum} - ${title}`}
-                  aria-disabled={!canNavigate}
-                >
-                  <span className="step-circle">{stepNum}</span>
-                  <span className="step-label">{title}</span>
-                  {isSubmitted && <span className="step-check">✓</span>}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        )}
 
         <div className="form">
-          {[1, 2, 3, 4, 5, 6, 7].includes(currentStep) ? (
-            <div className="form">
-              <StepComponent
-                onStepSubmit={(stepNumber) => {
-                  setStepSubmissionStatus(prev => ({
-                    ...prev,
-                    [stepNumber]: true
-                  }));
-                }}
-              />
+          <StepComponent onStepSubmit={handleMarkStepAsSubmitted} user={user} />
 
-              <div className="buttons d-flex justify-content-between">
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  disabled={currentStep === 1}
-                  aria-disabled={currentStep === 1}
-                  className="btn btn-primary"
-                >
-                  قبلی
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  disabled={currentStep === steps.length}
-                  aria-disabled={currentStep === steps.length}
-                  className="btn btn-primary"
-                >
-                  بعدی
-                </button>
-              </div>
+          {isInstitute && (
+            <div className="buttons d-flex justify-content-between mt-4">
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={currentStep === 1}
+                aria-disabled={currentStep === 1}
+                className="btn btn-primary"
+              >
+                قبلی
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={currentStep === steps.length}
+                aria-disabled={currentStep === steps.length}
+                className="btn btn-primary"
+              >
+                بعدی
+              </button>
             </div>
-          ) : (
-        <form className="form" onSubmit={handleSubmitStep}>
-          <StepComponent
-            value={formData[`step${currentStep}Input`] || ""}
-            onChange={handleInputChange}
-                onStepSubmit={(stepNumber) => {
-                  setStepSubmissionStatus(prev => ({
-                    ...prev,
-                    [stepNumber]: true
-                  }));
-                }}
-          />
-
-          <div className="buttons d-flex justify-content-between">
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={currentStep === 1}
-              aria-disabled={currentStep === 1}
-              className="btn btn-primary"
-            >
-              قبلی
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={currentStep === steps.length}
-              aria-disabled={currentStep === steps.length}
-              className="btn btn-primary"
-            >
-              بعدی
-            </button>
-          </div>
-        </form>
           )}
         </div>
       </div>

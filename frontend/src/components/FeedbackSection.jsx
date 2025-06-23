@@ -17,6 +17,29 @@ const FeedbackSection = () => {
   const [particles, setParticles] = useState([]);
   const canvasRef = useRef(null);
 
+  // Copy-to-clipboard tooltip state
+  const [copiedField, setCopiedField] = useState(null);
+  const copyTimeoutRef = useRef(null);
+
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleCopy = (field, value) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setShowConfetti(true);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopiedField(null);
+      setShowConfetti(false);
+    }, 1200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
   // Particle animation system
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -210,6 +233,8 @@ const FeedbackSection = () => {
         } else {
           showNotification("success", "پیام شما با موفقیت ارسال شد. تشکر!");
         }
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 1500);
         setFormData({ firstName: "", lastName: "", email: "", message: "" });
         setTouched({});
         setErrors({});
@@ -246,194 +271,305 @@ const FeedbackSection = () => {
       {/* Animated Background Canvas */}
       <canvas ref={canvasRef} className="particle-canvas" />
       
-      {/* Floating Elements */}
-      <div className="floating-elements">
-        <div className="floating-shape shape-1"></div>
-        <div className="floating-shape shape-2"></div>
-        <div className="floating-shape shape-3"></div>
-        <div className="floating-shape shape-4"></div>
+      {/* Floating SVG Blob Backgrounds */}
+      <svg className="floating-blob-bg blob1" viewBox="0 0 600 400" width="600" height="400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="blobGradient1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0dcaf0" />
+            <stop offset="100%" stopColor="#00b5d7" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#blobGradient1)" fillOpacity="0.15" d="M421.5,320Q370,400,260,370Q150,340,120,220Q90,100,220,80Q350,60,420,140Q490,220,421.5,320Z"/>
+      </svg>
+      <svg className="floating-blob-bg blob2" viewBox="0 0 600 400" width="600" height="400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="blobGradient2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#00b5d7" />
+            <stop offset="100%" stopColor="#0dcaf0" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#blobGradient2)" fillOpacity="0.12" d="M421.5,320Q370,400,260,370Q150,340,120,220Q90,100,220,80Q350,60,420,140Q490,220,421.5,320Z"/>
+      </svg>
+      
+      {/* Confetti burst animation */}
+      {showConfetti && <div className="confetti-burst" aria-hidden="true"></div>}
+      
+      {/* Hero Section */}
+      <div className="feedback-hero">
+        <div className="hero-content">
+          <span className="mascot-emoji" aria-label="Mascot">🤗</span>
+          <h1 className="hero-title">ارتباط با ما</h1>
+          <p className="hero-subtitle">ما همیشه آماده شنیدن نظرات و پیشنهادات شما هستیم!</p>
+        </div>
       </div>
 
-      <div className="feedback-container">
-        {/* Glowing Header */}
-        <div className="header-glow">
-          <h2 className="feedback-heading">
-            <span className="gradient-text">ارسال باز خورد</span>
-            <div className="heading-underline"></div>
-          </h2>
-          <p className="feedback-subtitle">نظرات شما برای ما ارزشمند است</p>
-        </div>
-        
-        {/* Enhanced Notification */}
-        {notification.show && (
-          <div className={`notification ${notification.type}`}>
-            <div className="notification-icon">
-              {notification.type === 'success' ? '✓' : '⚠'}
+      {/* Main Content Container */}
+      <div className="feedback-content">
+        <div className="feedback-grid">
+          {/* Contact Information Card */}
+          <div className="contact-card fade-in-card">
+            <div className="card-header">
+              <h3 className="card-title">اطلاعات تماس</h3>
+              <p className="card-subtitle">برای ارتباط با ما می‌توانید از راه‌های زیر استفاده کنید</p>
             </div>
-            <span className="notification-message">{notification.message}</span>
-            <button 
-              className="notification-close"
-              onClick={() => setNotification({ show: false, type: "", message: "" })}
-              aria-label="بستن اعلان"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Glassmorphism Form */}
-        <form className="feedback-form" onSubmit={handleSubmit} noValidate>
-          <div className="form-grid">
-            <div className="form-group">
-              <div className="input-container">
-                <input
-                  id="firstName"
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('firstName')}
-                  onBlur={handleBlur}
-                  required
-                  disabled={submitting}
-                  className={`floating-input ${errors.firstName ? "error" : ""} ${activeField === 'firstName' ? "active" : ""}`}
-                  placeholder=" "
-                />
-                <label htmlFor="firstName" className="floating-label">
-                  <span className="label-text">اسم</span>
-                  <span className="required-star">*</span>
-                </label>
-                <div className="input-border"></div>
+            
+            <div className="contact-list">
+              <div className="contact-item">
+                <div className="contact-icon-wrapper">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <polyline points="3 7 12 13 21 7"/>
+                  </svg>
+                </div>
+                <div className="contact-details">
+                  <span className="contact-label">ایمیل</span>
+                  <div className="contact-value">
+                    <a href="mailto:info@tveta.gov.af" className="contact-link">info@tveta.gov.af</a>
+                    <button
+                      type="button"
+                      className={`copy-btn${copiedField === 'email' ? ' copied' : ''}`}
+                      title="کپی ایمیل"
+                      aria-label="کپی ایمیل"
+                      onClick={() => handleCopy('email', 'info@tveta.gov.af')}
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+                      </svg>
+                      <span className="copied-tooltip" aria-live="polite">
+                        {copiedField === 'email' ? 'کپی شد!' : ''}
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              {errors.firstName && (
-                <span className="error-message" role="alert">
-                  {errors.firstName}
-                </span>
-              )}
-            </div>
 
-            <div className="form-group">
-              <div className="input-container">
-                <input
-                  id="lastName"
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus('lastName')}
-                  onBlur={handleBlur}
-                  required
-                  disabled={submitting}
-                  className={`floating-input ${errors.lastName ? "error" : ""} ${activeField === 'lastName' ? "active" : ""}`}
-                  placeholder=" "
-                />
-                <label htmlFor="lastName" className="floating-label">
-                  <span className="label-text">تخلص</span>
-                  <span className="required-star">*</span>
-                </label>
-                <div className="input-border"></div>
+              <div className="contact-item">
+                <div className="contact-icon-wrapper">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.72 19.72 0 0 1 3 5.18 2 2 0 0 1 5 3h4.09a2 2 0 0 1 2 1.72c.13 1.13.37 2.23.72 3.28a2 2 0 0 1-.45 2.11l-1.27 1.27a16 16 0 0 0 6.29 6.29l1.27-1.27a2 2 0 0 1 2.11-.45c1.05.35 2.15.59 3.28.72A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <div className="contact-details">
+                  <span className="contact-label">تلفن</span>
+                  <div className="contact-value">
+                    <div className="phone-number-container">
+                      <a href="tel:+93700000000" className="contact-link">+93 700 000 000</a>
+                    </div>
+                    <button
+                      type="button"
+                      className={`copy-btn${copiedField === 'phone' ? ' copied' : ''}`}
+                      title="کپی شماره"
+                      aria-label="کپی شماره"
+                      onClick={() => handleCopy('phone', '+93700000000')}
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2"/>
+                        <path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+                      </svg>
+                      <span className="copied-tooltip" aria-live="polite">
+                        {copiedField === 'phone' ? 'کپی شد!' : ''}
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
-              {errors.lastName && (
-                <span className="error-message" role="alert">
-                  {errors.lastName}
-                </span>
-              )}
+
+              <div className="contact-item">
+                <div className="contact-icon-wrapper">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div className="contact-details">
+                  <span className="contact-label">آدرس</span>
+                  <a href="https://maps.google.com/?q=کابل، افغانستان، اداره ملی تعلیمات تخنیکی و مسلکی" target="_blank" rel="noopener noreferrer" className="contact-link">کابل، افغانستان، اداره ملی تعلیمات تخنیکی و مسلکی</a>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="form-group">
-            <div className="input-container">
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                onFocus={() => handleFocus('email')}
-                onBlur={handleBlur}
-                required
-                disabled={submitting}
-                className={`floating-input ${errors.email ? "error" : ""} ${activeField === 'email' ? "active" : ""}`}
-                placeholder=" "
-              />
-              <label htmlFor="email" className="floating-label">
-                <span className="label-text">ایمل آدرس</span>
-                <span className="required-star">*</span>
-              </label>
-              <div className="input-border"></div>
+          {/* Feedback Form Card */}
+          <div className="form-card fade-in-card">
+            <div className="card-header">
+              <div className="cta-badge">👋 ما منتظر پیام شما هستیم!</div>
+              <h3 className="card-title">ارسال باز خورد</h3>
+              <p className="card-subtitle">نظرات شما برای ما ارزشمند است</p>
             </div>
-            {errors.email && (
-              <span className="error-message" role="alert">
-                {errors.email}
-              </span>
+            
+            {/* Enhanced Notification */}
+            {notification.show && (
+              <div className={`notification ${notification.type}`}>
+                <div className="notification-icon">
+                  {notification.type === 'success' ? '✓' : '⚠'}
+                </div>
+                <span className="notification-message">{notification.message}</span>
+                <button 
+                  className="notification-close"
+                  onClick={() => setNotification({ show: false, type: "", message: "" })}
+                  aria-label="بستن اعلان"
+                >
+                  ×
+                </button>
+              </div>
             )}
-          </div>
 
-          <div className="form-group">
-            <div className="textarea-container">
-              <textarea
-                id="message"
-                name="message"
-                rows="4"
-                value={formData.message}
-                onChange={handleChange}
-                onFocus={() => handleFocus('message')}
-                onBlur={handleBlur}
-                required
-                disabled={submitting}
-                className={`floating-textarea ${errors.message ? "error" : ""} ${activeField === 'message' ? "active" : ""}`}
-                placeholder=" "
-                maxLength={1000}
-              ></textarea>
-              <label htmlFor="message" className="floating-label">
-                <span className="label-text">پیام شما</span>
-                <span className="required-star">*</span>
-              </label>
-              <div className="textarea-border"></div>
-            </div>
-            <div className="textarea-footer">
-              {errors.message && (
-                <span className="error-message" role="alert">
-                  {errors.message}
-                </span>
-              )}
-              <span className="character-count">
-                {getCharacterCount()}/1000
-              </span>
-            </div>
-          </div>
+            {/* Feedback Form */}
+            <form className="feedback-form" onSubmit={handleSubmit} noValidate>
+              <div className="form-grid">
+                <div className="form-group">
+                  <div className="input-container">
+                    <input
+                      id="firstName"
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus('firstName')}
+                      onBlur={handleBlur}
+                      required
+                      disabled={submitting}
+                      className={`floating-input${errors.firstName ? " error" : ""}${activeField === 'firstName' ? " active" : ""} animated-field`}
+                      placeholder=" "
+                    />
+                    <label htmlFor="firstName" className="floating-label">
+                      <span className="label-text">اسم</span>
+                      <span className="required-star">*</span>
+                    </label>
+                    <div className="input-border"></div>
+                  </div>
+                  {errors.firstName && (
+                    <span className="error-message" role="alert">
+                      {errors.firstName}
+                    </span>
+                  )}
+                </div>
 
-          {/* Enhanced Submit Button */}
-          <div className="button-container">
-            <button 
-              type="submit" 
-              className={`submit-button ${!isFormValid() || submitting ? "disabled" : ""}`}
-              disabled={!isFormValid() || submitting}
-              aria-describedby={submitting ? "submitting-status" : undefined}
-            >
-              <span className="button-content">
-                {submitting ? (
-                  <>
-                    <div className="loading-spinner"></div>
-                    <span>در حال ارسال...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="button-text">ارسال پیام</span>
-                    <span className="button-icon">→</span>
-                  </>
+                <div className="form-group">
+                  <div className="input-container">
+                    <input
+                      id="lastName"
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      onFocus={() => handleFocus('lastName')}
+                      onBlur={handleBlur}
+                      required
+                      disabled={submitting}
+                      className={`floating-input${errors.lastName ? " error" : ""}${activeField === 'lastName' ? " active" : ""} animated-field`}
+                      placeholder=" "
+                    />
+                    <label htmlFor="lastName" className="floating-label">
+                      <span className="label-text">تخلص</span>
+                      <span className="required-star">*</span>
+                    </label>
+                    <div className="input-border"></div>
+                  </div>
+                  {errors.lastName && (
+                    <span className="error-message" role="alert">
+                      {errors.lastName}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <div className="input-container">
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus('email')}
+                    onBlur={handleBlur}
+                    required
+                    disabled={submitting}
+                    className={`floating-input${errors.email ? " error" : ""}${activeField === 'email' ? " active" : ""} animated-field`}
+                    placeholder=" "
+                  />
+                  <label htmlFor="email" className="floating-label">
+                    <span className="label-text">ایمل آدرس</span>
+                    <span className="required-star">*</span>
+                  </label>
+                  <div className="input-border"></div>
+                </div>
+                {errors.email && (
+                  <span className="error-message" role="alert">
+                    {errors.email}
+                  </span>
                 )}
-              </span>
-              <div className="button-glow"></div>
-            </button>
+              </div>
+
+              <div className="form-group">
+                <div className="textarea-container">
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows="4"
+                    value={formData.message}
+                    onChange={handleChange}
+                    onFocus={() => handleFocus('message')}
+                    onBlur={handleBlur}
+                    required
+                    disabled={submitting}
+                    className={`floating-textarea${errors.message ? " error" : ""}${activeField === 'message' ? " active" : ""} animated-field`}
+                    placeholder=" "
+                    maxLength={1000}
+                  ></textarea>
+                  <label htmlFor="message" className="floating-label">
+                    <span className="label-text">پیام شما</span>
+                    <span className="required-star">*</span>
+                  </label>
+                  <div className="textarea-border"></div>
+                </div>
+                <div className="textarea-footer">
+                  {errors.message && (
+                    <span className="error-message" role="alert">
+                      {errors.message}
+                    </span>
+                  )}
+                  <span className="character-count">
+                    {getCharacterCount()}/1000
+                  </span>
+                </div>
+              </div>
+
+              {/* Enhanced Submit Button */}
+              <div className="button-container">
+                <button
+                  type="submit"
+                  className={`submit-button${!isFormValid() || submitting ? " disabled" : ""} animated-submit`}
+                  disabled={!isFormValid() || submitting}
+                  aria-describedby={submitting ? "submitting-status" : undefined}
+                >
+                  <span className="button-content">
+                    {submitting ? (
+                      <>
+                        <div className="loading-spinner"></div>
+                        <span>در حال ارسال...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="button-text">ارسال پیام</span>
+                        <span className="button-icon">→</span>
+                      </>
+                    )}
+                  </span>
+                  <div className="button-glow"></div>
+                </button>
+              </div>
+              
+              {submitting && (
+                <div id="submitting-status" className="sr-only" role="status">
+                  در حال ارسال فرم...
+                </div>
+              )}
+            </form>
           </div>
-          
-          {submitting && (
-            <div id="submitting-status" className="sr-only" role="status">
-              در حال ارسال فرم...
-            </div>
-          )}
-        </form>
+        </div>
       </div>
     </section>
   );

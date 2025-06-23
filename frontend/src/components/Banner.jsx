@@ -1,255 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Typed from 'typed.js';
 import { FaCheckCircle, FaUsers, FaClipboardCheck, FaGraduationCap } from 'react-icons/fa';
-
-const TechnologySVG = () => (
-  <svg viewBox="0 0 800 600" fill="currentColor">
-    <g className="animate-float">
-      {/* Circuit Board Pattern */}
-      <path d="M200 200 L400 200 L400 400 L200 400 Z" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-draw"
-      />
-      <path d="M300 200 L300 400 M200 300 L400 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-draw"
-        style={{ animationDelay: '0.3s' }}
-      />
-      {/* Tech Elements */}
-      <circle cx="300" cy="300" r="30" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-pulse"
-      />
-      <path d="M500 200 L600 200 L550 300 L500 200" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-draw"
-        style={{ animationDelay: '0.6s' }}
-      />
-      {/* Floating Elements */}
-      <circle cx="150" cy="150" r="15" className="animate-float-delayed" />
-      <circle cx="650" cy="150" r="15" className="animate-float-delayed" style={{ animationDelay: '0.3s' }} />
-      <path d="M400 450 L450 500 L400 550" className="animate-float-delayed" style={{ animationDelay: '0.6s' }} />
-    </g>
-  </svg>
-);
-
-const CarSVG = () => (
-  <svg viewBox="0 0 800 600" fill="currentColor">
-    <g className="animate-float">
-      {/* Car Body */}
-      <path d="M250 350 L550 350 L520 400 L280 400 Z" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-      />
-      {/* Car Top */}
-      <path d="M300 350 L500 350 L480 300 L320 300 Z" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-        style={{ animationDelay: '0.3s' }}
-      />
-      {/* Windows */}
-      <path d="M320 310 L480 310 L470 340 L330 340 Z" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-draw"
-        style={{ animationDelay: '0.5s' }}
-      />
-      {/* Wheels */}
-      <circle cx="320" cy="400" r="25" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="6"
-        className="animate-spin-slow"
-      />
-      <circle cx="480" cy="400" r="25" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="6"
-        className="animate-spin-slow"
-      />
-      {/* Wheel Details */}
-      <circle cx="320" cy="400" r="15" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-spin-slow"
-        style={{ animationDirection: 'reverse' }}
-      />
-      <circle cx="480" cy="400" r="15" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-spin-slow"
-        style={{ animationDirection: 'reverse' }}
-      />
-      {/* Headlights */}
-      <path d="M280 360 L290 360" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-pulse"
-      />
-      <path d="M510 360 L520 360" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-pulse"
-      />
-    </g>
-  </svg>
-);
-
-const AirplaneSVG = () => (
-  <svg viewBox="0 0 800 600" fill="currentColor">
-    <g className="animate-float">
-      {/* Main Body */}
-      <path d="M200 300 L600 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-      />
-      {/* Wings */}
-      <path d="M400 300 L400 200 L450 250 L400 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-        style={{ animationDelay: '0.3s' }}
-      />
-      <path d="M400 300 L400 400 L450 350 L400 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-        style={{ animationDelay: '0.3s' }}
-      />
-      {/* Tail */}
-      <path d="M200 300 L250 250 L300 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-        style={{ animationDelay: '0.5s' }}
-      />
-      {/* Windows */}
-      <path d="M300 290 L500 290" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-draw"
-        style={{ animationDelay: '0.7s' }}
-      />
-      {/* Engine */}
-      <path d="M550 290 L550 310" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="6"
-        className="animate-pulse"
-      />
-      <path d="M570 290 L570 310" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="6"
-        className="animate-pulse"
-      />
-    </g>
-  </svg>
-);
-
-const DroneSVG = () => (
-  <svg viewBox="0 0 800 600" fill="currentColor">
-    <g className="animate-float">
-      {/* Main Body */}
-      <circle cx="400" cy="300" r="40" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="8"
-        className="animate-draw"
-      />
-      {/* Inner Circle */}
-      <circle cx="400" cy="300" r="25" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="4"
-        className="animate-pulse"
-      />
-      {/* Arms */}
-      <path d="M400 200 L400 400 M200 300 L600 300" 
-        fill="none" 
-        stroke="currentColor" 
-        strokeWidth="6"
-        className="animate-draw"
-        style={{ animationDelay: '0.3s' }}
-      />
-      {/* Propellers */}
-      <g className="animate-spin-slow">
-        <path d="M400 180 L400 220 M380 200 L420 200" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="4"
-        />
-        <path d="M400 380 L400 420 M380 400 L420 400" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="4"
-        />
-        <path d="M180 300 L220 300 M200 280 L200 320" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="4"
-        />
-        <path d="M580 300 L620 300 M600 280 L600 320" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="4"
-        />
-      </g>
-      {/* LED Lights */}
-      <circle cx="400" cy="300" r="5" 
-        fill="currentColor" 
-        className="animate-pulse"
-      />
-      <circle cx="400" cy="200" r="3" 
-        fill="currentColor" 
-        className="animate-pulse"
-        style={{ animationDelay: '0.3s' }}
-      />
-      <circle cx="400" cy="400" r="3" 
-        fill="currentColor" 
-        className="animate-pulse"
-        style={{ animationDelay: '0.3s' }}
-      />
-      <circle cx="200" cy="300" r="3" 
-        fill="currentColor" 
-        className="animate-pulse"
-        style={{ animationDelay: '0.3s' }}
-      />
-      <circle cx="600" cy="300" r="3" 
-        fill="currentColor" 
-        className="animate-pulse"
-        style={{ animationDelay: '0.3s' }}
-      />
-    </g>
-  </svg>
-);
+import PresentationImg from '../assets/illustrations/presentation-6-30.png';
+import CustomerServiceImg from '../assets/illustrations/customer-service-1-33.png';
+import OfficeWorkImg from '../assets/illustrations/office-work-81.png';
+import TeamPresentationImg from '../assets/illustrations/team-presentation-6-18.png';
 
 const slides = [
   {
-    component: <CarSVG />,
+    component: <img src={PresentationImg} alt="ارائه - Presentation Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
     title: 'ریاست تضمین کیفیت',
     slogans: [
       'تضمین کیفیت؛ مسیر آموزش بهتر',
@@ -260,7 +19,7 @@ const slides = [
       'مأموریت ما ارتقاء کیفیت آموزش‌های فنی و حرفه‌ای از طریق ارزیابی، نظارت و همکاری مستمر با مؤسسات آموزشی است.',
   },
   {
-    component: <AirplaneSVG />,
+    component: <img src={CustomerServiceImg} alt="خدمات مشتری - Customer Service Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
     title: 'اداره تعلیمات تخنیکی و مسلکی',
     slogans: [
       'همکاری با مؤسسات آموزشی',
@@ -271,7 +30,7 @@ const slides = [
       'ما با همکاری نزدیک با مؤسسات، استانداردهای آموزشی را به سطح جهانی می‌رسانیم.',
   },
   {
-    component: <DroneSVG />,
+    component: <img src={OfficeWorkImg} alt="دفتر کار - Office Work Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
     title: 'آموزش، توسعه و پیشرفت',
     slogans: [
       'توسعه مهارت‌های کارآفرینی',
@@ -280,6 +39,17 @@ const slides = [
     ],
     description:
       'با تمرکز بر مهارت‌ها و نوآوری، آینده‌ای روشن برای نیروی کار کشور می‌سازیم.',
+  },
+  {
+    component: <img src={TeamPresentationImg} alt="ارائه تیمی - Team Presentation Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
+    title: 'علوم و فناوری',
+    slogans: [
+      'پیشرفت علمی و فناوری',
+      'نوآوری در آموزش',
+      'تحقیق و توسعه',
+    ],
+    description:
+      'ما به توسعه علوم و فناوری و ترویج نوآوری در آموزش متعهدیم.',
   },
 ];
 
@@ -445,8 +215,14 @@ export default function Banner() {
             </div>
           ))}
         </div>
+        <div className="banner__wave" aria-hidden="true">
+          <svg viewBox="0 0 1440 320" width="100%" height="110" preserveAspectRatio="none" style={{ display: 'block' }}>
+            <path fill="#0dcaf0" fillOpacity="1" d="M0,224L48,202.7C96,181,192,139,288,133.3C384,128,480,160,576,186.7C672,213,768,235,864,218.7C960,203,1056,149,1152,133.3C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
+            <path fill="#00b5d7" fillOpacity="0.7" d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,154.7C672,160,768,192,864,197.3C960,203,1056,181,1152,176C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
+            <path fill="#a9e5ff" fillOpacity="0.5" d="M0,256L60,245.3C120,235,240,213,360,197.3C480,181,600,171,720,186.7C840,203,960,245,1080,250.7C1200,256,1320,224,1380,208L1440,192L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/>
+          </svg>
+        </div>
       </section>
-
       <style>{`
         /* Reset and basics */
         .banner {
@@ -1021,6 +797,16 @@ export default function Banner() {
         }
 
         /* Rest of the existing styles... */
+        .banner__wave {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          z-index: 0;
+          pointer-events: none;
+          overflow: hidden;
+        }
       `}</style>
     </>
   );
