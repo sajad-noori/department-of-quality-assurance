@@ -248,6 +248,8 @@ const ProfileSidebar = () => {
           height: 100vh;
           backdrop-filter: blur(10px);
           transition: all 0.3s ease;
+          background: rgba(255, 255, 255, 0.05);
+          border-left: 1px solid rgba(0, 212, 255, 0.1);
         }
 
         .profile-content {
@@ -265,9 +267,9 @@ const ProfileSidebar = () => {
           height: 120px;
           margin: 0 auto 2rem;
           padding: 4px;
-          background: linear-gradient(145deg, #3b82f6, #2563eb);
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
           border-radius: 50%;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
         }
 
         .profile-image {
@@ -283,7 +285,7 @@ const ProfileSidebar = () => {
           width: 100%;
           height: 100%;
           border-radius: 50%;
-          background: linear-gradient(145deg, #3b82f6, #2563eb);
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -292,14 +294,14 @@ const ProfileSidebar = () => {
           font-weight: 600;
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
           border: 3px solid #1a1a1a;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
         }
 
         .upload-button {
           position: absolute;
           bottom: 0;
           right: 0;
-          background: #3b82f6;
+          background: #0dcaf0;
           width: 36px;
           height: 36px;
           border-radius: 50%;
@@ -323,7 +325,7 @@ const ProfileSidebar = () => {
           position: absolute;
           bottom: 0;
           right: 0;
-          background: rgba(59, 130, 246, 0.9);
+          background: rgba(13, 202, 240, 0.9);
           width: 36px;
           height: 36px;
           border-radius: 50%;
@@ -336,7 +338,7 @@ const ProfileSidebar = () => {
         .user-name {
           font-size: 1.4rem;
           margin-bottom: 1rem;
-          color: #8db8ff;
+          color: #a9e5ff;
           font-weight: 600;
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -372,14 +374,14 @@ const ProfileSidebar = () => {
         }
 
         .stage.active {
-          background: rgba(59, 130, 246, 0.15);
-          border-right: 3px solid #3b82f6;
+          background: rgba(13, 202, 240, 0.15);
+          border-right: 3px solid #0dcaf0;
         }
 
         .stage-number {
           width: 32px;
           height: 32px;
-          background: linear-gradient(145deg, #3b82f6, #2563eb);
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -387,17 +389,17 @@ const ProfileSidebar = () => {
           color: white;
           font-weight: 600;
           font-size: 0.9rem;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+          box-shadow: 0 2px 8px rgba(13, 202, 240, 0.3);
         }
 
         .stage-text {
-          color: #8db8ff;
+          color: #a9e5ff;
           font-size: 1rem;
           font-weight: 500;
         }
 
         .stage.active .stage-text {
-          color: #3b82f6;
+          color: #0dcaf0;
           font-weight: 600;
         }
 

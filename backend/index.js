@@ -26,6 +26,7 @@ const stakeholderInvolvementRoutes = require("./routes/stakeholder_involvement.r
 const documentRoutes = require("./routes/document.routes");
 const profileDocumentRoutes = require("./routes/profile_document.routes");
 const stageRoutes = require('./routes/stage.routes');
+const stepProgressRoutes = require('./routes/stepProgress.routes');
 const fs = require('fs');
 
 require('dotenv').config();
@@ -85,7 +86,7 @@ app.use("/api/stakeholder-involvement", stakeholderInvolvementRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/profile-documents", profileDocumentRoutes);
 app.use('/api/stages', stageRoutes);
-
+app.use('/api/step-progress', stepProgressRoutes);
 
 // Trust proxy for rate limiting
 app.set('trust proxy', 1);

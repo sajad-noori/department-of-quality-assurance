@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FaPlay, FaSearch, FaCalendarAlt, FaTag } from "react-icons/fa";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -7,11 +8,14 @@ const VideoGallery = () => {
   const [videos, setVideos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [hoveredVideo, setHoveredVideo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { type } = useParams();
 
   useEffect(() => {
     const fetchVideos = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/media/videos");
         const data = await response.json();
@@ -31,9 +35,11 @@ const VideoGallery = () => {
         }));
 
         setVideos(mapped);
-        setCurrentPage(1); // Reset to first page on type change
+        setCurrentPage(1);
       } catch (error) {
         console.error("Error fetching videos:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -44,8 +50,15 @@ const VideoGallery = () => {
     navigate("/video", { state: { video } });
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fa-IR');
+  };
+
   const filteredVideos = videos.filter((video) =>
-    video.title.toLowerCase().includes(searchTerm.toLowerCase())
+    video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    video.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredVideos.length / ITEMS_PER_PAGE);
@@ -54,74 +67,141 @@ const VideoGallery = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>در حال بارگذاری ویدیوها...</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{`
         body {
-          background-color: #121212;
+          background: #121212;
           margin: 0;
         }
+        
         .container {
-          max-width: 960px;
+          max-width: 1200px;
           margin: auto;
           padding: 2rem 1rem;
           color: white;
         }
+        
+        .page-header {
+          text-align: center;
+          margin-bottom: 3rem;
+          animation: fadeInDown 0.8s ease-out;
+        }
+        
+        .page-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          background: linear-gradient(45deg, #00d4ff, #0099cc);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 0.5rem;
+          text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .page-subtitle {
+          color: #a0a0a0;
+          font-size: 1.1rem;
+          margin: 0;
+        }
+        
+        .search-container {
+          position: relative;
+          margin-bottom: 2rem;
+          animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
         .search-input {
           width: 100%;
-          padding: 0.75rem 1rem;
-          margin-bottom: 1.5rem;
+          padding: 1rem 1rem 1rem 3rem;
           font-size: 1rem;
-          border-radius: 8px;
-          border: 1px solid #444;
-          background-color: #1e1e1e;
+          border-radius: 12px;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.05);
           color: #eee;
           outline: none;
-          transition: border 0.3s ease;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
         }
+        
         .search-input::placeholder {
           color: #888;
         }
+        
         .search-input:focus {
-          border-color: #ff0000;
+          border-color: #00d4ff;
+          box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+          background: rgba(255, 255, 255, 0.1);
         }
+        
+        .search-icon {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #888;
+          font-size: 1.2rem;
+        }
+        
+        .no-results {
+          text-align: center;
+          padding: 3rem;
+          color: #888;
+          font-size: 1.1rem;
+        }
+        
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 2rem;
+          margin-bottom: 2rem;
+        }
+        
         .video-card {
-          background-color: #222;
+          background: rgba(255, 255, 255, 0.05);
           border-radius: 16px;
           overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.7);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
           position: relative;
-          outline: none;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          animation: fadeInUp 0.6s ease-out;
         }
-        .video-card:hover,
-        .video-card:focus {
-          transform: translateY(-8px);
-          box-shadow: 0 12px 24px rgba(255,255,255,0.2);
+        
+        .video-card:hover {
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+          border-color: rgba(0, 212, 255, 0.3);
         }
-        .video-card video {
+        
+        .video-thumbnail {
+          position: relative;
           width: 100%;
-          height: 180px;
+          height: 200px;
+          overflow: hidden;
+        }
+        
+        .video-thumbnail video {
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          display: block;
-          border-radius: 16px 16px 0 0;
-          background: black;
+          transition: transform 0.3s ease;
         }
-        .video-info {
-          padding: 1rem;
-          width: 100%;
+        
+        .video-card:hover .video-thumbnail video {
+          transform: scale(1.1);
         }
-        .video-title {
-          font-weight: 700;
-          font-size: 1.1rem;
-          margin: 0;
-          color: #eee;
-          text-align: center;
-        }
+        
         .play-button {
           position: absolute;
           top: 50%;
@@ -129,105 +209,273 @@ const VideoGallery = () => {
           transform: translate(-50%, -50%);
           width: 60px;
           height: 60px;
-          background: rgba(255, 0, 0, 0.8);
+          background: rgba(0, 212, 255, 0.9);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background 0.3s ease;
+          transition: all 0.3s ease;
           z-index: 2;
-          pointer-events: none;
+          box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
         }
+        
         .play-button svg {
-          fill: white;
-          width: 24px;
-          height: 24px;
-          margin-left: 4px;
+          color: white;
+          font-size: 1.2rem;
+          margin-left: 2px;
         }
-        .video-card:hover .play-button,
-        .video-card:focus .play-button {
-          background: rgba(255, 0, 0, 1);
+        
+        .video-card:hover .play-button {
+          background: rgba(0, 212, 255, 1);
+          transform: translate(-50%, -50%) scale(1.1);
+          box-shadow: 0 6px 25px rgba(0, 212, 255, 0.6);
         }
-        .grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
+        
+        .video-info {
+          padding: 1.5rem;
         }
+        
+        .video-title {
+          font-weight: 600;
+          font-size: 1.1rem;
+          margin: 0 0 0.5rem 0;
+          color: #eee;
+          line-height: 1.4;
+        }
+        
+        .video-description {
+          color: #a0a0a0;
+          font-size: 0.9rem;
+          line-height: 1.5;
+          margin: 0 0 1rem 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .video-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.8rem;
+          color: #888;
+        }
+        
+        .video-category {
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+          background: rgba(0, 212, 255, 0.1);
+          padding: 0.3rem 0.6rem;
+          border-radius: 6px;
+          color: #00d4ff;
+        }
+        
         .pagination {
           display: flex;
           justify-content: center;
-          margin-top: 2rem;
+          align-items: center;
           gap: 1rem;
+          margin-top: 3rem;
         }
+        
         .pagination button {
-          background-color: #1e1e1e;
-          border: 1px solid #444;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           color: #eee;
-          padding: 0.5rem 1rem;
+          padding: 0.8rem 1.5rem;
           border-radius: 8px;
           cursor: pointer;
-          transition: background 0.3s ease;
+          transition: all 0.3s ease;
+          font-weight: 500;
+          backdrop-filter: blur(10px);
         }
-        .pagination button:hover {
-          background-color: #333;
+        
+        .pagination button:hover:not(:disabled) {
+          background: rgba(0, 212, 255, 0.1);
+          border-color: rgba(0, 212, 255, 0.3);
+          color: #00d4ff;
         }
+        
         .pagination button:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        
+        .page-info {
+          color: #a0a0a0;
+          font-weight: 500;
+          padding: 0.8rem 1.5rem;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+          backdrop-filter: blur(10px);
+        }
+        
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 50vh;
+          color: #eee;
+        }
+        
+        .loading-spinner {
+          width: 50px;
+          height: 50px;
+          border: 3px solid rgba(255, 255, 255, 0.1);
+          border-top: 3px solid #00d4ff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .container {
+            padding: 1rem;
+          }
+          
+          .page-title {
+            font-size: 2rem;
+          }
+          
+          .grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+          
+          .pagination {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        }
       `}</style>
 
       <div className="container">
-        <h2 className="mb-4" style={{ textAlign: "center", fontSize: "2rem" }}>
-          ویدیو های آموزشی
-        </h2>
-
-        <input
-          type="text"
-          className="search-input"
-          placeholder="جستجوی ویدیو..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
-
-        <div className="grid">
-          {paginatedVideos.map((video) => (
-            <div
-              key={video.id}
-              className="video-card"
-              tabIndex={0}
-              role="button"
-              onClick={() => handleVideoClick(video)}
-            >
-              <video
-                src={video.videoUrl}
-                muted
-                loop
-                playsInline
-                preload="metadata"
-              />
-              <div className="play-button" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-              <div className="video-info">
-                <h3 className="video-title">{video.title}</h3>
-              </div>
-            </div>
-          ))}
+        <div className="page-header">
+          <h1 className="page-title">ویدیو های آموزشی</h1>
+          <p className="page-subtitle">مجموعه کامل ویدیوهای آموزشی و تخصصی</p>
         </div>
+
+        <div className="search-container">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            className="search-input"
+            placeholder="جستجوی ویدیو بر اساس عنوان یا توضیحات..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        {filteredVideos.length === 0 && !isLoading && (
+          <div className="no-results">
+            {searchTerm ? 'هیچ ویدیویی با این جستجو یافت نشد.' : 'هیچ ویدیویی در این دسته موجود نیست.'}
+          </div>
+        )}
+
+        {filteredVideos.length > 0 && (
+          <div className="grid">
+            {paginatedVideos.map((video, index) => (
+              <div
+                key={video.id}
+                className="video-card"
+                tabIndex={0}
+                role="button"
+                onClick={() => handleVideoClick(video)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleVideoClick(video);
+                  }
+                }}
+                onMouseEnter={() => setHoveredVideo(video.id)}
+                onMouseLeave={() => setHoveredVideo(null)}
+                style={{
+                  animationDelay: `${index * 0.1}s`
+                }}
+              >
+                <div className="video-thumbnail">
+                  <video
+                    src={video.videoUrl}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                  />
+                  <div className="play-button">
+                    <FaPlay />
+                  </div>
+                </div>
+                <div className="video-info">
+                  <h3 className="video-title">{video.title}</h3>
+                  {video.description && (
+                    <p className="video-description">{video.description}</p>
+                  )}
+                  <div className="video-meta">
+                    <span className="video-category">
+                      <FaTag />
+                      {video.category}
+                    </span>
+                    {video.uploaded_at && (
+                      <span>
+                        <FaCalendarAlt style={{ marginLeft: '0.3rem' }} />
+                        {formatDate(video.uploaded_at)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className="pagination">
-            <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
-              Previous
+            <button 
+              onClick={() => setCurrentPage(p => p - 1)} 
+              disabled={currentPage === 1}
+            >
+              قبلی
             </button>
-            <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
-              Next
+            <div className="page-info">
+              صفحه {currentPage} از {totalPages}
+            </div>
+            <button 
+              onClick={() => setCurrentPage(p => p + 1)} 
+              disabled={currentPage === totalPages}
+            >
+              بعدی
             </button>
           </div>
         )}

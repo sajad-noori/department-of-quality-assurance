@@ -1743,7 +1743,7 @@ function Step10() {
   );
 }
 
-// Map steps to components
+// Step components mapping
 const stepComponents = {
   1: Step1,
   2: Step2,
@@ -1754,9 +1754,8 @@ const stepComponents = {
   7: Step7,
   8: Step8,
   9: Step9,
-  10: Step10,
+  10: Step10
 };
-
 
 export default function MultiStepForm10() {
   const [user, setUser] = useState(null);
@@ -1765,8 +1764,9 @@ export default function MultiStepForm10() {
   const [stepSubmissionStatus, setStepSubmissionStatus] = useState({
     1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false
   });
+  const [progressLoading, setProgressLoading] = useState(true);
 
-  // Fetch user and initialize per-user localStorage
+  // Fetch user and initialize progress from database
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -1784,46 +1784,88 @@ export default function MultiStepForm10() {
     fetchUser();
   }, []);
 
-  // Load per-user progress from localStorage when user changes
+  // Load progress from database when user changes
   useEffect(() => {
-    if (user && user.id) {
-      const stepStatusKey = `stepSubmissionStatus_user_${user.id}`;
-      const currentStepKey = `currentStep_user_${user.id}`;
-      const savedStatus = localStorage.getItem(stepStatusKey);
-      const savedStep = localStorage.getItem(currentStepKey);
-      setStepSubmissionStatus(savedStatus ? JSON.parse(savedStatus) : {
-        1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false
-      });
-      setCurrentStep(savedStep ? Number(savedStep) : 1);
+    if (user && user.id && user.role === 'institute') {
+      fetchProgressFromDatabase();
+    } else {
+      setProgressLoading(false);
     }
   }, [user]);
 
-  // Save per-user progress to localStorage
-  useEffect(() => {
-    if (user && user.id) {
-      const stepStatusKey = `stepSubmissionStatus_user_${user.id}`;
-      const currentStepKey = `currentStep_user_${user.id}`;
-      localStorage.setItem(stepStatusKey, JSON.stringify(stepSubmissionStatus));
-      localStorage.setItem(currentStepKey, String(currentStep));
+  const fetchProgressFromDatabase = async () => {
+    try {
+      setProgressLoading(true);
+      const response = await axios.get('http://localhost:5000/api/step-progress', {
+        withCredentials: true,
+      });
+      
+      setCurrentStep(response.data.current_step);
+      setStepSubmissionStatus(response.data.step_submission_status);
+    } catch (error) {
+      console.error('Error fetching progress from database:', error);
+      // If there's an error, start with default values
+      setCurrentStep(1);
+      setStepSubmissionStatus({
+        1: false, 2: false, 3: false, 4: false, 5: false,
+        6: false, 7: false, 8: false, 9: false, 10: false
+      });
+    } finally {
+      setProgressLoading(false);
     }
-  }, [stepSubmissionStatus, currentStep, user]);
+  };
+
+  const saveProgressToDatabase = async (newCurrentStep, newStepSubmissionStatus) => {
+    try {
+      await axios.put('http://localhost:5000/api/step-progress', {
+        current_step: newCurrentStep,
+        step_submission_status: newStepSubmissionStatus
+      }, {
+        withCredentials: true,
+      });
+    } catch (error) {
+      console.error('Error saving progress to database:', error);
+    }
+  };
 
   const isInstitute = user && user.role === 'institute';
   const displayStep = isInstitute ? currentStep : 1;
   const StepComponent = stepComponents[displayStep];
 
-  const handleMarkStepAsSubmitted = (stepNumber, nextStep) => {
-    setStepSubmissionStatus(prev => ({
-      ...prev,
-      [stepNumber]: true,
-    }));
-    if (nextStep && nextStep <= steps.length) {
-      setCurrentStep(nextStep);
+  const handleMarkStepAsSubmitted = async (stepNumber, nextStep) => {
+    try {
+      // Mark step as submitted in database
+      await axios.post('http://localhost:5000/api/step-progress/mark-step', {
+        stepNumber: stepNumber
+      }, {
+        withCredentials: true,
+      });
+
+      // Update local state
+      setStepSubmissionStatus(prev => ({
+        ...prev,
+        [stepNumber]: true,
+      }));
+
+      // Navigate to next step if provided
+      if (nextStep && nextStep <= steps.length) {
+        const newCurrentStep = nextStep;
+        setCurrentStep(newCurrentStep);
+        
+        // Save updated progress to database
+        await saveProgressToDatabase(newCurrentStep, {
+          ...stepSubmissionStatus,
+          [stepNumber]: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error marking step as submitted:', error);
+      alert('خطا در ثبت مرحله. لطفاً دوباره تلاش کنید.');
     }
   };
 
   // Only allow navigation to a step if all previous steps are completed
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length) {
       let canGo = true;
       for (let i = 1; i <= currentStep; i++) {
@@ -1833,20 +1875,30 @@ export default function MultiStepForm10() {
         }
       }
       if (canGo) {
-        setCurrentStep(currentStep + 1);
+        const newCurrentStep = currentStep + 1;
+        setCurrentStep(newCurrentStep);
+        
+        // Save updated progress to database
+        await saveProgressToDatabase(newCurrentStep, stepSubmissionStatus);
       } else {
         alert(`لطفاً ابتدا مرحله ${steps[currentStep - 1]} را تکمیل و ثبت کنید`);
       }
     }
   };
 
-  const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  const handlePrev = async () => {
+    if (currentStep > 1) {
+      const newCurrentStep = currentStep - 1;
+      setCurrentStep(newCurrentStep);
+      
+      // Save updated progress to database
+      await saveProgressToDatabase(newCurrentStep, stepSubmissionStatus);
+    }
   };
 
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
   
-  if (userLoading) {
+  if (userLoading || progressLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
         <CircularProgress />
@@ -1885,6 +1937,7 @@ export default function MultiStepForm10() {
                     onClick={() => {
                       if (canNavigate) {
                         setCurrentStep(stepNum);
+                        saveProgressToDatabase(stepNum, stepSubmissionStatus);
                       } else {
                         alert("لطفاً ابتدا مرحله قبلی را تکمیل کنید");
                       }
