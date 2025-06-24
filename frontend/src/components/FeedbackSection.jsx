@@ -324,13 +324,13 @@ const FeedbackSection = () => {
                 <div className="contact-details">
                   <span className="contact-label">ایمیل</span>
                   <div className="contact-value">
-                    <a href="mailto:info@tveta.gov.af" className="contact-link">info@tveta.gov.af</a>
+                    <a href="mailto:sajadnooribayany2@gmail.com" className="contact-link">sajadnooribayany2@gmail.com</a>
                     <button
                       type="button"
                       className={`copy-btn${copiedField === 'email' ? ' copied' : ''}`}
                       title="کپی ایمیل"
                       aria-label="کپی ایمیل"
-                      onClick={() => handleCopy('email', 'info@tveta.gov.af')}
+                      onClick={() => handleCopy('email', 'sajadnooribayany@gmail.com')}
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                         <rect x="9" y="9" width="13" height="13" rx="2"/>
@@ -354,14 +354,14 @@ const FeedbackSection = () => {
                   <span className="contact-label">تلفن</span>
                   <div className="contact-value">
                     <div className="phone-number-container">
-                      <a href="tel:+93700000000" className="contact-link">+93 700 000 000</a>
+                      <a href="tel:0778558968" className="contact-link">+93 77 8558968</a>
                     </div>
                     <button
                       type="button"
                       className={`copy-btn${copiedField === 'phone' ? ' copied' : ''}`}
                       title="کپی شماره"
                       aria-label="کپی شماره"
-                      onClick={() => handleCopy('phone', '+93700000000')}
+                      onClick={() => handleCopy('phone', '0778558968')}
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                         <rect x="9" y="9" width="13" height="13" rx="2"/>

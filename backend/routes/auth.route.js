@@ -7,13 +7,13 @@ const { authenticate } = require('../middleware/auth.middleware');
 // Rate limiting configuration
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 50, // 5 attempts per window
   message: { message: 'Too many attempts, please try again later.' }
 });
 
 const verifyLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 attempts per hour
+  max: 30, // 3 attempts per hour
   message: { message: 'Too many verification attempts, please try again later.' }
 });
 

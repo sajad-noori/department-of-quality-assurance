@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { upload, uploadVideo, getVideos, updateVideo, deleteVideo, addComment, getComments } = require("../controllers/videos.controller");
 
-router.post("/video", (req, res) => {
+// Only admin can upload, update, and delete videos
+router.post("/video",(req, res) => {
   upload(req, res, (err) => {
     if (err) {
       console.error("Multer error:", err);
@@ -13,8 +14,11 @@ router.post("/video", (req, res) => {
 });
 
 router.get('/videos', getVideos);
-router.put('/video/:id', upload, updateVideo);
+
+// Only admin can update and delete videos
+router.put('/video/:id', updateVideo);
 router.delete('/video/:id', deleteVideo);
+
 router.post('/:id/comments', addComment);
 router.get('/:id/comments', getComments);
 
