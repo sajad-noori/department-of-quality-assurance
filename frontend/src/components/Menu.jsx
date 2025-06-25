@@ -64,6 +64,8 @@ export default function MenuWithUtilityBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [userName, setUserName] = useState('');
   const translateInitialized = useRef(false);
 
   const menuRef = useRef(null);
@@ -139,11 +141,22 @@ export default function MenuWithUtilityBar() {
         });
         if (res.data?.user) {
           setIsLoggedIn(true);
+          setUserName(res.data.user.name);
+          // Set profile image if available
+          if (res.data.user.profileImage) {
+            setProfileImage(res.data.user.profileImage);
+          } else {
+            setProfileImage(null);
+          }
         } else {
           setIsLoggedIn(false);
+          setProfileImage(null);
+          setUserName('');
         }
       } catch (err) {
         setIsLoggedIn(false);
+        setProfileImage(null);
+        setUserName('');
       }
     };
     checkAuth();
@@ -279,9 +292,33 @@ export default function MenuWithUtilityBar() {
                 padding: 0,
               }}
               onClick={() => navigate("/profile")}
-              title="مشاهده پروفایل"
+              title={`مشاهده پروفایل ${userName}`}
             >
-              <FaUserCircle size={24} />
+              {profileImage ? (
+                <img
+                  src={`http://localhost:5000${profileImage}`}
+                  alt={`پروفایل ${userName}`}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid #fff",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
+                />
+              ) : null}
+              <FaUserCircle 
+                size={32} 
+                style={{ 
+                  display: profileImage ? 'none' : 'block',
+                  color: '#3b82f6'
+                }} 
+              />
             </button>
           ) : (
             <button className={styles.loginBtn} onClick={() => navigate("/login")}>

@@ -25,6 +25,7 @@ const practicalFacilityRoutes = require('./routes/practical_facility.routes');
 const stakeholderInvolvementRoutes = require("./routes/stakeholder_involvement.routes");
 const documentRoutes = require("./routes/document.routes");
 const profileDocumentRoutes = require("./routes/profile_document.routes");
+const profileImageRoutes = require("./routes/profile_image.routes");
 const stageRoutes = require('./routes/stage.routes');
 const stepProgressRoutes = require('./routes/stepProgress.routes');
 const fs = require('fs');
@@ -85,6 +86,7 @@ app.use('/api/practical-facilities', practicalFacilityRoutes);
 app.use("/api/stakeholder-involvement", stakeholderInvolvementRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/profile-documents", profileDocumentRoutes);
+app.use("/api", profileImageRoutes);
 app.use('/api/stages', stageRoutes);
 app.use('/api/step-progress', stepProgressRoutes);
 

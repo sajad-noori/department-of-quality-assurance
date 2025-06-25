@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { FaEnvelope, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
+import '../styles/AuthForm.css';
 
 const VerifyCode = () => {
   const [searchParams] = useSearchParams();
@@ -107,62 +109,102 @@ const VerifyCode = () => {
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
-      <div className="w-100" style={{ maxWidth: '400px' }}>
-        <div className="card shadow">
-          <div className="card-body p-4">
-            <h2 className="card-title text-center mb-4">تایید ایمیل</h2>
-            <p className="text-center mb-4">
-              کد تایید به ایمیل <strong>{email}</strong> ارسال شد
-            </p>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <div className="logo-icon">��</div>
+          </div>
+          <h2 className="auth-title">تایید ایمیل</h2>
+          <p className="auth-subtitle">
+            کد تایید به ایمیل <strong>{email}</strong> ارسال شد
+          </p>
+        </div>
 
-            <form onSubmit={handleVerify}>
-              {error && <p className="text-danger text-center small">{error}</p>}
-              {message && <p className="text-success text-center small">{message}</p>}
-              
-              <div className="mb-3">
-                <label htmlFor="code" className="form-label">کد تایید</label>
-                <input
-                  id="code"
-                  type="text"
-                  className="form-control"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="کد تایید را وارد کنید"
-                  required
-                  disabled={verifying}
-                />
-              </div>
+        <form onSubmit={handleVerify} className="auth-form">
+          {error && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
 
-              <button 
-                type="submit" 
-                className="btn btn-primary w-100 mb-3"
-                disabled={verifying}
-              >
-                {verifying ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    در حال تایید...
-                  </>
-                ) : 'تایید'}
-              </button>
+          {message && (
+            <div className="success-message">
+              <span className="success-icon">✅</span>
+              {message}
+            </div>
+          )}
 
+          <div className="form-group">
+            <label htmlFor="code" className="form-label">
+              <FaEnvelope className="label-icon" />
+              کد تایید
+            </label>
+            <input
+              id="code"
+              type="text"
+              className="form-input"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              maxLength={6}
+              required
+              disabled={verifying}
+              style={{ textAlign: 'center', letterSpacing: '0.5rem', fontSize: '1.2rem' }}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-button verify-code-button"
+            disabled={verifying}
+          >
+            {verifying ? (
+              <>
+                <FaSpinner className="spinner" />
+                در حال تایید...
+              </>
+            ) : (
+              'تایید کد'
+            )}
+          </button>
+
+          <div className="auth-footer">
+            <div className="auth-links">
               <button
                 type="button"
-                className="btn btn-outline-secondary w-100"
+                className="auth-link resend-code-link"
                 onClick={handleResend}
                 disabled={timer > 0 || resending}
               >
                 {resending ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <FaSpinner className="spinner" />
                     در حال ارسال...
                   </>
-                ) : timer > 0 ? `ارسال مجدد (${timer} ثانیه)` : 'ارسال مجدد کد'}
+                ) : timer > 0 ? (
+                  `ارسال مجدد (${timer} ثانیه)`
+                ) : (
+                  'ارسال مجدد کد'
+                )}
               </button>
-            </form>
+              <button
+                type="button"
+                className="auth-link back-to-login"
+                onClick={() => {
+                  localStorage.removeItem('registrationData');
+                  localStorage.removeItem('pendingVerificationEmail');
+                  navigate('/register');
+                }}
+                disabled={verifying || resending}
+              >
+                <FaArrowLeft className="back-icon" />
+                بازگشت به ثبت‌نام
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

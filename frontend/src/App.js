@@ -6,7 +6,7 @@ import NewsSection from './components/NewsSection';
 import FeedbackSection from './components/FeedbackSection';
 import FooterSection from './components/FooterSection';
 import AboutUs from './components/AboutUs';
-import { Login, Register } from './components/AuthForm';
+import { Login, Register, ForgotPassword, ResetPassword, VerifyResetCode } from './components/AuthForm';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
 import AdminRoute from './components/AdminRoute';
@@ -153,6 +153,33 @@ function App() {
 />
 
             <Route path="/register" element={<Register />} />
+            
+            {/* ✅ Forgot Password and Reset Password Routes */}
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicRoute>
+                  <ForgotPassword />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/verify-reset-code"
+              element={
+                <PublicRoute>
+                  <VerifyResetCode />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPassword />
+                </PublicRoute>
+              }
+            />
+            
             <Route path="/documents/:type" element={<DocumentsPage />} />
             <Route path="/training/:type" element={<VideoGallery />} />
             <Route path="/video" element={<VideoPlayer />} />

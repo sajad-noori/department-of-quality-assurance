@@ -1,14 +1,21 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const db = require('../config/db');
 const { hashPassword, comparePassword } = require('../utils/hash');
-const sendEmail = require('../utils/sendEmail');
+const { sendVerificationEmail } = require('../utils/sendEmail');
 const redisClient = require('../utils/redisClient');
+const ProfileImage = require('../models/profile_image.model');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 
 function generateToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
+
+// Generate reset token
+function generateResetToken() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Input validation helper
@@ -75,7 +82,7 @@ exports.register = async (req, res) => {
     // Send verification email
     try {
       console.log('Sending verification email...');
-      await sendEmail(email, code);
+      await sendVerificationEmail(email, code);
       console.log('Verification email sent successfully');
     } catch (emailError) {
       console.error('Email error:', emailError);
@@ -218,7 +225,7 @@ exports.resendCode = async (req, res) => {
     parsed.code = newCode;
 
     await redisClient.setEx(`verify:${email}`, 600, JSON.stringify(parsed));
-    await sendEmail(email, newCode);
+    await sendVerificationEmail(email, newCode);
 
     res.json({ message: 'کد جدید به ایمیل شما ارسال شد' });
   } catch (error) {
@@ -227,8 +234,169 @@ exports.resendCode = async (req, res) => {
   }
 };
 
-exports.getMe = (req, res) => {
-  const user = req.user;
-  if (!user) return res.sendStatus(401);
-  res.json({ user });
+exports.getMe = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.sendStatus(401);
+    
+    // Get user's profile image
+    const profileImage = await ProfileImage.findByUserId(user.id);
+    
+    const userData = {
+      ...user,
+      profileImage: profileImage ? `/uploads/profile/${profileImage.file_name}` : null
+    };
+    
+    res.json({ user: userData });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: 'ایمیل معتبر نیست' });
+    }
+
+    // Check if user exists
+    const [users] = await db.promise().query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = users[0];
+
+    if (!user) {
+      return res.status(404).json({ message: 'کاربری با این ایمیل یافت نشد' });
+    }
+
+    // Generate 6-digit reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetCodeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store reset code in database
+    await db.promise().query(
+      'UPDATE users SET reset_code = ?, reset_code_expiry = ? WHERE email = ?',
+      [resetCode, resetCodeExpiry, email]
+    );
+
+    // Send reset email with code
+    const emailSubject = 'کد بازنشانی رمز عبور';
+    const emailBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; text-align: center; margin-bottom: 30px;">بازنشانی رمز عبور</h2>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            سلام ${user.name}،
+          </p>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            درخواست بازنشانی رمز عبور برای حساب کاربری شما دریافت شده است.
+          </p>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            کد بازنشانی شما:
+          </p>
+          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 5px;">${resetCode}</span>
+          </div>
+          <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
+            این کد تا ۱۰ دقیقه معتبر است.
+          </p>
+          <p style="color: #666; font-size: 14px; text-align: center;">
+            اگر شما این درخواست را نکرده‌اید، این ایمیل را نادیده بگیرید.
+          </p>
+        </div>
+      </div>
+    `;
+
+    const sendEmail = require('../utils/sendEmail');
+    await sendEmail(email, emailSubject, emailBody);
+
+    res.json({ 
+      message: 'کد بازنشانی رمز عبور ارسال شد',
+      email: email 
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'خطا در ارسال کد بازنشانی' });
+  }
+};
+
+exports.verifyResetCode = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code || code.length !== 6) {
+      return res.status(400).json({ message: 'ایمیل و کد ۶ رقمی الزامی است' });
+    }
+
+    // Find user with valid reset code
+    const [users] = await db.promise().query(
+      'SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_code_expiry > NOW()',
+      [email, code]
+    );
+
+    const user = users[0];
+
+    if (!user) {
+      return res.status(400).json({ message: 'کد نامعتبر یا منقضی شده است' });
+    }
+
+    // Generate temporary token for password reset
+    const resetToken = generateResetToken();
+    const resetTokenExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Store reset token and clear reset code
+    await db.promise().query(
+      'UPDATE users SET reset_token = ?, reset_token_expiry = ?, reset_code = NULL, reset_code_expiry = NULL WHERE id = ?',
+      [resetToken, resetTokenExpiry, user.id]
+    );
+
+    res.json({ 
+      message: 'کد تایید شد',
+      token: resetToken 
+    });
+  } catch (error) {
+    console.error('Verify reset code error:', error);
+    res.status(500).json({ message: 'خطا در تایید کد' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ message: 'توکن و رمز عبور جدید الزامی است' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'رمز عبور باید حداقل ۶ حرف باشد' });
+    }
+
+    // Find user with valid reset token
+    const [users] = await db.promise().query(
+      'SELECT * FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()',
+      [token]
+    );
+
+    const user = users[0];
+
+    if (!user) {
+      return res.status(400).json({ message: 'توکن نامعتبر یا منقضی شده است' });
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(password);
+
+    // Update password and clear reset token
+    await db.promise().query(
+      'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ message: 'رمز عبور با موفقیت بازنشانی شد' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'خطا در بازنشانی رمز عبور' });
+  }
 }; 

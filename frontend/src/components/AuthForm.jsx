@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import '../styles/AuthForm.css';
 
@@ -162,17 +162,458 @@ export function Login() {
           </button>
 
           <div className="auth-footer">
-            <p className="auth-link-text">
-              حساب ندارید؟{' '}
+            <div className="auth-links">
               <button
                 type="button"
-                className="auth-link"
-                onClick={() => navigate('/register')}
+                className="auth-link forgot-password-link"
+                onClick={() => navigate('/forgot-password')}
                 disabled={isLoading}
               >
-                ثبت‌نام
+                رمز عبور خود را فراموش کرده اید؟
               </button>
-            </p>
+              <p className="auth-link-text">
+                حساب ندارید؟{' '}
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => navigate('/register')}
+                  disabled={isLoading}
+                >
+                  ثبت‌نام
+                </button>
+              </p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ✅ FORGOT PASSWORD COMPONENT
+export function ForgotPassword() {
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
+
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+    
+    try {
+      const res = await axios.post(
+        'http://localhost:5000/api/auth/forgot-password',
+        { email },
+        { withCredentials: true }
+      );
+
+      setSuccess('کد بازنشانی رمز عبور به ایمیل شما ارسال شد.');
+      // Store email for verification step
+      localStorage.setItem('resetEmail', email);
+      setTimeout(() => {
+        navigate('/verify-reset-code');
+      }, 2000);
+    } catch (err) {
+      console.error('Forgot password error:', err);
+      if (err.response?.status === 404) {
+        setError('کاربری با این ایمیل یافت نشد.');
+      } else {
+        setError(err.response?.data?.message || 'خطا در ارسال کد بازنشانی');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <div className="logo-icon">🔑</div>
+          </div>
+          <h2 className="auth-title">فراموشی رمز عبور</h2>
+          <p className="auth-subtitle">ایمیل خود را وارد کنید تا کد بازنشانی ارسال شود</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          {error && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="success-message">
+              <span className="success-icon">✅</span>
+              {success}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              <FaEnvelope className="label-icon" />
+              ایمیل
+            </label>
+            <input
+              id="email"
+              type="email"
+              className="form-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@email.com"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-button forgot-password-button"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <FaSpinner className="spinner" />
+                در حال ارسال...
+              </>
+            ) : (
+              'ارسال کد بازنشانی'
+            )}
+          </button>
+
+          <div className="auth-footer">
+            <button
+              type="button"
+              className="auth-link back-to-login"
+              onClick={() => navigate('/login')}
+              disabled={isLoading}
+            >
+              <FaArrowLeft className="back-icon" />
+              بازگشت به صفحه ورود
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ✅ VERIFY RESET CODE COMPONENT
+export function VerifyResetCode() {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const resetEmail = localStorage.getItem('resetEmail');
+    if (!resetEmail) {
+      navigate('/forgot-password');
+      return;
+    }
+    setEmail(resetEmail);
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (code.length !== 6) return setError('کد باید ۶ رقم باشد');
+
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      const res = await axios.post(
+        'http://localhost:5000/api/auth/verify-reset-code',
+        { email, code },
+        { withCredentials: true }
+      );
+
+      // Store verification token for password reset
+      localStorage.setItem('resetToken', res.data.token);
+      navigate('/reset-password');
+    } catch (err) {
+      console.error('Verify reset code error:', err);
+      if (err.response?.status === 400) {
+        setError('کد نامعتبر یا منقضی شده است.');
+      } else {
+        setError(err.response?.data?.message || 'خطا در تایید کد');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await axios.post(
+        'http://localhost:5000/api/auth/forgot-password',
+        { email },
+        { withCredentials: true }
+      );
+      setError('کد جدید ارسال شد.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'خطا در ارسال کد جدید');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!email) {
+    return null; // Will redirect to forgot-password
+  }
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <div className="logo-icon">🔐</div>
+          </div>
+          <h2 className="auth-title">تایید کد بازنشانی</h2>
+          <p className="auth-subtitle">کد ۶ رقمی ارسال شده به {email} را وارد کنید</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          {error && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="code" className="form-label">
+              <FaEnvelope className="label-icon" />
+              کد تایید
+            </label>
+            <input
+              id="code"
+              type="text"
+              className="form-input"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="123456"
+              maxLength={6}
+              required
+              disabled={isLoading}
+              style={{ textAlign: 'center', letterSpacing: '0.5rem', fontSize: '1.2rem' }}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-button verify-code-button"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <FaSpinner className="spinner" />
+                در حال تایید...
+              </>
+            ) : (
+              'تایید کد'
+            )}
+          </button>
+
+          <div className="auth-footer">
+            <div className="auth-links">
+              <button
+                type="button"
+                className="auth-link resend-code-link"
+                onClick={handleResendCode}
+                disabled={isLoading}
+              >
+                ارسال مجدد کد
+              </button>
+              <button
+                type="button"
+                className="auth-link back-to-login"
+                onClick={() => {
+                  localStorage.removeItem('resetEmail');
+                  navigate('/login');
+                }}
+                disabled={isLoading}
+              >
+                <FaArrowLeft className="back-icon" />
+                بازگشت به صفحه ورود
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ✅ RESET PASSWORD COMPONENT
+export function ResetPassword() {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const resetToken = localStorage.getItem('resetToken');
+    if (!resetToken) {
+      navigate('/forgot-password');
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
+    if (password !== confirmPassword) return setError('رمز عبور با تکرار آن مطابقت ندارد');
+
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+    
+    try {
+      const resetToken = localStorage.getItem('resetToken');
+      const res = await axios.post(
+        'http://localhost:5000/api/auth/reset-password',
+        { token: resetToken, password },
+        { withCredentials: true }
+      );
+
+      setSuccess('رمز عبور شما با موفقیت تغییر یافت.');
+      
+      // Clean up stored data
+      localStorage.removeItem('resetToken');
+      localStorage.removeItem('resetEmail');
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (err) {
+      console.error('Reset password error:', err);
+      if (err.response?.status === 400) {
+        setError('توکن نامعتبر یا منقضی شده است.');
+        // Clean up invalid token
+        localStorage.removeItem('resetToken');
+        localStorage.removeItem('resetEmail');
+      } else {
+        setError(err.response?.data?.message || 'خطا در بازنشانی رمز عبور');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <div className="logo-icon">🔐</div>
+          </div>
+          <h2 className="auth-title">بازنشانی رمز عبور</h2>
+          <p className="auth-subtitle">رمز عبور جدید خود را وارد کنید</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          {error && (
+            <div className="error-message">
+              <span className="error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="success-message">
+              <span className="success-icon">✅</span>
+              {success}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              <FaLock className="label-icon" />
+              رمز عبور جدید
+            </label>
+            <div className="password-input-container">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="رمز عبور جدید خود را وارد کنید"
+                required
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+                title={showPassword ? 'مخفی کردن رمز' : 'نمایش رمز'}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">
+              <FaLock className="label-icon" />
+              تکرار رمز عبور جدید
+            </label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              className="form-input"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="رمز عبور جدید را دوباره وارد کنید"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-button reset-password-button"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <FaSpinner className="spinner" />
+                در حال بازنشانی...
+              </>
+            ) : (
+              'بازنشانی رمز عبور'
+            )}
+          </button>
+
+          <div className="auth-footer">
+            <button
+              type="button"
+              className="auth-link"
+              onClick={() => {
+                localStorage.removeItem('resetToken');
+                localStorage.removeItem('resetEmail');
+                navigate('/login');
+              }}
+              disabled={isLoading}
+            >
+              بازگشت به صفحه ورود
+            </button>
           </div>
         </form>
       </div>
