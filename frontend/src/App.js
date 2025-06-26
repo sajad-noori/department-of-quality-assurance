@@ -26,6 +26,7 @@ import PublicRoute from './components/PublicRoute';
 import SpecificInstitute from './components/SpecificInstitute';
 import Step2 from './components/Step2';
 import Step3 from './components/Step3';
+import Goals from './components/Goals';
 
 
 function App() {
@@ -191,6 +192,7 @@ function App() {
                 <>
                   <Banner />
                   <NewsSection />
+                  <Goals />
                   <FeedbackSection />
                 </>
               }

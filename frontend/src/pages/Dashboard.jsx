@@ -203,7 +203,7 @@ const Dashboard = () => {
       <div style={header}>
         <div style={headerContent}>
           <h1 style={dashboardTitle}>داشبورد مدیریت</h1>
-          <p style={dashboardSubtitle}>به سیستم مدیریت کیفیت خوش آمدید</p>
+          <p style={dashboardSubtitle}>به سیستم مدیریت تضمین کیفیت خوش آمدید</p>
         </div>
         <UserInfo user={user} onLogout={handleLogout} />
       </div>

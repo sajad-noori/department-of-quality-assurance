@@ -140,15 +140,6 @@ const NewsSection = () => {
                 </article>
               ))}
             </div>
-            
-            {newsData.length > 6 && (
-              <div className="view-all-container">
-                <Link to="/news" className="view-all-link">
-                  مشاهده همه اخبار ({toPersianNumbers(newsData.length)} خبر)
-                  <FaArrowLeft className="arrow" />
-                </Link>
-              </div>
-            )}
           </>
         )}
       </div>

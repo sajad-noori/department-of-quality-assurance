@@ -1,0 +1,187 @@
+.goal5-container {
+    background-color: #121212;
+    position: relative;
+    overflow: hidden;
+}
+
+@property --glow-deg {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: -90deg;
+  }
+  
+  /* the colors don't need to be registed */
+  @property --clr-1 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: red;
+  }
+  
+  @property --clr-2 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: yellow;
+  }
+  
+  @property --clr-3 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: green;
+  }
+  
+  @property --clr-4 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: blue;
+  }
+  
+  @property --clr-5 {
+    syntax: "<color>";
+    inherits: true;
+    initial-value: purple;
+  }
+  
+  .glowing-border {
+    --gradient-glow: var(--clr-1), var(--clr-2), var(--clr-3), var(--clr-4),
+      var(--clr-5), var(--clr-1);
+  
+    padding: 8rem 3rem;
+    max-width: 60ch;
+  
+    border: var(--border-width, 3px) solid transparent;
+    border-left: 0;
+    border-radius: 0 100vw 100vw 0;
+    background: linear-gradient(var(--surface, canvas) 0 0) padding-box,
+      conic-gradient(from var(--glow-deg), var(--gradient-glow)) border-box;
+  
+    position: relative;
+    isolation: isolate;
+  
+    animation: glow 10s infinite linear;
+    color: #eee;
+  }
+  
+  @keyframes glow {
+    100% {
+      --glow-deg: 270deg;
+    }
+  }
+  
+  .glowing-border::before,
+  .glowing-border::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+  }
+  
+  .glowing-border::before {
+    z-index: -1;
+    background: var(--surface, canvas);
+    inset: 0.5rem;
+    scale: 1.2 1;
+    transform-origin: right;
+    filter: blur(var(--glow-size, 1rem));
+  }
+  
+  .glowing-border::after {
+    z-index: -2;
+    inset: -1.5rem;
+    background: conic-gradient(from var(--glow-deg), var(--gradient-glow));
+    filter: blur(var(--glow-size, 1rem));
+    opacity: var(--glow-intensity, 0.125);
+  }
+  
+  .glowing-border.right {
+    margin-inline-start: auto;
+    border-radius: 100vw 0 0 100vw;
+    border: var(--border-width, 3px) solid transparent;
+    border-right: 0;
+  
+    &::before {
+      transform-origin: left;
+    }
+  }
+  
+  .goal5-bg-animations {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  .goal5-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.35;
+    filter: blur(32px);
+    mix-blend-mode: lighten;
+    animation-timing-function: ease-in-out;
+  }
+  
+  .goal5-bg-circle.circle1 {
+    width: 320px;
+    height: 320px;
+    background: #0dcaf0;
+    left: -80px;
+    top: 10%;
+    animation: moveCircle1 14s infinite alternate;
+  }
+  
+  .goal5-bg-circle.circle2 {
+    width: 220px;
+    height: 220px;
+    background: #a9e5ff;
+    right: -60px;
+    top: 50%;
+    animation: moveCircle2 18s infinite alternate;
+  }
+  
+  .goal5-bg-circle.circle3 {
+    width: 180px;
+    height: 180px;
+    background: #00b5d7;
+    left: 40%;
+    bottom: -60px;
+    animation: moveCircle3 16s infinite alternate;
+  }
+  
+  @keyframes moveCircle1 {
+    0% { left: -80px; top: 10%; }
+    100% { left: 10%; top: 30%; }
+  }
+  @keyframes moveCircle2 {
+    0% { right: -60px; top: 50%; }
+    100% { right: 10%; top: 20%; }
+  }
+  @keyframes moveCircle3 {
+    0% { left: 40%; bottom: -60px; }
+    100% { left: 60%; bottom: 10%; }
+  }
+  
+  .glowing-border, .glowing-border.right {
+    position: relative;
+    z-index: 1;
+  }
+  
+  @layer general-styling {
+    * {
+      box-sizing: border-box;
+    }
+  
+    html {
+      font-family: system-ui;
+      color-scheme: dark;
+    }
+  
+    body {
+      margin: 0;
+      overflow-x: clip;
+  
+      /* --surface: purple; */
+  
+      background: var(--surface);
+    }
+  }
+  
