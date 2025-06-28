@@ -316,7 +316,6 @@ export default function MenuWithUtilityBar() {
                 size={32} 
                 style={{ 
                   display: profileImage ? 'none' : 'block',
-                  color: '#3b82f6'
                 }} 
               />
             </button>
