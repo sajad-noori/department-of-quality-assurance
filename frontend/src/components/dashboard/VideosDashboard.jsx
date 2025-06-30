@@ -559,6 +559,11 @@ function VideoUploadDashboard() {
     };
 
     xhr.open(editingVideoId ? "PUT" : "POST", `${API_BASE}/video${editingVideoId ? `/${editingVideoId}` : ""}`);
+    xhr.withCredentials = true;
+    const token = localStorage.getItem('token');
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
     xhr.send(formData);
   };
 
@@ -566,7 +571,12 @@ function VideoUploadDashboard() {
     if (!window.confirm("آیا مطمئن هستید که می‌خواهید این ویدیو را حذف کنید؟")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/video/${id}`, { method: "DELETE" });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/video/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (!res.ok) throw new Error("خطا در حذف ویدیو");
       alert("حذف با موفقیت انجام شد!");
       await fetchVideos();
