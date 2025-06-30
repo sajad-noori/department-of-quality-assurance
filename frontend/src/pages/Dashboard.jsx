@@ -2,10 +2,6 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../contexts/AuthContext';
-
-// Configure axios to include credentials
-axios.defaults.withCredentials = true;
 
 const resources = [
   { 
@@ -155,26 +151,41 @@ UserInfo.defaultProps = {
 };
 
 const Dashboard = () => {
-  const [search, setSearch] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const [search, setSearch] = useState('');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    setLoading(false);
-  }, [user, navigate]);
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/me', {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        console.error('User not authenticated:', err);
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
+      await axios.post(
+        'http://localhost:5000/api/auth/logout',
+        {},
+        { withCredentials: true }
+      );
+    } catch (e) {
+      console.warn('Logout failed:', e);
+    } finally {
+      localStorage.removeItem('token');
       navigate('/login');
     }
   };
