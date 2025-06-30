@@ -140,6 +140,13 @@ const NewsSection = () => {
                 </article>
               ))}
             </div>
+            {/* See All News Button */}
+            <div className="view-all-container">
+              <Link to="/public-news" className="view-all-link" aria-label="مشاهده همه اخبار">
+                مشاهده همه اخبار
+                <FaArrowLeft className="arrow" />
+              </Link>
+            </div>
           </>
         )}
       </div>

@@ -27,6 +27,7 @@ import SpecificInstitute from './components/SpecificInstitute';
 import Step2 from './components/Step2';
 import Step3 from './components/Step3';
 import Goals from './components/Goals';
+import AllNews from './components/AllNews';
 
 
 function App() {
@@ -57,13 +58,11 @@ function App() {
             </AdminRoute>
           }
         />
+
+        
         <Route
-          path="/news"
-          element={
-            <AdminRoute>
-              <NewsSectionDashboard />
-            </AdminRoute>
-          }
+          path="/public-news"
+          element={<AllNews />}
         />
 
 
@@ -73,6 +72,15 @@ function App() {
           element={
             <AdminRoute>
               <NewsForm />
+            </AdminRoute>
+          }
+        />
+
+<Route
+          path="/news"
+          element={
+            <AdminRoute>
+              <NewsSectionDashboard />
             </AdminRoute>
           }
         />
@@ -203,6 +211,15 @@ function App() {
               element={
                 <AdminRoute>
                   <UserManagement />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard/news"
+              element={
+                <AdminRoute>
+                  <NewsSectionDashboard />
                 </AdminRoute>
               }
             />

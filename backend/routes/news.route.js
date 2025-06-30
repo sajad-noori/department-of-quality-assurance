@@ -11,7 +11,7 @@ router.get('/:id', newsController.getNewsById);
 router.put('/:id', authenticate, checkRole('admin'), upload.single('image'), newsController.updateNews);
 router.delete('/:id', authenticate, checkRole('admin'), newsController.deleteNews);
 
-router.get('/', authenticate, checkRole('admin'), newsController.getAllNews);
+router.get('/', newsController.getAllNews);
 
 // this is the public route which takes 6 latest news
 router.get("/news", getLatestNews);

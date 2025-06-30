@@ -808,3 +808,136 @@
     padding: 0.8rem 1.5rem;
   }
 }
+
+.news-sort-container {
+  position: relative;
+  z-index: 100;
+}
+
+.news-sort-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(13, 202, 240, 0.15);
+}
+
+.news-sort-button:hover {
+  box-shadow: 0 4px 12px rgba(13, 202, 240, 0.25);
+  transform: translateY(-1px);
+}
+
+.news-sort-icon {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.news-sort-button[aria-expanded="true"] .news-sort-icon {
+  transform: rotate(180deg);
+}
+
+.news-sort-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+.news-sort-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  text-align: right;
+  border: none;
+  background: none;
+  color: #333;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.news-sort-option:hover {
+  background: rgba(13, 202, 240, 0.1);
+  color: #00b5d7;
+}
+
+.news-sort-option.active {
+  background: rgba(13, 202, 240, 0.15);
+  color: #00b5d7;
+  font-weight: 600;
+}
+
+.news-sort-option-icon {
+  font-size: 1rem;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.news-sort-option:hover .news-sort-option-icon {
+  opacity: 1;
+  color: #00b5d7;
+}
+
+.news-sort-option.active .news-sort-option-icon {
+  opacity: 1;
+  color: #00b5d7;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-nav-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.hero-nav-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.hero-nav-button:active {
+  transform: scale(0.95);
+}
+
+@keyframes progressBar {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
