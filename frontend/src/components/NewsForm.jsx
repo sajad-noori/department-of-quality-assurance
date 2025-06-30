@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+// Configure axios to include credentials
+axios.defaults.withCredentials = true;
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -297,6 +301,7 @@ const NewsForm = () => {
   });
   const [editingId, setEditingId] = useState(null);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchNews();
@@ -310,6 +315,14 @@ const NewsForm = () => {
       setNews(res.data);
     } catch (error) {
       console.error('Error fetching news:', error);
+      if (error.response?.status === 401) {
+        alert('شما وارد نشده اید. لطفاً دوباره وارد شوید.');
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert('شما دسترسی به این بخش را ندارید.');
+        navigate('/');
+      }
     } finally {
       setLoading(false);
     }
@@ -349,7 +362,16 @@ const NewsForm = () => {
       resetForm();
     } catch (error) {
       console.error('Error saving news:', error);
-      alert('خطا در ذخیره خبر');
+      if (error.response?.status === 401) {
+        alert('شما وارد نشده اید. لطفاً دوباره وارد شوید.');
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert('شما دسترسی به این بخش را ندارید.');
+        navigate('/');
+      } else {
+        alert('خطا در ذخیره خبر');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -377,7 +399,16 @@ const NewsForm = () => {
       await fetchNews();
     } catch (error) {
       console.error('Error deleting news:', error);
-      alert('خطا در حذف خبر');
+      if (error.response?.status === 401) {
+        alert('شما وارد نشده اید. لطفاً دوباره وارد شوید.');
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        alert('شما دسترسی به این بخش را ندارید.');
+        navigate('/');
+      } else {
+        alert('خطا در حذف خبر');
+      }
     }
   };
 

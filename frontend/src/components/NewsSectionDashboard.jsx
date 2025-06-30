@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+
+// Configure axios to include credentials
+axios.defaults.withCredentials = true;
 
 const API_URL = '/api/news';
 
@@ -238,6 +243,7 @@ const NewsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchNews();
@@ -247,13 +253,20 @@ const NewsList = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error('Failed to fetch news');
-      const data = await res.json();
-      setNews(data);
+      const res = await axios.get(API_URL);
+      setNews(res.data);
     } catch (error) {
       console.error('Error fetching news:', error);
-      setError('خطا در بارگذاری اخبار');
+      if (error.response?.status === 401) {
+        setError('شما وارد نشده اید. لطفاً دوباره وارد شوید.');
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        setError('شما دسترسی به این بخش را ندارید.');
+        navigate('/');
+      } else {
+        setError('خطا در بارگذاری اخبار');
+      }
     } finally {
       setLoading(false);
     }
@@ -263,12 +276,22 @@ const NewsList = () => {
     if (!window.confirm('آیا مطمئن هستید که می‌خواهید این خبر را حذف کنید؟')) return;
     
     try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete news');
-      await fetchNews();
+      const res = await axios.delete(`${API_URL}/${id}`);
+      if (res.status === 200) {
+        await fetchNews();
+      }
     } catch (error) {
       console.error('Error deleting news:', error);
-      alert('خطا در حذف خبر');
+      if (error.response?.status === 401) {
+        setError('شما وارد نشده اید. لطفاً دوباره وارد شوید.');
+        logout();
+        navigate('/login');
+      } else if (error.response?.status === 403) {
+        setError('شما دسترسی به این بخش را ندارید.');
+        navigate('/');
+      } else {
+        alert('خطا در حذف خبر');
+      }
     }
   };
 

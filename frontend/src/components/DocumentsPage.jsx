@@ -276,7 +276,7 @@ const DocumentsPage = () => {
                     <div className="d-flex align-items-start mb-3">
                       <div className="me-3 fs-2 flex-shrink-0">{getFileIcon(doc.fileName)}</div>
                       <div className="flex-grow-1 min-width-0">
-                        <h6 className="card-title mb-1 text-truncate dark-text" title={doc.name}>
+                        <h6 className="card-title mb-1 text-truncate dark-text document-title" title={doc.name}>
                           {doc.name}
                         </h6>
                         <span className={`badge bg-${categoryColors[doc.category] || 'secondary'} badge-sm`}>
@@ -300,10 +300,6 @@ const DocumentsPage = () => {
                     )}
                     
                     <div className="d-flex justify-content-center align-items-center mb-3">
-                      <small className="text-muted me-3">
-                        <i className="fas fa-file me-1"></i>
-                        <span className="d-none d-sm-inline">{formatFileSize()}</span>
-                      </small>
                       <small className="text-muted">
                         <i className="fas fa-calendar me-1"></i>
                         <span className="d-none d-md-inline">{new Date(doc.uploadDate).toLocaleDateString("fa-IR")}</span>
@@ -522,6 +518,10 @@ const DocumentsPage = () => {
           .btn-group .btn {
             flex: 1;
           }
+          
+          .document-title {
+            font-size: 0.95rem;
+          }
         }
         
         /* Tablet Optimizations */
@@ -543,6 +543,10 @@ const DocumentsPage = () => {
           
           .responsive-text {
             font-size: 0.9rem;
+          }
+          
+          .document-title {
+            font-size: 1.05rem;
           }
         }
         
@@ -574,6 +578,15 @@ const DocumentsPage = () => {
           .dark-card {
             border-width: 0.5px;
           }
+        }
+        
+        /* Add this for document title size and style */
+        .document-title {
+          font-size: 1rem;
+          font-weight: 500;
+          line-height: 1.3;
+          margin-bottom: 0.25rem;
+          word-break: break-all;
         }
       `}</style>
     </div>
