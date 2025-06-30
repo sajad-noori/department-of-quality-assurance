@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { FaArrowLeft, FaExclamationTriangle, FaNewspaper, FaSpinner, FaSearch, FaRegNewspaper, FaSort, FaCalendarAlt, FaCalendarPlus, FaSortAlphaDown, FaChevronRight, FaChevronLeft } from "react-icons/fa";
+import { FaArrowLeft, FaExclamationTriangle, FaNewspaper, FaSpinner, FaSearch, FaRegNewspaper, FaSort, FaCalendarAlt, FaCalendarPlus, FaSortAlphaDown, FaChevronRight, FaChevronLeft, FaPause, FaPlay } from "react-icons/fa";
 import "../styles/NewsSection.css";
 
 // Persian date formatting utility
@@ -34,9 +34,117 @@ const AllNews = () => {
   const [sort, setSort] = useState("newest");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
-  const heroIntervalRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [isHeroTransitioning, setIsHeroTransitioning] = useState(false);
+  
+  const heroIntervalRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const sortButtonRef = useRef(null);
 
+  // Filter and sort news data
+  const filteredNews = useMemo(() => {
+    // Filter
+    let filtered = newsData.filter(
+      (item) =>
+        item.title?.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    // Sort
+    if (sort === "newest") {
+      filtered = filtered.sort((a, b) => {
+        const dateA = new Date(a.published_date);
+        const dateB = new Date(b.published_date);
+        return dateB - dateA; // Newest first (most recent date at the top)
+      });
+    } else if (sort === "oldest") {
+      filtered = filtered.sort((a, b) => {
+        const dateA = new Date(a.published_date);
+        const dateB = new Date(b.published_date);
+        return dateA - dateB; // Oldest first (earliest date at the top)
+      });
+    } else if (sort === "title") {
+      filtered = filtered.sort((a, b) => (a.title || "").localeCompare(b.title || "", 'fa'));
+    }
+
+    return filtered;
+  }, [newsData, search, sort]);
+
+  // Get current hero news and rest of the news
+  const heroNews = useMemo(() => 
+    filteredNews.length > 0 ? filteredNews[currentHeroIndex] : null
+  , [filteredNews, currentHeroIndex]);
+
+  const restNews = useMemo(() => 
+    filteredNews.filter((_, index) => index !== currentHeroIndex)
+  , [filteredNews, currentHeroIndex]);
+
+  // Pagination
+  const totalPages = Math.ceil(restNews.length / PAGE_SIZE);
+  const paginatedNews = restNews.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // Enhanced navigation functions
+  const goToNextHero = useCallback(() => {
+    if (isHeroTransitioning || !filteredNews.length) return;
+    setIsHeroTransitioning(true);
+    setTimeout(() => {
+      setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % filteredNews.length);
+      setIsHeroTransitioning(false);
+    }, 300);
+  }, [isHeroTransitioning, filteredNews.length]);
+
+  const goToPrevHero = useCallback(() => {
+    if (isHeroTransitioning || !filteredNews.length) return;
+    setIsHeroTransitioning(true);
+    setTimeout(() => {
+      setCurrentHeroIndex((prevIndex) => 
+        prevIndex === 0 ? filteredNews.length - 1 : prevIndex - 1
+      );
+      setIsHeroTransitioning(false);
+    }, 300);
+  }, [isHeroTransitioning, filteredNews.length]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft' && !e.target.closest('input')) {
+        goToNextHero();
+      } else if (e.key === 'ArrowRight' && !e.target.closest('input')) {
+        goToPrevHero();
+      } else if (e.key === 'Space' && !e.target.closest('input')) {
+        e.preventDefault();
+        setIsPaused(!isPaused);
+      } else if (e.key === '/' && !e.target.closest('input')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'Escape') {
+        if (showSortDropdown) {
+          setShowSortDropdown(false);
+        }
+        if (document.activeElement === searchInputRef.current) {
+          searchInputRef.current.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPaused, showSortDropdown, goToNextHero, goToPrevHero]);
+
+  // Auto-rotation effect
+  useEffect(() => {
+    if (filteredNews.length > 1 && !isPaused) {
+      heroIntervalRef.current = setInterval(goToNextHero, 30000);
+    }
+    return () => {
+      if (heroIntervalRef.current) {
+        clearInterval(heroIntervalRef.current);
+      }
+    };
+  }, [filteredNews.length, isPaused, goToNextHero]);
+
+  // Initial data fetch
   useEffect(() => {
     fetchNews();
     return () => {
@@ -45,24 +153,6 @@ const AllNews = () => {
       }
     };
   }, []);
-
-  // Set up auto-rotation when news data changes
-  useEffect(() => {
-    if (filteredNews && filteredNews.length > 1) {
-      heroIntervalRef.current = setInterval(() => {
-        setIsHeroTransitioning(true);
-        setTimeout(() => {
-          setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % filteredNews.length);
-          setIsHeroTransitioning(false);
-        }, 300); // Wait for fade out before changing
-      }, 30000); // 30 seconds interval
-    }
-    return () => {
-      if (heroIntervalRef.current) {
-        clearInterval(heroIntervalRef.current);
-      }
-    };
-  }, [newsData, search, sort]); // Reset interval when data or filters change
 
   const fetchNews = async () => {
     try {
@@ -77,60 +167,17 @@ const AllNews = () => {
     }
   };
 
-  // Filter
-  let filteredNews = newsData.filter(
-    (item) =>
-      item.title?.toLowerCase().includes(search.toLowerCase()) ||
-      item.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Debounced search
+  const debouncedSearch = useCallback((value) => {
+    setLoadingMore(true);
+    setSearch(value);
+    setPage(1);
+    setTimeout(() => setLoadingMore(false), 300);
+  }, []);
 
-  // Sort
-  if (sort === "newest") {
-    filteredNews = filteredNews.sort((a, b) => {
-      const dateA = new Date(a.published_date);
-      const dateB = new Date(b.published_date);
-      return dateB - dateA; // Newest first (most recent date at the top)
-    });
-  } else if (sort === "oldest") {
-    filteredNews = filteredNews.sort((a, b) => {
-      const dateA = new Date(a.published_date);
-      const dateB = new Date(b.published_date);
-      return dateA - dateB; // Oldest first (earliest date at the top)
-    });
-  } else if (sort === "title") {
-    filteredNews = filteredNews.sort((a, b) => (a.title || "").localeCompare(b.title || "", 'fa'));
-  }
-
-  // Hero navigation functions
-  const goToNextHero = () => {
-    setIsHeroTransitioning(true);
-    setTimeout(() => {
-      setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % filteredNews.length);
-      setIsHeroTransitioning(false);
-    }, 300);
-  };
-
-  const goToPrevHero = () => {
-    setIsHeroTransitioning(true);
-    setTimeout(() => {
-      setCurrentHeroIndex((prevIndex) => 
-        prevIndex === 0 ? filteredNews.length - 1 : prevIndex - 1
-      );
-      setIsHeroTransitioning(false);
-    }, 300);
-  };
-
-  // Get current hero news
-  const heroNews = filteredNews.length > 0 ? filteredNews[currentHeroIndex] : null;
-  // Rest of the news (excluding current hero)
-  const restNews = filteredNews.filter((_, index) => index !== currentHeroIndex);
-
-  const totalPages = Math.ceil(restNews.length / PAGE_SIZE);
-  const paginatedNews = restNews.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const handlePageChange = (newPage) => {
+  const handlePageChange = useCallback((newPage) => {
     if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
-  };
+  }, [totalPages]);
 
   // Helper: is news recent (less than 3 days old)?
   const isRecent = (dateString) => {
@@ -266,7 +313,7 @@ const AllNews = () => {
             </Link>
           </div>
 
-          {/* Navigation buttons */}
+          {/* Enhanced Navigation buttons */}
           <div style={{
             position: 'absolute',
             bottom: '2rem',
@@ -280,13 +327,23 @@ const AllNews = () => {
               onClick={goToPrevHero}
               className="hero-nav-button"
               aria-label="خبر قبلی"
+              title="خبر قبلی (کلید جهت راست)"
             >
               <FaChevronRight />
+            </button>
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="hero-nav-button"
+              aria-label={isPaused ? "ادامه پخش خودکار" : "توقف پخش خودکار"}
+              title={isPaused ? "ادامه پخش خودکار (Space)" : "توقف پخش خودکار (Space)"}
+            >
+              {isPaused ? <FaPlay /> : <FaPause />}
             </button>
             <button
               onClick={goToNextHero}
               className="hero-nav-button"
               aria-label="خبر بعدی"
+              title="خبر بعدی (کلید جهت چپ)"
             >
               <FaChevronLeft />
             </button>
@@ -302,16 +359,35 @@ const AllNews = () => {
             background: 'rgba(255,255,255,0.2)',
             zIndex: 3,
           }}>
-            <div
-              style={{
-                height: '100%',
-                width: '100%',
-                background: 'linear-gradient(90deg,#0dcaf0,#00b5d7)',
-                transform: 'scaleX(0)',
-                transformOrigin: 'right',
-                animation: 'progressBar 30s linear infinite',
-              }}
-            />
+            {!isPaused && (
+              <div
+                style={{
+                  height: '100%',
+                  width: '100%',
+                  background: 'linear-gradient(90deg,#0dcaf0,#00b5d7)',
+                  transform: 'scaleX(0)',
+                  transformOrigin: 'right',
+                  animation: 'progressBar 30s linear infinite',
+                }}
+              />
+            )}
+          </div>
+
+          {/* Slide counter */}
+          <div style={{
+            position: 'absolute',
+            top: '1.5rem',
+            left: '1.5rem',
+            background: 'rgba(255,255,255,0.15)',
+            backdropFilter: 'blur(4px)',
+            padding: '0.4rem 0.8rem',
+            borderRadius: '8px',
+            color: '#fff',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            zIndex: 3,
+          }}>
+            {currentHeroIndex + 1} / {filteredNews.length}
           </div>
         </div>
       )}
@@ -319,10 +395,11 @@ const AllNews = () => {
         <div className="news-search-sort-underline">
           <div className="news-search-row">
             <input
+              ref={searchInputRef}
               type="text"
-              placeholder="جستجو در اخبار..."
+              placeholder="جستجو در اخبار... (کلید /)"
               value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              onChange={e => debouncedSearch(e.target.value)}
               className="news-search-underline-input"
               aria-label="جستجو در اخبار"
               dir="rtl"
@@ -331,6 +408,7 @@ const AllNews = () => {
           </div>
           <div className="news-sort-container">
             <button
+              ref={sortButtonRef}
               className="news-sort-button"
               onClick={() => setShowSortDropdown(!showSortDropdown)}
               aria-label="مرتب‌سازی اخبار"
@@ -372,7 +450,7 @@ const AllNews = () => {
           </div>
         </div>
         {loading ? (
-          <div className="news-list">
+          <div className="news-list loading-fade-in">
             {[...Array(8)].map((_, index) => (
               <div className="news-card skeleton" key={index}>
                 <div className="skeleton-image"></div>
@@ -387,19 +465,19 @@ const AllNews = () => {
             ))}
           </div>
         ) : error ? (
-          <div className="error-container">
+          <div className="error-container loading-fade-in">
             <FaExclamationTriangle className="error-icon" />
             <p className="error-message">{error}</p>
             <button onClick={fetchNews} className="retry-button">تلاش مجدد</button>
           </div>
         ) : filteredNews.length === 0 ? (
-          <div className="empty-container">
+          <div className="empty-container loading-fade-in">
             <FaNewspaper className="empty-icon" />
             <p className="empty-message">هیچ خبری یافت نشد</p>
           </div>
         ) : (
           <>
-            <div className="news-list">
+            <div className={`news-list ${loadingMore ? 'loading-fade' : ''}`}>
               {paginatedNews.map((news, idx) => (
                 <article key={news.id} className="news-card all-news-card fade-in" tabIndex="0" style={{ boxShadow: '0 8px 32px rgba(13,202,240,0.10)', border: '2px solid #0dcaf0', borderRadius: 18, transition: 'box-shadow 0.3s, border 0.3s', background: '#181f2a', position: 'relative', overflow: 'hidden' }}>
                   <div className="news-image-container" style={{ borderRadius: '14px', overflow: 'hidden', position: 'relative', border: '1.5px solid #00b5d7' }}>
@@ -480,14 +558,70 @@ const AllNews = () => {
           </>
         )}
       </div>
-      {/* Fade-in animation style */}
+      {/* Enhanced animations */}
       <style>{`
+        .loading-fade-in {
+          animation: fadeInNewsCard 0.5s ease;
+        }
+        
+        .loading-fade {
+          opacity: 0.7;
+          transition: opacity 0.3s ease;
+        }
+
         .fade-in {
           animation: fadeInNewsCard 0.7s ease;
+          animation-fill-mode: both;
         }
+
         @keyframes fadeInNewsCard {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: none; }
+          from { 
+            opacity: 0; 
+            transform: translateY(30px);
+            filter: blur(10px);
+          }
+          to { 
+            opacity: 1; 
+            transform: none;
+            filter: blur(0);
+          }
+        }
+
+        .news-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .news-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 12px 40px rgba(13,202,240,0.15) !important;
+        }
+
+        .news-card:focus-within {
+          outline: 2px solid #0dcaf0;
+          outline-offset: 2px;
+        }
+
+        .hero-nav-button:focus {
+          outline: 2px solid #fff;
+          outline-offset: 2px;
+        }
+
+        .news-search-underline-input::placeholder {
+          transition: opacity 0.2s ease;
+        }
+
+        .news-search-underline-input:focus::placeholder {
+          opacity: 0.5;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .fade-in,
+          .loading-fade-in,
+          .news-card,
+          * {
+            animation: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
       {/* Minimalist underline style for search/sort */}
@@ -508,25 +642,37 @@ const AllNews = () => {
           align-items: center;
           gap: 0.7rem;
           flex: 1 1 0;
+          position: relative;
         }
         .news-search-underline-input {
           border: none;
           border-bottom: 2px solid #00b5d7;
           background: transparent;
-          color: #222;
+          color: #e0f7fa;
           font-size: 1.08rem;
           font-family: 'Tahoma', Arial, sans-serif;
           padding: 0.6rem 0.2rem 0.6rem 0.2rem;
           width: 100%;
-          transition: border-color 0.2s;
+          transition: all 0.2s ease;
+        }
+        .news-search-underline-input::placeholder {
+          color: rgba(224, 247, 250, 0.6);
+          transition: color 0.2s ease;
         }
         .news-search-underline-input:focus {
           outline: none;
           border-bottom: 2.5px solid #0dcaf0;
         }
+        .news-search-underline-input:focus::placeholder {
+          color: rgba(224, 247, 250, 0.4);
+        }
         .news-search-underline-icon {
           color: #00b5d7;
           font-size: 1.25rem;
+          transition: color 0.2s ease;
+        }
+        .news-search-row:focus-within .news-search-underline-icon {
+          color: #0dcaf0;
         }
         .news-sort-underline-select {
           border: none;
