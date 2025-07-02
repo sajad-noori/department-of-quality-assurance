@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import '../styles/AuthForm.css';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Helper function to validate email
 function validateEmail(email) {
@@ -38,6 +39,7 @@ function isLoggedIn() {
 
 // ✅ LOGIN COMPONENT
 export function Login() {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -84,6 +86,78 @@ export function Login() {
 
   return (
     <div className="auth-container">
+      <style>{`
+        ${theme === 'light' ? `
+        .auth-container {
+          background: #f7fcfd;
+          color: #222;
+        }
+        .auth-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .auth-header {
+          color: #0dcaf0;
+        }
+        .auth-title {
+          color: #0dcaf0;
+        }
+        .auth-subtitle {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .auth-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .auth-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .auth-button:disabled {
+          opacity: 0.7;
+        }
+        .error-message {
+          background: #fffbe6;
+          color: #ff6b6b;
+          border: 1px solid #ffe082;
+        }
+        .success-message {
+          background: #e6ffe6;
+          color: #28a745;
+          border: 1px solid #b2ffb2;
+        }
+        .auth-link, .auth-link-text, .forgot-password-link, .resend-code-link, .back-to-login {
+          color: #00b5d7;
+        }
+        .auth-link:hover, .forgot-password-link:hover, .resend-code-link:hover, .back-to-login:hover {
+          color: #0dcaf0;
+        }
+        .logo-icon {
+          color: #0dcaf0;
+        }
+        .spinner {
+          color: #0dcaf0;
+        }
+        ` : ''}
+      `}</style>
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -192,6 +266,7 @@ export function Login() {
 
 // ✅ FORGOT PASSWORD COMPONENT
 export function ForgotPassword() {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -233,6 +308,78 @@ export function ForgotPassword() {
 
   return (
     <div className="auth-container">
+      <style>{`
+        ${theme === 'light' ? `
+        .auth-container {
+          background: #f7fcfd;
+          color: #222;
+        }
+        .auth-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .auth-header {
+          color: #0dcaf0;
+        }
+        .auth-title {
+          color: #0dcaf0;
+        }
+        .auth-subtitle {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .auth-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .auth-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .auth-button:disabled {
+          opacity: 0.7;
+        }
+        .error-message {
+          background: #fffbe6;
+          color: #ff6b6b;
+          border: 1px solid #ffe082;
+        }
+        .success-message {
+          background: #e6ffe6;
+          color: #28a745;
+          border: 1px solid #b2ffb2;
+        }
+        .auth-link, .auth-link-text, .forgot-password-link, .resend-code-link, .back-to-login {
+          color: #00b5d7;
+        }
+        .auth-link:hover, .forgot-password-link:hover, .resend-code-link:hover, .back-to-login:hover {
+          color: #0dcaf0;
+        }
+        .logo-icon {
+          color: #0dcaf0;
+        }
+        .spinner {
+          color: #0dcaf0;
+        }
+        ` : ''}
+      `}</style>
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -308,6 +455,7 @@ export function ForgotPassword() {
 
 // ✅ VERIFY RESET CODE COMPONENT
 export function VerifyResetCode() {
+  const { theme } = useTheme();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -376,6 +524,78 @@ export function VerifyResetCode() {
 
   return (
     <div className="auth-container">
+      <style>{`
+        ${theme === 'light' ? `
+        .auth-container {
+          background: #f7fcfd;
+          color: #222;
+        }
+        .auth-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .auth-header {
+          color: #0dcaf0;
+        }
+        .auth-title {
+          color: #0dcaf0;
+        }
+        .auth-subtitle {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .auth-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .auth-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .auth-button:disabled {
+          opacity: 0.7;
+        }
+        .error-message {
+          background: #fffbe6;
+          color: #ff6b6b;
+          border: 1px solid #ffe082;
+        }
+        .success-message {
+          background: #e6ffe6;
+          color: #28a745;
+          border: 1px solid #b2ffb2;
+        }
+        .auth-link, .auth-link-text, .forgot-password-link, .resend-code-link, .back-to-login {
+          color: #00b5d7;
+        }
+        .auth-link:hover, .forgot-password-link:hover, .resend-code-link:hover, .back-to-login:hover {
+          color: #0dcaf0;
+        }
+        .logo-icon {
+          color: #0dcaf0;
+        }
+        .spinner {
+          color: #0dcaf0;
+        }
+        ` : ''}
+      `}</style>
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -459,6 +679,7 @@ export function VerifyResetCode() {
 
 // ✅ RESET PASSWORD COMPONENT
 export function ResetPassword() {
+  const { theme } = useTheme();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -517,6 +738,78 @@ export function ResetPassword() {
 
   return (
     <div className="auth-container">
+      <style>{`
+        ${theme === 'light' ? `
+        .auth-container {
+          background: #f7fcfd;
+          color: #222;
+        }
+        .auth-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .auth-header {
+          color: #0dcaf0;
+        }
+        .auth-title {
+          color: #0dcaf0;
+        }
+        .auth-subtitle {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .auth-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .auth-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .auth-button:disabled {
+          opacity: 0.7;
+        }
+        .error-message {
+          background: #fffbe6;
+          color: #ff6b6b;
+          border: 1px solid #ffe082;
+        }
+        .success-message {
+          background: #e6ffe6;
+          color: #28a745;
+          border: 1px solid #b2ffb2;
+        }
+        .auth-link, .auth-link-text, .forgot-password-link, .resend-code-link, .back-to-login {
+          color: #00b5d7;
+        }
+        .auth-link:hover, .forgot-password-link:hover, .resend-code-link:hover, .back-to-login:hover {
+          color: #0dcaf0;
+        }
+        .logo-icon {
+          color: #0dcaf0;
+        }
+        .spinner {
+          color: #0dcaf0;
+        }
+        ` : ''}
+      `}</style>
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
@@ -623,6 +916,7 @@ export function ResetPassword() {
 
 // ✅ REGISTER COMPONENT
 export function Register() {
+  const { theme } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -813,6 +1107,78 @@ export function Register() {
 
   return (
     <div className="auth-container">
+      <style>{`
+        ${theme === 'light' ? `
+        .auth-container {
+          background: #f7fcfd;
+          color: #222;
+        }
+        .auth-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .auth-header {
+          color: #0dcaf0;
+        }
+        .auth-title {
+          color: #0dcaf0;
+        }
+        .auth-subtitle {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .auth-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .auth-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .auth-button:disabled {
+          opacity: 0.7;
+        }
+        .error-message {
+          background: #fffbe6;
+          color: #ff6b6b;
+          border: 1px solid #ffe082;
+        }
+        .success-message {
+          background: #e6ffe6;
+          color: #28a745;
+          border: 1px solid #b2ffb2;
+        }
+        .auth-link, .auth-link-text, .forgot-password-link, .resend-code-link, .back-to-login {
+          color: #00b5d7;
+        }
+        .auth-link:hover, .forgot-password-link:hover, .resend-code-link:hover, .back-to-login:hover {
+          color: #0dcaf0;
+        }
+        .logo-icon {
+          color: #0dcaf0;
+        }
+        .spinner {
+          color: #0dcaf0;
+        }
+        ` : ''}
+      `}</style>
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">

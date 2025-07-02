@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Laylia = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Laylia = () => {
   const [user, setUser] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [focusedField, setFocusedField] = useState(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -841,6 +843,144 @@ const Laylia = () => {
             padding: 0.75rem 0.5rem;
           }
         }
+
+        ${theme === 'light' ? `
+        .laylia-form {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .form-title {
+          color: #0dcaf0;
+        }
+        .form-header {
+          color: #0dcaf0;
+        }
+        .entries-badge {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          color: #0dcaf0;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .success-notification {
+          background: linear-gradient(135deg, #e6ffe6 0%, #e7fff7 100%);
+          border: 1px solid #b2ffb2;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .notification-content {
+          color: #28a745;
+        }
+        .error-notification .notification-content {
+          color: #ffb300;
+        }
+        .close-button {
+          color: #0dcaf0;
+        }
+        .close-button:hover {
+          background: #e0f7fa;
+        }
+        .form-section,
+        .entries-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .section-title {
+          color: #00b5d7;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .required {
+          color: #ff6b6b;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .form-input.focused {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .form-input.error {
+          border-color: #ff6b6b;
+          background: #fff0f0;
+        }
+        .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .error-message {
+          color: #ff6b6b;
+        }
+        .submit-section {
+          background: none;
+        }
+        .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .submit-button:disabled {
+          opacity: 0.7;
+        }
+        .button-icon {
+          color: #0dcaf0;
+        }
+        .table-container {
+          background: #f7fcfd;
+        }
+        .data-table {
+          color: #222;
+        }
+        .data-table th {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          color: #00b5d7;
+          border-bottom: 2px solid #b2ebf2;
+        }
+        .data-table td {
+          border-bottom: 1px solid #e0f7fa;
+        }
+        .table-row:hover {
+          background: #e0f7fa;
+        }
+        .delete-button {
+          background: #fff0f0;
+          border: 1px solid #ffb3b3;
+          color: #ff6b6b;
+        }
+        .delete-button:hover:not(:disabled) {
+          background: #ffeaea;
+          box-shadow: 0 4px 15px #ffb3b3;
+        }
+        .spinner {
+          border-top-color: #0dcaf0;
+        }
+        .spinner-small {
+          border-top-color: #ff6b6b;
+        }
+        @media (max-width: 768px) {
+          .laylia-form {
+            padding: 1.5rem;
+          }
+        }
+        ` : ''}
       `}</style>
     </div>
   );

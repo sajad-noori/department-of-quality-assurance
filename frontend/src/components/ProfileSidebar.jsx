@@ -441,6 +441,76 @@ const ProfileSidebar = () => {
           font-size: 1.1rem;
         }
       `}</style>
+      {/* Light mode styles for ProfileSidebar */}
+      <style>{`
+        [data-theme="light"] .profile-sidebar {
+          background: #fff;
+          color: #222;
+          border-left: 1.5px solid #e0e0e0;
+        }
+        [data-theme="light"] .profile-content {
+          color: #222;
+        }
+        [data-theme="light"] .profile-image-container {
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
+          box-shadow: 0 4px 12px rgba(13, 202, 240, 0.13);
+        }
+        [data-theme="light"] .profile-image {
+          border: 3px solid #fff;
+          background: #fff;
+        }
+        [data-theme="light"] .profile-initial {
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          border: 3px solid #fff;
+          box-shadow: 0 4px 12px rgba(13, 202, 240, 0.13);
+        }
+        [data-theme="light"] .upload-button {
+          background: #0dcaf0;
+          border: 2px solid #fff;
+        }
+        [data-theme="light"] .upload-loading {
+          background: rgba(13, 202, 240, 0.9);
+          border: 2px solid #fff;
+        }
+        [data-theme="light"] .user-name {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .user-email {
+          color: #00b5d7;
+        }
+        [data-theme="light"] .progress-stages {
+          background: #f5f5f5;
+        }
+        [data-theme="light"] .stage {
+          background: #f9f9f9;
+          color: #222;
+        }
+        [data-theme="light"] .stage.active {
+          background: #e8f8fc;
+          border-right: 3px solid #0dcaf0;
+        }
+        [data-theme="light"] .stage-number {
+          background: linear-gradient(145deg, #0dcaf0, #00b5d7);
+          color: #fff;
+        }
+        [data-theme="light"] .stage-text {
+          color: #00b5d7;
+        }
+        [data-theme="light"] .stage.active .stage-text {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .logout-container {
+          background: none;
+        }
+        [data-theme="light"] .logout-button {
+          background: linear-gradient(145deg, #ef4444, #dc2626);
+          color: #fff;
+        }
+        [data-theme="light"] .logout-button:hover {
+          background: linear-gradient(145deg, #dc2626, #b91c1c);
+        }
+      `}</style>
     </motion.div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTheme } from '../contexts/ThemeContext';
 
 const containerStyle = {
   backgroundColor: '#1a1a1a',
@@ -278,6 +279,8 @@ const selectStyle = {
 };
 
 const Comments = ({ newsId }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -448,61 +451,289 @@ const Comments = ({ newsId }) => {
     return pages;
   };
 
+  // Light mode style overrides
+  const containerStyleLight = {
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    border: '1px solid #e0f7fa',
+    boxShadow: '0 4px 20px rgba(13,202,240,0.08)',
+    marginTop: '2rem',
+  };
+  const titleStyleLight = {
+    fontSize: '1.5rem',
+    fontWeight: '600',
+    color: '#0dcaf0',
+    marginBottom: '1.5rem',
+    borderBottom: '2px solid #0dcaf0',
+    paddingBottom: '0.5rem',
+  };
+  const commentsListStyleLight = { ...commentsListStyle };
+  const commentItemStyleLight = {
+    backgroundColor: '#f7fcfd',
+    border: '1px solid #e0f7fa',
+    borderRadius: '8px',
+    padding: '1rem',
+    marginBottom: '1rem',
+    transition: 'all 0.2s ease',
+  };
+  const commentItemHoverStyleLight = {
+    borderColor: '#0dcaf0',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(13,202,240,0.10)',
+  };
+  const commentHeaderStyleLight = { ...commentHeaderStyle };
+  const authorStyleLight = {
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    color: '#00b5d7',
+    backgroundColor: '#e0f7fa',
+    padding: '0.25rem 0.75rem',
+    borderRadius: '4px',
+  };
+  const dateStyleLight = {
+    fontSize: '0.75rem',
+    color: '#666',
+    backgroundColor: '#f7fcfd',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
+    border: '1px solid #e0f7fa',
+  };
+  const commentTextStyleLight = {
+    fontSize: '0.95rem',
+    color: '#222',
+    lineHeight: '1.6',
+    margin: 0,
+  };
+  const formContainerStyleLight = {
+    borderTop: '1px solid #e0f7fa',
+    paddingTop: '1.5rem',
+  };
+  const textareaStyleLight = {
+    width: '100%',
+    padding: '0.75rem',
+    fontSize: '0.875rem',
+    border: '1px solid #e0f7fa',
+    borderRadius: '6px',
+    backgroundColor: '#fff',
+    color: '#222',
+    outline: 'none',
+    transition: 'border-color 0.2s ease',
+    resize: 'vertical',
+    minHeight: '100px',
+    fontFamily: 'inherit',
+  };
+  const textareaFocusStyleLight = {
+    borderColor: '#0dcaf0',
+    boxShadow: '0 0 0 2px #b2ebf2',
+  };
+  const buttonStyleLight = {
+    backgroundColor: '#0dcaf0',
+    border: 'none',
+    color: '#fff',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: '0.875rem',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: '1rem',
+  };
+  const buttonHoverStyleLight = {
+    backgroundColor: '#00b5d7',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(13,202,240,0.10)',
+  };
+  const buttonDisabledStyleLight = {
+    ...buttonStyleLight,
+    backgroundColor: '#e0e0e0',
+    color: '#aaa',
+    cursor: 'not-allowed',
+    transform: 'none',
+  };
+  const loadingStyleLight = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '2rem',
+    color: '#0dcaf0',
+  };
+  const spinnerStyleLight = {
+    width: '20px',
+    height: '20px',
+    border: '2px solid #e0f7fa',
+    borderTop: '2px solid #0dcaf0',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    marginRight: '0.5rem',
+  };
+  const errorStyleLight = {
+    color: '#ff6b6b',
+    fontSize: '0.875rem',
+    padding: '0.75rem',
+    backgroundColor: '#fffbe6',
+    border: '1px solid #ffe082',
+    borderRadius: '6px',
+    marginBottom: '1rem',
+  };
+  const emptyStateStyleLight = {
+    textAlign: 'center',
+    padding: '2rem',
+    color: '#bbb',
+  };
+  const emptyStateIconStyleLight = {
+    fontSize: '2rem',
+    marginBottom: '0.5rem',
+    opacity: 0.5,
+  };
+  const loginPromptStyleLight = {
+    backgroundColor: '#e0f7fa',
+    border: '1px solid #b2ebf2',
+    borderRadius: '6px',
+    padding: '1rem',
+    marginBottom: '1rem',
+    textAlign: 'center',
+  };
+  const loginPromptTextStyleLight = {
+    color: '#00b5d7',
+    fontSize: '0.875rem',
+    margin: 0,
+    marginBottom: '0.5rem',
+  };
+  const loginButtonStyleLight = {
+    backgroundColor: '#0dcaf0',
+    border: 'none',
+    color: '#fff',
+    padding: '0.5rem 1rem',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.75rem',
+    fontWeight: '500',
+    transition: 'all 0.2s ease',
+  };
+  const loginButtonHoverStyleLight = {
+    backgroundColor: '#00b5d7',
+    transform: 'translateY(-1px)',
+  };
+  const paginationContainerStyleLight = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '1.5rem',
+    padding: '1rem',
+    backgroundColor: '#f7fcfd',
+    borderRadius: '6px',
+    border: '1px solid #e0f7fa',
+  };
+  const paginationInfoStyleLight = {
+    fontSize: '0.875rem',
+    color: '#888',
+  };
+  const paginationControlsStyleLight = { ...paginationControlsStyle };
+  const pageButtonStyleLight = {
+    backgroundColor: '#fff',
+    border: '1px solid #e0f7fa',
+    color: '#00b5d7',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    transition: 'all 0.2s ease',
+    minWidth: '40px',
+    textAlign: 'center',
+  };
+  const pageButtonHoverStyleLight = {
+    backgroundColor: '#e0f7fa',
+    borderColor: '#0dcaf0',
+    color: '#00b5d7',
+  };
+  const pageButtonActiveStyleLight = {
+    backgroundColor: '#0dcaf0',
+    borderColor: '#0dcaf0',
+    color: '#fff',
+    fontWeight: '600',
+  };
+  const pageButtonDisabledStyleLight = {
+    ...pageButtonStyleLight,
+    backgroundColor: '#e0e0e0',
+    color: '#aaa',
+    cursor: 'not-allowed',
+  };
+  const itemsPerPageStyleLight = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.875rem',
+    color: '#888',
+  };
+  const selectStyleLight = {
+    backgroundColor: '#fff',
+    border: '1px solid #e0f7fa',
+    color: '#00b5d7',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '4px',
+    fontSize: '0.875rem',
+    outline: 'none',
+  };
+
   return (
-    <div style={containerStyle}>
-      <h3 style={titleStyle}>💬 نظرات</h3>
+    <div style={isLight ? containerStyleLight : containerStyle}>
+      <h3 style={isLight ? titleStyleLight : titleStyle}>💬 نظرات</h3>
 
       {loading && (
-        <div style={loadingStyle}>
-          <div style={spinnerStyle}></div>
+        <div style={isLight ? loadingStyleLight : loadingStyle}>
+          <div style={isLight ? spinnerStyleLight : spinnerStyle}></div>
           <span>در حال بارگذاری نظرات...</span>
         </div>
       )}
 
-      {error && <div style={errorStyle}>❌ {error}</div>}
+      {error && <div style={isLight ? errorStyleLight : errorStyle}>❌ {error}</div>}
 
       {comments.length === 0 && !loading && (
-        <div style={emptyStateStyle}>
-          <div style={emptyStateIconStyle}>💭</div>
+        <div style={isLight ? emptyStateStyleLight : emptyStateStyle}>
+          <div style={isLight ? emptyStateIconStyleLight : emptyStateIconStyle}>💭</div>
           <p>هنوز نظری ثبت نشده است.</p>
         </div>
       )}
 
-      <ul style={commentsListStyle}>
+      <ul style={isLight ? commentsListStyleLight : commentsListStyle}>
         {currentComments.map((c) => (
           <li
             key={c.id}
-            style={commentItemStyle}
-            onMouseEnter={handleCommentHover}
-            onMouseLeave={handleCommentLeave}
+            style={isLight ? commentItemStyleLight : commentItemStyle}
+            onMouseEnter={e => Object.assign(e.currentTarget.style, isLight ? commentItemHoverStyleLight : commentItemHoverStyle)}
+            onMouseLeave={e => Object.assign(e.currentTarget.style, isLight ? commentItemStyleLight : commentItemStyle)}
           >
-            <div style={commentHeaderStyle}>
-              <span style={authorStyle}>
+            <div style={isLight ? commentHeaderStyleLight : commentHeaderStyle}>
+              <span style={isLight ? authorStyleLight : authorStyle}>
                 👤 {c.author || "کاربر ناشناس"}
               </span>
-              <span style={dateStyle}>
+              <span style={isLight ? dateStyleLight : dateStyle}>
                 📅 {formatDate(c.created_at)}
               </span>
             </div>
-            <p style={commentTextStyle}>{c.comment}</p>
+            <p style={isLight ? commentTextStyleLight : commentTextStyle}>{c.comment}</p>
           </li>
         ))}
       </ul>
 
       {/* Pagination */}
       {totalComments > 0 && (
-        <div style={paginationContainerStyle}>
-          <div style={paginationInfoStyle}>
+        <div style={isLight ? paginationContainerStyleLight : paginationContainerStyle}>
+          <div style={isLight ? paginationInfoStyleLight : paginationInfoStyle}>
             نمایش {startIndex + 1} تا {Math.min(endIndex, totalComments)} از {totalComments} نظر
           </div>
           
-          <div style={paginationControlsStyle}>
-            <div style={itemsPerPageStyle}>
+          <div style={isLight ? paginationControlsStyleLight : paginationControlsStyle}>
+            <div style={isLight ? itemsPerPageStyleLight : itemsPerPageStyle}>
               <span>نمایش:</span>
               <select
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
-                style={selectStyle}
+                style={isLight ? selectStyleLight : selectStyle}
               >
                 <option value={3}>3</option>
                 <option value={5}>5</option>
@@ -512,11 +743,11 @@ const Comments = ({ newsId }) => {
               <span>نظر در هر صفحه</span>
             </div>
             
-            <div style={paginationControlsStyle}>
+            <div style={isLight ? paginationControlsStyleLight : paginationControlsStyle}>
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                style={currentPage === 1 ? pageButtonDisabledStyle : pageButtonStyle}
+                style={currentPage === 1 ? (isLight ? pageButtonDisabledStyleLight : pageButtonDisabledStyle) : (isLight ? pageButtonStyleLight : pageButtonStyle)}
                 onMouseEnter={handlePageButtonHover}
                 onMouseLeave={handlePageButtonLeave}
               >
@@ -531,10 +762,10 @@ const Comments = ({ newsId }) => {
                   className={page === currentPage ? 'active' : ''}
                   style={
                     page === '...' 
-                      ? pageButtonDisabledStyle 
+                      ? (isLight ? pageButtonDisabledStyleLight : pageButtonDisabledStyle) 
                       : page === currentPage 
-                        ? pageButtonActiveStyle 
-                        : pageButtonStyle
+                        ? (isLight ? pageButtonActiveStyleLight : pageButtonActiveStyle) 
+                        : (isLight ? pageButtonStyleLight : pageButtonStyle)
                   }
                   onMouseEnter={handlePageButtonHover}
                   onMouseLeave={handlePageButtonLeave}
@@ -546,7 +777,7 @@ const Comments = ({ newsId }) => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                style={currentPage === totalPages ? pageButtonDisabledStyle : pageButtonStyle}
+                style={currentPage === totalPages ? (isLight ? pageButtonDisabledStyleLight : pageButtonDisabledStyle) : (isLight ? pageButtonStyleLight : pageButtonStyle)}
                 onMouseEnter={handlePageButtonHover}
                 onMouseLeave={handlePageButtonLeave}
               >
@@ -557,17 +788,17 @@ const Comments = ({ newsId }) => {
         </div>
       )}
 
-      <div style={formContainerStyle}>
+      <div style={isLight ? formContainerStyleLight : formContainerStyle}>
         {!user && (
-          <div style={loginPromptStyle}>
-            <p style={loginPromptTextStyle}>
+          <div style={isLight ? loginPromptStyleLight : loginPromptStyle}>
+            <p style={isLight ? loginPromptTextStyleLight : loginPromptTextStyle}>
               برای ارسال نظر ابتدا وارد شوید
             </p>
             <button
               onClick={() => navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)}
-              style={loginButtonStyle}
-              onMouseEnter={(e) => Object.assign(e.currentTarget.style, loginButtonHoverStyle)}
-              onMouseLeave={(e) => Object.assign(e.currentTarget.style, loginButtonStyle)}
+              style={isLight ? loginButtonStyleLight : loginButtonStyle}
+              onMouseEnter={e => Object.assign(e.currentTarget.style, isLight ? loginButtonHoverStyleLight : loginButtonHoverStyle)}
+              onMouseLeave={e => Object.assign(e.currentTarget.style, isLight ? loginButtonStyleLight : loginButtonStyle)}
             >
               ورود به سیستم
             </button>
@@ -580,8 +811,8 @@ const Comments = ({ newsId }) => {
           placeholder="نظر خود را اینجا بنویسید..."
           rows={4}
           style={{
-            ...textareaStyle,
-            ...(textareaFocused ? textareaFocusStyle : {})
+            ...(isLight ? textareaStyleLight : textareaStyle),
+            ...(textareaFocused ? (isLight ? textareaFocusStyleLight : textareaFocusStyle) : {})
           }}
           onFocus={() => setTextareaFocused(true)}
           onBlur={() => setTextareaFocused(false)}
@@ -591,7 +822,7 @@ const Comments = ({ newsId }) => {
         <button
           onClick={handleAddComment}
           disabled={submitting || !user || !newComment.trim()}
-          style={submitting || !user || !newComment.trim() ? buttonDisabledStyle : buttonStyle}
+          style={submitting || !user || !newComment.trim() ? (isLight ? buttonDisabledStyleLight : buttonDisabledStyle) : (isLight ? buttonStyleLight : buttonStyle)}
           onMouseEnter={handleButtonHover}
           onMouseLeave={handleButtonLeave}
         >

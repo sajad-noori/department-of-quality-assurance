@@ -45,6 +45,7 @@ import { styled } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import PropTypes from 'prop-types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const darkTheme = createTheme({
   direction: "rtl",
@@ -86,6 +87,60 @@ const darkTheme = createTheme({
           '&:hover': {
             backgroundColor: '#00b5d7',
           },
+        },
+      },
+    },
+  }
+});
+
+const lightTheme = createTheme({
+  direction: "rtl",
+  palette: {
+    mode: "light",
+    background: {
+      default: "#fff",
+      paper: "#f7fcfd",
+    },
+    primary: {
+      main: "#0dcaf0",
+    },
+    secondary: {
+      main: "#00b5d7",
+    },
+    info: {
+      main: "#00b5d7",
+    },
+    success: {
+      main: "#4caf50",
+    },
+    error: {
+      main: "#ff6b6b",
+    },
+    text: {
+      primary: '#222',
+      secondary: '#666',
+    }
+  },
+  typography: {
+    fontFamily: "sans-serif",
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        containedPrimary: {
+          color: '#fff',
+          fontWeight: 'bold',
+          background: 'linear-gradient(135deg, #0dcaf0, #00b5d7)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #00b5d7, #0dcaf0)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#fff',
         },
       },
     },
@@ -259,6 +314,7 @@ export default function FileUploadWizard({ onStepChange }) {
   const [success, setSuccess] = useState(null);
   const clearMsgTimeout = useRef(null);
   const [step10Triggered, setStep10Triggered] = useState(false);
+  const { theme } = useTheme();
   // Count how many fields are filled (uploaded)
   const filledCount = Object.values(documents).filter(Boolean).length;
 
@@ -696,7 +752,7 @@ export default function FileUploadWizard({ onStepChange }) {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider theme={darkTheme}>
+      <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
         <CssBaseline />
         <Box
           sx={{

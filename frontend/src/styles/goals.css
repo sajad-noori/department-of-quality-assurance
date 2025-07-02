@@ -67,31 +67,9 @@
   color: rgba(255, 255, 255, 0.85); /* Light text like Banner description */
 }
 
-.squiggly-card figure button {
-  margin-top: 30px;
-  background-color: #0dcaf0; /* Primary cyan color from Banner */
-  color: #030305; /* Dark text for contrast */
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 600;
-  font-size: 16px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3); /* Glow effect like Banner */
-  transition: all 0.3s ease;
-}
 
-.squiggly-card figure button:hover {
-  background-color: #00b5d7; /* Darker cyan on hover like Banner */
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 202, 240, 0.4);
-}
 
-.squiggly-card figure button:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(13, 202, 240, 0.1);
-}
+
 
 @media (max-width: 450px) {
   .squiggly-card {
@@ -141,3 +119,40 @@
         flex-direction: column;
     }
 }
+
+/* Light mode styles for Goals component */
+[data-theme="light"] .goals-container,
+[data-theme="light"] .goals-container--reverse {
+  background: #fff;
+  color: #222;
+}
+
+[data-theme="light"] .squiggly-card {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] .squiggly-card h2 {
+  color: #0dcaf0;
+}
+
+[data-theme="light"] .squiggly-card figcaption {
+  color: #333;
+}
+
+[data-theme="light"] .goals-image-wrapper {
+  background: #f5f5f5;
+}
+
+[data-theme="light"] .goals-image {
+  filter: none;
+}
+
+
+[data-theme="light"] .squiggly-card figure {
+  background: #f5f5f5;
+}
+
+/* K accent colors for SVG squiggle as is */

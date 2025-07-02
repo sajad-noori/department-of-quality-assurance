@@ -185,3 +185,50 @@
     }
   }
   
+  /* Light mode styles for Goal5 component */
+  [data-theme="light"] .goal5-container {
+    background: #fff;
+    color: #222;
+    margin: 3rem;
+  }
+  
+  [data-theme="light"] .glowing-border {
+    border: var(--border-width, 3px) solid transparent;
+    background: linear-gradient(white 0 0) padding-box,
+      conic-gradient(from var(--glow-deg, 0deg), var(--gradient-glow, #0dcaf0 0%, #00b5d7 100%, #fff 100%)) border-box;
+    box-shadow: 0 4px 24px 0 rgba(13, 202, 240, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.06);
+    padding: 2.2rem 1.7rem;
+    border-radius: 1.2rem;
+    color: #222;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s, background 0.2s;
+  }
+  
+  [data-theme="light"] .glowing-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1.2rem;
+    pointer-events: none;
+    box-shadow: 0 0 32px 8px #0dcaf0, 0 0 0 0 #fff;
+    opacity: 0.08;
+    z-index: 0;
+  }
+  
+  [data-theme="light"] .glowing-border h1 {
+    color: #0dcaf0;
+    z-index: 1;
+    position: relative;
+  }
+  
+  [data-theme="light"] .glowing-border p {
+    color: #333;
+    z-index: 1;
+    position: relative;
+  }
+  
+  [data-theme="light"] .goal5-bg-circle {
+    opacity: 0.12;
+  }
+  

@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { CircularProgress } from '@mui/material';
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function StaffCountForm({ formData, onChange, onSubmit }) {
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -844,6 +846,129 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
             align-items: flex-start;
           }
         }
+
+        ${theme === 'light' ? `
+        .personnel-form {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .form-title {
+          color: #0dcaf0;
+        }
+        .form-header {
+          color: #0dcaf0;
+        }
+        .existing-data-badge {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          color: #0dcaf0;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .changes-indicator {
+          border-right: 1px solid #b2ebf2;
+        }
+        .changes-dot {
+          background: #ffd700;
+        }
+        .changes-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .notification-content {
+          color: #ffb300;
+        }
+        .reset-button {
+          background: #fffde7;
+          border: 1px solid #ffe082;
+          color: #ffb300;
+        }
+        .reset-button:hover {
+          background: #fff9c4;
+        }
+        .personnel-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .section-title {
+          color: #00b5d7;
+        }
+        .total-badge {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+        }
+        .field-label {
+          color: #00b5d7;
+        }
+        .field-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .field-input::placeholder {
+          color: #90a4ae;
+        }
+        .field-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .field-input.focused {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .field-input.modified {
+          border-color: #ffd700;
+          background: #fffde7;
+          box-shadow: 0 0 0 2px #fff9c4;
+        }
+        .field-input.error {
+          border-color: #ff6b6b;
+          background: #fff0f0;
+        }
+        .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        .field-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .field-input.modified ~ .input-border {
+          background: linear-gradient(90deg, #ffd700, #ffed4e);
+        }
+        .error-message {
+          color: #ff6b6b;
+        }
+        .submit-section {
+          background: none;
+        }
+        .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .submit-button.has-changes {
+          background: linear-gradient(135deg, #ffd700, #ffed4e);
+          color: #222;
+          box-shadow: 0 2px 8px rgba(255,215,0,0.10);
+        }
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .submit-button.has-changes:hover:not(:disabled) {
+          background: linear-gradient(135deg, #ffed4e, #ffd700);
+        }
+        .submit-button:disabled {
+          opacity: 0.7;
+        }
+        .button-icon {
+          color: #0dcaf0;
+        }
+        @media (max-width: 768px) {
+          .personnel-form {
+            padding: 1.5rem;
+          }
+        }
+        ` : ''}
       `}</style>
     </div>
   );

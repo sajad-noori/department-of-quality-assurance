@@ -866,6 +866,128 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
           color: #f0f0f0;
         }
       `}</style>
+      {/* Light mode styles for GeneralInformationEducationalCenter */}
+      <style>{`
+        [data-theme="light"] .educational-center-form {
+          background: #fff;
+          color: #222;
+          border: 1.5px solid #e0e0e0;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08);
+        }
+        [data-theme="light"] .form-header {
+          color: #222;
+        }
+        [data-theme="light"] .form-title {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .existing-data-badge {
+          background: linear-gradient(135deg, #e8f8fc, #fff);
+          color: #00b5d7;
+          box-shadow: 0 4px 15px rgba(13, 202, 240, 0.10);
+        }
+        [data-theme="light"] .edit-mode-indicator {
+          background: linear-gradient(135deg, #fffbe6, #fff9c4);
+          color: #ffd700;
+          box-shadow: 0 4px 15px rgba(255, 215, 0, 0.13);
+        }
+        [data-theme="light"] .changes-indicator {
+          border-right: 1px solid #e0e0e0;
+        }
+        [data-theme="light"] .changes-dot {
+          background: #ff6b6b;
+        }
+        [data-theme="light"] .changes-notification {
+          background: linear-gradient(135deg, #fff0f0, #fff);
+          border: 1px solid #ffd7d7;
+        }
+        [data-theme="light"] .notification-content {
+          color: #ff6b6b;
+        }
+        [data-theme="light"] .reset-button {
+          background: #fff0f0;
+          border: 1px solid #ffd7d7;
+          color: #ff6b6b;
+        }
+        [data-theme="light"] .reset-button:hover {
+          background: #ffeaea;
+        }
+        [data-theme="light"] .form-label {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .required {
+          color: #ff6b6b;
+        }
+        [data-theme="light"] .form-input,
+        [data-theme="light"] .form-select {
+          background: #fff;
+          color: #222;
+          border: 2px solid #e0e0e0;
+        }
+        [data-theme="light"] .form-input::placeholder,
+        [data-theme="light"] .form-select::placeholder {
+          color: #aaa;
+        }
+        [data-theme="light"] .form-input:focus,
+        [data-theme="light"] .form-select:focus {
+          border-color: #0dcaf0;
+          background: #e8f8fc;
+          box-shadow: 0 0 0 3px #e8f8fc;
+        }
+        [data-theme="light"] .form-input.focused,
+        [data-theme="light"] .form-select.focused {
+          border-color: #0dcaf0;
+          background: #e8f8fc;
+        }
+        [data-theme="light"] .form-input.modified,
+        [data-theme="light"] .form-select.modified {
+          border-color: #ffd700;
+          background: #fffbe6;
+          box-shadow: 0 0 0 2px #fffbe6;
+        }
+        [data-theme="light"] .form-input.error,
+        [data-theme="light"] .form-select.error {
+          border-color: #ff6b6b;
+          background: #fff0f0;
+        }
+        [data-theme="light"] .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        [data-theme="light"] .form-input:focus ~ .input-border,
+        [data-theme="light"] .form-select:focus ~ .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        [data-theme="light"] .form-input.modified ~ .input-border {
+          background: linear-gradient(90deg, #ffd700, #ffed4e);
+        }
+        [data-theme="light"] .error-message {
+          color: #ff6b6b;
+        }
+        [data-theme="light"] .address-section,
+        [data-theme="light"] .info-section,
+        [data-theme="light"] .contact-section {
+          background: #f5f5f5;
+          border: 1px solid #e0e0e0;
+        }
+        [data-theme="light"] .section-title {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 6px 20px rgba(13, 202, 240, 0.13);
+        }
+        [data-theme="light"] .submit-button.has-changes {
+          background: linear-gradient(135deg, #ffd700, #ffed4e);
+          color: #222;
+          box-shadow: 0 6px 20px rgba(255, 215, 0, 0.13);
+        }
+        [data-theme="light"] .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        [data-theme="light"] .submit-button.has-changes:hover:not(:disabled) {
+          background: linear-gradient(135deg, #ffed4e, #ffd700);
+        }
+      `}</style>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import PropTypes from 'prop-types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const StyledButton = styled(Button)({
   textTransform: 'none',
@@ -49,6 +50,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const { theme } = useTheme();
 
   const fetchFacilities = async () => {
     if (!user || user.role !== 'institute') return;
@@ -219,7 +221,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
             <span className="form-icon">🛠️</span>
             تجهیزات عملی مرکز آموزشی
           </h3>
-          <p className="form-description">
+          <p className="form-description" style={theme === 'light' ? { color: '#00b5d7' } : {  color: '#a9e5ff' }}>
             میزان تجهیزات موجود در ورکشاپ، لابراتوار و کتابخانه را بصورت رشته وار طی جدول ذیل درج نموده و وضعیت موجود آنرا بیان دارید.
           </p>
         </div>
@@ -258,7 +260,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('name')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'name' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               />
             </div>
@@ -272,7 +274,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('equipment_name')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'equipment_name' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               />
             </div>
@@ -286,7 +288,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('equipment_count')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'equipment_count' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 min="0"
                 disabled={isSubmitting}
               />
@@ -299,7 +301,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('equipment_status')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'equipment_status' ? 'focused' : ''}`}
-                style={{ background: "transparent", color: "white" }}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               >
                 <option value="" style={{color: "black"}}>وضعیت وسیله را انتخاب کنید</option>
@@ -368,6 +370,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
                           size="small"
                           onClick={() => handleDelete(entry.id)}
                           startIcon={<DeleteIcon />}
+                          className="delete-btn"
                         >
                           حذف
                         </StyledButton>
@@ -558,6 +561,43 @@ const PracticalFacilities = ({ onStepSubmit }) => {
             font-size: 0.9rem;
           }
         }
+        .delete-btn {
+          background: linear-gradient(135deg, #ff6b6b, #dc3545) !important;
+          color: white !important;
+          font-weight: 600 !important;
+          border-radius: 8px !important;
+          transition: all 0.3s ease !important;
+        }
+        .delete-btn:hover {
+          background: linear-gradient(135deg, #dc3545, #ff6b6b) !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+        }
+        ${theme === 'light' ? `
+        .academy-facilities-form.glass-bg input::placeholder {
+          color: #666;
+          opacity: 1;
+        }
+        .academy-facilities-form.glass-bg select option[disabled] {
+          color: #888;
+        }
+        .academy-facilities-form.glass-bg .files-table {
+          background: #fff;
+          color: #222;
+        }
+        .academy-facilities-form.glass-bg .files-table th {
+          background: #e0f7fa;
+          color: #00b5d7;
+          border-bottom: 1px solid #b2ebf2;
+        }
+        .academy-facilities-form.glass-bg .files-table td {
+          color: #222;
+          border-bottom: 1px solid #e0f7fa;
+        }
+        .academy-facilities-form.glass-bg .files-table tr:hover {
+          background: #e0f7fa;
+        }
+        ` : ''}
       `}</style>
     </div>
   );

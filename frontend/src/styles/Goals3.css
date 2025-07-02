@@ -284,3 +284,32 @@ article #_boxes ul li figure a:hover i {
 		height: auto;
 	}
 }
+
+/* Light mode styles for Goals3 component */
+
+
+[data-theme="light"] article {
+	background: #f5f5f5;
+}
+
+
+[data-theme="light"] .goals3-container {
+	background: #fff;
+	color: #222;
+}
+
+[data-theme="light"] .sectionWrapper {
+	background: #f5f5f5;
+}
+
+[data-theme="light"] .goals3-container h2 {
+	color: #0dcaf0;
+}
+
+[data-theme="light"] .goals3-container figcaption {
+	color: #333;
+}
+
+[data-theme="light"] .goals3-container svg {
+	filter: none;
+}

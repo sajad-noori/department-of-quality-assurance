@@ -8,6 +8,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import CircularProgress from '@mui/material/CircularProgress';
 import axios from 'axios';
 import PropTypes from 'prop-types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -48,6 +49,7 @@ function Standard({ value, onChange, onStepSubmit }) {
   const [focusedField, setFocusedField] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -930,6 +932,177 @@ function Standard({ value, onChange, onStepSubmit }) {
             font-size: 0.9rem;
           }
         }
+        ${theme === 'light' ? `
+        .standard-form {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .form-title {
+          color: #0dcaf0;
+        }
+        .form-header {
+          color: #0dcaf0;
+        }
+        .form-description {
+          color: #00b5d7;
+        }
+        .success-notification {
+          background: linear-gradient(135deg, #e6ffe6 0%, #e7fff7 100%);
+          border: 1px solid #b2ffb2;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .notification-content {
+          color: #28a745;
+        }
+        .error-notification .notification-content {
+          color: #ffb300;
+        }
+        .close-button {
+          color: #0dcaf0;
+        }
+        .close-button:hover {
+          background: #e0f7fa;
+        }
+        .form-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .required {
+          color: #ff6b6b;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .form-input.focused {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .error-message {
+          color: #ff6b6b;
+        }
+        .upload-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .upload-title {
+          color: #00b5d7;
+        }
+        .upload-description {
+          color: #00b5d7;
+        }
+        .upload-area {
+          border: 2px dashed #b2ebf2;
+          background: #f7fcfd;
+        }
+        .upload-area:hover,
+        .upload-area.drag-active {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .upload-icon-large {
+          color: #0dcaf0;
+        }
+        .upload-text {
+          color: #00b5d7;
+        }
+        .upload-hint {
+          color: #90a4ae;
+        }
+        .upload-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7) !important;
+          color: #fff !important;
+        }
+        .upload-button:hover {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0) !important;
+        }
+        .temp-files-title {
+          color: #00b5d7;
+        }
+        .file-name {
+          color: #222;
+        }
+        .file-size {
+          color: #90a4ae;
+        }
+       
+        .submit-section {
+          background: none;
+        }
+        .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .submit-button:disabled {
+          opacity: 0.7;
+        }
+        .button-icon {
+          color: #0dcaf0;
+        }
+        .uploaded-files-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .section-title {
+          color: #00b5d7;
+        }
+        .file-count {
+          color: #00b5d7;
+          background: #e0f7fa;
+        }
+        .table-container {
+          background: #f7fcfd;
+        }
+        .files-table {
+          background: #fff;
+          color: #222;
+        }
+        .files-table th {
+          background: #e0f7fa;
+          color: #00b5d7;
+          border-bottom: 1px solid #b2ebf2;
+        }
+        .files-table td {
+          color: #222;
+          border-bottom: 1px solid #e0f7fa;
+        }
+        .files-table tr:hover {
+          background: #e0f7fa;
+        }
+        
+        @media (max-width: 768px) {
+          .standard-form {
+            padding: 1.5rem;
+          }
+        }
+        ` : ''}
       `}</style>
     </div>
   );

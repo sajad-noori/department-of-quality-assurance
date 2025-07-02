@@ -36,3 +36,17 @@
     transform: rotate(360deg);
   }
 }
+
+:root {
+  --background-color: #fff;
+  --text-color: #222;
+  --primary-color: #007bff;
+  --secondary-color: #f8f9fa;
+}
+
+[data-theme="dark"] {
+  --background-color: #181818;
+  --text-color: #f1f1f1;
+  --primary-color: #ffd700;
+  --secondary-color: #232323;
+}

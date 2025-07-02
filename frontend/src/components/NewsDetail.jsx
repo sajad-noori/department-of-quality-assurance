@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import Comments from "./Comments";
+import { useTheme } from '../contexts/ThemeContext';
 
 const containerStyle = {
   backgroundColor: '#0a0a0a',
@@ -248,6 +249,177 @@ const NewsDetail = () => {
   const [zoomed, setZoomed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { theme } = useTheme();
+
+  // Light mode style overrides
+  const isLight = theme === 'light';
+  const containerStyleLight = {
+    backgroundColor: '#f7fcfd',
+    color: '#222',
+    minHeight: '100vh',
+    padding: '1rem',
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    direction: 'rtl',
+  };
+  const headerStyleLight = {
+    color: '#0dcaf0',
+    padding: '1.5rem',
+    marginBottom: '1.5rem',
+  };
+  const titleStyleLight = {
+    margin: '0 0 0.5rem 0',
+    fontSize: '2rem',
+    fontWeight: '700',
+    color: '#0dcaf0',
+    textAlign: 'center',
+  };
+  const newsContainerStyleLight = {
+    display: 'flex',
+    flexDirection: 'row-reverse',
+    gap: '2rem',
+    alignItems: 'flex-start',
+    marginBottom: '2rem',
+  };
+  const newsImageBoxStyleLight = { ...newsImageBoxStyle };
+  const newsImageStyleLight = {
+    ...newsImageStyle,
+    border: '4px solid #e0f7fa',
+    boxShadow: '0 8px 20px rgba(13,202,240,0.10)',
+  };
+  const newsImageHoverStyleLight = {
+    transform: 'scale(1.02)',
+    boxShadow: '0 12px 25px rgba(13,202,240,0.15)',
+    borderColor: '#0dcaf0',
+  };
+  const zoomedImageStyleLight = {
+    ...zoomedImageStyle,
+    border: '6px solid #e0f7fa',
+    backgroundColor: '#fff',
+  };
+  const overlayStyleLight = { ...overlayStyle, backgroundColor: 'rgba(0,0,0,0.5)' };
+  const newsContentBoxStyleLight = { ...newsContentBoxStyle };
+  const newsHeadingStyleLight = {
+    fontSize: '2rem',
+    fontWeight: '700',
+    color: '#0dcaf0',
+    marginBottom: '1rem',
+    lineHeight: '1.3',
+  };
+  const newsMetaStyleLight = { ...newsMetaStyle };
+  const newsDateStyleLight = {
+    fontSize: '0.875rem',
+    color: '#00b5d7',
+    backgroundColor: '#e0f7fa',
+    padding: '0.5rem 1rem',
+    borderRadius: '6px',
+    fontWeight: '500',
+  };
+  const authorStyleLight = {
+    fontSize: '0.875rem',
+    color: '#666',
+    backgroundColor: '#f7fcfd',
+    padding: '0.5rem 1rem',
+    borderRadius: '6px',
+    fontWeight: '500',
+    border: '1px solid #e0f7fa',
+  };
+  const newsDescriptionStyleLight = {
+    fontSize: '1.1rem',
+    color: '#444',
+    marginBottom: '1.5rem',
+    lineHeight: '1.6',
+    textAlign: 'justify',
+  };
+  const newsContentStyleLight = {
+    lineHeight: '1.8',
+    fontSize: '1rem',
+    color: '#222',
+    textAlign: 'justify',
+    marginBottom: '2rem',
+  };
+  const otherNewsContainerStyleLight = {
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    border: '1px solid #e0f7fa',
+    boxShadow: '0 4px 20px rgba(13,202,240,0.08)',
+    marginBottom: '2rem',
+  };
+  const otherNewsTitleStyleLight = {
+    fontSize: '1.5rem',
+    fontWeight: '600',
+    color: '#0dcaf0',
+    marginBottom: '1rem',
+    borderBottom: '2px solid #0dcaf0',
+    paddingBottom: '0.5rem',
+  };
+  const otherNewsListStyleLight = { ...otherNewsListStyle };
+  const otherNewsItemStyleLight = {
+    marginBottom: '0.75rem',
+    padding: '0.75rem',
+    backgroundColor: '#f7fcfd',
+    borderRadius: '6px',
+    border: '1px solid #e0f7fa',
+    transition: 'all 0.2s ease',
+  };
+  const otherNewsItemHoverStyleLight = {
+    borderColor: '#0dcaf0',
+    transform: 'translateX(-4px)',
+    boxShadow: '0 4px 12px rgba(13,202,240,0.10)',
+  };
+  const otherNewsLinkStyleLight = {
+    color: '#00b5d7',
+    textDecoration: 'none',
+    fontSize: '0.95rem',
+    lineHeight: '1.4',
+    display: 'block',
+    transition: 'color 0.2s ease',
+  };
+  const otherNewsLinkHoverStyleLight = {
+    color: '#0dcaf0',
+  };
+  const backLinkStyleLight = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    color: '#fff',
+    textDecoration: 'none',
+    fontSize: '1rem',
+    fontWeight: '500',
+    padding: '0.75rem 1.5rem',
+    backgroundColor: '#0dcaf0',
+    borderRadius: '6px',
+    border: '1px solid #0dcaf0',
+    transition: 'all 0.2s ease',
+    marginBottom: '2rem',
+  };
+  const backLinkHoverStyleLight = {
+    backgroundColor: '#00b5d7',
+    color: '#fff',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(13,202,240,0.10)',
+  };
+  const loadingStyleLight = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '3rem',
+    color: '#00b5d7',
+  };
+  const spinnerStyleLight = {
+    width: '40px',
+    height: '40px',
+    border: '3px solid #e0f7fa',
+    borderTop: '3px solid #0dcaf0',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+    marginRight: '1rem',
+  };
+  const errorStyleLight = {
+    textAlign: 'center',
+    padding: '3rem',
+    color: '#ff6b6b',
+  };
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -317,9 +489,9 @@ const NewsDetail = () => {
 
   if (loading) {
     return (
-      <div style={containerStyle}>
-        <div style={loadingStyle}>
-          <div style={spinnerStyle}></div>
+      <div style={isLight ? containerStyleLight : containerStyle}>
+        <div style={isLight ? loadingStyleLight : loadingStyle}>
+          <div style={isLight ? spinnerStyleLight : spinnerStyle}></div>
           <span>در حال بارگذاری...</span>
         </div>
       </div>
@@ -328,12 +500,12 @@ const NewsDetail = () => {
 
   if (error || !news) {
     return (
-      <div style={containerStyle}>
-        <div style={errorStyle}>
+      <div style={isLight ? containerStyleLight : containerStyle}>
+        <div style={isLight ? errorStyleLight : errorStyle}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-          <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>خطا</h3>
+          <h3 style={{ color: isLight ? '#ff6b6b' : '#dc3545', marginBottom: '1rem' }}>خطا</h3>
           <p style={{ marginBottom: '1.5rem' }}>{error || 'خبر مورد نظر یافت نشد'}</p>
-          <Link to="/" style={backLinkStyle}>
+          <Link to="/" style={isLight ? backLinkStyleLight : backLinkStyle}>
             <span>🏠</span>
             <span>بازگشت به صفحه اصلی</span>
           </Link>
@@ -343,62 +515,62 @@ const NewsDetail = () => {
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>جزئیات خبر</h1>
+    <div style={isLight ? containerStyleLight : containerStyle}>
+      <div style={isLight ? headerStyleLight : headerStyle}>
+        <h1 style={isLight ? titleStyleLight : titleStyle}>جزئیات خبر</h1>
       </div>
 
-      <div style={newsContainerStyle}>
+      <div style={isLight ? newsContainerStyleLight : newsContainerStyle}>
         <div 
-          style={newsImageBoxStyle} 
+          style={isLight ? newsImageBoxStyleLight : newsImageBoxStyle} 
           onClick={() => setZoomed(true)}
         >
           <img
             src={`${news.image_path}`}
             alt={news.title}
-            style={newsImageStyle}
-            onMouseEnter={handleImageHover}
-            onMouseLeave={handleImageLeave}
+            style={isLight ? newsImageStyleLight : newsImageStyle}
+            onMouseEnter={e => Object.assign(e.currentTarget.style, isLight ? newsImageHoverStyleLight : newsImageHoverStyle)}
+            onMouseLeave={e => Object.assign(e.currentTarget.style, isLight ? newsImageStyleLight : newsImageStyle)}
           />
         </div>
 
-        <div style={newsContentBoxStyle}>
-          <h2 style={newsHeadingStyle}>{news.title}</h2>
+        <div style={isLight ? newsContentBoxStyleLight : newsContentBoxStyle}>
+          <h2 style={isLight ? newsHeadingStyleLight : newsHeadingStyle}>{news.title}</h2>
           
-          <div style={newsMetaStyle}>
-            <span style={newsDateStyle}>
+          <div style={isLight ? newsMetaStyleLight : newsMetaStyle}>
+            <span style={isLight ? newsDateStyleLight : newsDateStyle}>
               📅 {formatDate(news.published_date)}
             </span>
-            <span style={authorStyle}>
+            <span style={isLight ? authorStyleLight : authorStyle}>
               ✍️ {news.author || "ناشناخته"}
             </span>
           </div>
           
-          <p style={newsDescriptionStyle}>{news.description}</p>
+          <p style={isLight ? newsDescriptionStyleLight : newsDescriptionStyle}>{news.description}</p>
           
           <div 
-            style={newsContentStyle} 
+            style={isLight ? newsContentStyleLight : newsContentStyle} 
             dangerouslySetInnerHTML={{ __html: news.content }} 
           />
         </div>
       </div>
 
       {otherNews.length > 0 && (
-        <div style={otherNewsContainerStyle}>
-          <h3 style={otherNewsTitleStyle}>📰 اخبار دیگر</h3>
-          <ul style={otherNewsListStyle}>
+        <div style={isLight ? otherNewsContainerStyleLight : otherNewsContainerStyle}>
+          <h3 style={isLight ? otherNewsTitleStyleLight : otherNewsTitleStyle}>📰 اخبار دیگر</h3>
+          <ul style={isLight ? otherNewsListStyleLight : otherNewsListStyle}>
             {otherNews.slice(0, 5).map(other => (
               <li 
                 key={other.id}
-                style={otherNewsItemStyle}
-                onMouseEnter={handleOtherNewsHover}
-                onMouseLeave={handleOtherNewsLeave}
+                style={isLight ? otherNewsItemStyleLight : otherNewsItemStyle}
+                onMouseEnter={e => Object.assign(e.currentTarget.style, isLight ? otherNewsItemHoverStyleLight : otherNewsItemHoverStyle)}
+                onMouseLeave={e => Object.assign(e.currentTarget.style, isLight ? otherNewsItemStyleLight : otherNewsItemStyle)}
               >
                 <Link 
                   to={`/news/${other.id}`} 
-                  style={otherNewsLinkStyle}
-                  onMouseEnter={(e) => Object.assign(e.target.style, otherNewsLinkHoverStyle)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, otherNewsLinkStyle)}
+                  style={isLight ? otherNewsLinkStyleLight : otherNewsLinkStyle}
+                  onMouseEnter={e => Object.assign(e.target.style, isLight ? otherNewsLinkHoverStyleLight : otherNewsLinkHoverStyle)}
+                  onMouseLeave={e => Object.assign(e.target.style, isLight ? otherNewsLinkStyleLight : otherNewsLinkStyle)}
                 >
                   {other.title}
                 </Link>
@@ -410,9 +582,9 @@ const NewsDetail = () => {
 
       <Link 
         to="/" 
-        style={backLinkStyle}
-        onMouseEnter={handleBackLinkHover}
-        onMouseLeave={handleBackLinkLeave}
+        style={isLight ? backLinkStyleLight : backLinkStyle}
+        onMouseEnter={e => Object.assign(e.currentTarget.style, isLight ? backLinkHoverStyleLight : backLinkHoverStyle)}
+        onMouseLeave={e => Object.assign(e.currentTarget.style, isLight ? backLinkStyleLight : backLinkStyle)}
       >
         <span>🏠</span>
         <span>بازگشت به صفحه اصلی</span>
@@ -420,11 +592,11 @@ const NewsDetail = () => {
 
       {zoomed && (
         <>
-          <div style={overlayStyle} onClick={() => setZoomed(false)} />
+          <div style={isLight ? overlayStyleLight : overlayStyle} onClick={() => setZoomed(false)} />
           <img
             src={`${news.image_path}`}
             alt={news.title}
-            style={zoomedImageStyle}
+            style={isLight ? zoomedImageStyleLight : zoomedImageStyle}
             onClick={() => setZoomed(false)}
           />
         </>

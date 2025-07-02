@@ -235,6 +235,54 @@ export default function Banner() {
           overflow: hidden;
         }
 
+        /* Light mode styles */
+        [data-theme="light"] .banner {
+          background-color: #ffffff;
+          color: #333333;
+        }
+
+        [data-theme="light"] .banner__subtitle {
+          color: #0dcaf0;
+        }
+
+        [data-theme="light"] .banner__title {
+          background: linear-gradient(45deg, #0dcaf0, #00b5d7);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        [data-theme="light"] .banner__typed {
+          color: #0dcaf0;
+        }
+
+        [data-theme="light"] .banner__description {
+          color: #333333;
+        }
+
+        [data-theme="light"] .banner__list-item {
+          color: #333333;
+        }
+
+        [data-theme="light"] .banner__icon {
+          color: #0dcaf0;
+        }
+
+        [data-theme="light"] .banner__stat {
+          color: #0dcaf0;
+        }
+
+        [data-theme="light"] .banner__stat-label {
+          color: #333333;
+        }
+
+        [data-theme="light"] .banner__stat-value {
+          color: #0dcaf0;
+        }
+
+        [data-theme="light"] .banner__progress-dot {
+          border: 1px solid #0dcaf0;
+        }
+
         .banner::before {
           display: none;
         }

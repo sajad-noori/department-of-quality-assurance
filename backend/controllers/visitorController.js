@@ -63,19 +63,19 @@ function getVisitorStats(req, res) {
       );
 
       const totalRows = await queryAsync(
-        `SELECT COUNT(DISTINCT visitor_id) AS total FROM visits`
+        `SELECT COUNT(*) AS total FROM visits`
       );
 
       const dailyRows = await queryAsync(
-        `SELECT COUNT(DISTINCT visitor_id) AS daily FROM visits WHERE visit_time >= CURDATE()`
+        `SELECT COUNT(*) AS daily FROM visits WHERE visit_time >= CURDATE()`
       );
 
       const weeklyRows = await queryAsync(
-        `SELECT COUNT(DISTINCT visitor_id) AS weekly FROM visits WHERE visit_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)`
+        `SELECT COUNT(*) AS weekly FROM visits WHERE visit_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)`
       );
 
       const monthlyRows = await queryAsync(
-        `SELECT COUNT(DISTINCT visitor_id) AS monthly FROM visits WHERE visit_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
+        `SELECT COUNT(*) AS monthly FROM visits WHERE visit_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
       );
 
       res.json({

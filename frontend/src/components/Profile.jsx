@@ -16,6 +16,7 @@ import ClassFacilities from "./accreditation/ClassFacilities";
 import PracticalFacilities from "./accreditation/PracticalFacilities";
 import Documents from "./accreditation/Documents"
 import ReviewAndSubmit from "./accreditation/ReviewAndSubmit";
+import { useTheme } from "../contexts/ThemeContext";
 
 const steps = [
   "معلومات عمومی مرکز آموزشی",
@@ -429,6 +430,7 @@ Step3.defaultProps = {
 };
 
 function Step4({ onStepSubmit, user }) {
+  const { theme } = useTheme();
   const [formData, setFormData] = useState({
     vision: '',
     mission: '',
@@ -934,6 +936,107 @@ function Step4({ onStepSubmit, user }) {
         .form-container {
           user-select: text !important;
         }
+        ${theme === 'light' ? `
+        .vision-mission-form {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .form-title {
+          color: #0dcaf0;
+        }
+        .form-header {
+          color: #0dcaf0;
+        }
+        .entries-badge {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          color: #0dcaf0;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .success-notification {
+          background: linear-gradient(135deg, #e6ffe6 0%, #e7fff7 100%);
+          border: 1px solid #b2ffb2;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .notification-content {
+          color: #28a745;
+        }
+        .error-notification .notification-content {
+          color: #ffb300;
+        }
+        .close-button {
+          color: #0dcaf0;
+        }
+        .close-button:hover {
+          background: #e0f7fa;
+        }
+        .form-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .form-label {
+          color: #00b5d7;
+        }
+        .required {
+          color: #ff6b6b;
+        }
+        .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .form-input.focused {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .form-input.error {
+          border-color: #ff6b6b;
+          background: #fff0f0;
+        }
+        .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .error-message {
+          color: #ff6b6b;
+        }
+        .submit-section {
+          background: none;
+        }
+        .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .submit-button:disabled {
+          opacity: 0.7;
+        }
+        .button-icon {
+          color: #0dcaf0;
+        }
+        @media (max-width: 768px) {
+          .vision-mission-form {
+            padding: 1.5rem;
+          }
+        }
+        ` : ''}
       `}</style>
     </div>
   );
@@ -1060,6 +1163,7 @@ Step7.defaultProps = {
 };
 
 function Step8({ onStepSubmit, user }) {
+  const { theme } = useTheme();
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1692,6 +1796,135 @@ function Step8({ onStepSubmit, user }) {
             font-size: 1rem;
           }
         }
+        ${theme === 'light' ? `
+        .stakeholder-form {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .stakeholder-form .form-title {
+          color: #0dcaf0;
+        }
+        .stakeholder-form .form-header {
+          color: #0dcaf0;
+        }
+        .stakeholder-form .form-description {
+          color: #00b5d7;
+        }
+        .stakeholder-form .entries-badge {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          color: #0dcaf0;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .stakeholder-form .success-notification {
+          background: linear-gradient(135deg, #e6ffe6 0%, #e7fff7 100%);
+          border: 1px solid #b2ffb2;
+        }
+        .stakeholder-form .error-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .stakeholder-form .notification-content {
+          color: #28a745;
+        }
+        .stakeholder-form .error-notification .notification-content {
+          color: #ffb300;
+        }
+        .stakeholder-form .close-button {
+          color: #0dcaf0;
+        }
+        .stakeholder-form .close-button:hover {
+          background: #e0f7fa;
+        }
+        .stakeholder-form .form-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .stakeholder-form .form-label {
+          color: #00b5d7;
+        }
+        .stakeholder-form .required {
+          color: #ff6b6b;
+        }
+        .stakeholder-form .form-input {
+          background: #fff;
+          border: 2px solid #e0f7fa;
+          color: #222;
+        }
+        .stakeholder-form .form-input::placeholder {
+          color: #90a4ae;
+        }
+        .stakeholder-form .form-input:focus {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+          box-shadow: 0 0 0 3px #b2ebf2;
+        }
+        .stakeholder-form .form-input.focused {
+          border-color: #0dcaf0;
+          background: #e0f7fa;
+        }
+        .stakeholder-form .form-input.error {
+          border-color: #ff6b6b;
+          background: #fff0f0;
+        }
+        .stakeholder-form .input-border {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        .stakeholder-form .form-input:focus ~ .input-border {
+          width: 100%;
+        }
+        .stakeholder-form .error-message {
+          color: #ff6b6b;
+        }
+        .stakeholder-form .submit-section {
+          background: none;
+        }
+        .stakeholder-form .submit-button {
+          background: linear-gradient(135deg, #0dcaf0, #00b5d7);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        .stakeholder-form .submit-button:hover:not(:disabled) {
+          background: linear-gradient(135deg, #00b5d7, #0dcaf0);
+        }
+        .stakeholder-form .submit-button:disabled {
+          opacity: 0.7;
+        }
+        .stakeholder-form .button-icon {
+          color: #0dcaf0;
+        }
+        .stakeholder-form .form-tips {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .stakeholder-form .tips-title {
+          color: #0dcaf0;
+        }
+        .stakeholder-form .tips-list li {
+          color: #00b5d7;
+        }
+        .stakeholder-form .submit-hint {
+          color: #00b5d7;
+        }
+        .stakeholder-form .character-count {
+          color: #00b5d7;
+        }
+        .stakeholder-form .character-count.warning {
+          color: #ffc107;
+        }
+        .stakeholder-form .character-count.error {
+          color: #ff6b6b;
+        }
+        .stakeholder-form .min-chars-warning {
+          color: #ff6b6b;
+        }
+        @media (max-width: 768px) {
+          .stakeholder-form {
+            padding: 1.5rem;
+          }
+        }
+        ` : ''}
       `}</style>
     </div>
   );
@@ -1735,10 +1968,54 @@ Step9.defaultProps = {
 };
 
 function Step10() {
+  const { theme } = useTheme();
   return (
     <>
-      <label className="form-label-center">{steps[9]}</label>
       <ReviewAndSubmit />
+      <style>{`
+        ${theme === 'light' ? `
+        .review-submit-container {
+          background-color: #fff;
+        }
+        .review-card {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .icon-wrapper {
+          background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+          border: 2px solid #0dcaf0;
+        }
+        .icon {
+          color: #0dcaf0;
+          text-shadow: 0 0 10px #0dcaf0;
+        }
+        .title {
+          color: #0dcaf0;
+        }
+        .description {
+          color: #00b5d7;
+        }
+        .alert-info {
+          background: #e0f7fa;
+          border: 1px solid #b2ebf2;
+          color: #00b5d7;
+        }
+        .alert-icon {
+          color: #0dcaf0;
+        }
+        .support-section {
+          border-top: 1px solid #e0f7fa;
+        }
+        .support-title {
+          color: #00b5d7;
+        }
+        .support-text {
+          color: #666;
+        }
+        ` : ''}
+      `}</style>
     </>
   );
 }
@@ -2249,6 +2526,82 @@ export default function MultiStepForm10() {
           .section-title {
             font-size: 1.1rem;
           }
+        }
+      `}</style>
+      {/* Light mode styles for Profile (MultiStepForm10) */}
+      <style>{`
+        [data-theme="light"] .page-container {
+          background: #fff;
+          color: #222;
+        }
+        [data-theme="light"] .main-content {
+          background: #fff;
+          color: #222;
+        }
+        [data-theme="light"] .title {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .progress-bar-bg {
+          background: #e0e0e0;
+          box-shadow: inset 0 0 14px #e8f8fc;
+        }
+        [data-theme="light"] .progress-bar-fill {
+          background: linear-gradient(90deg, #0dcaf0, #00b5d7);
+        }
+        [data-theme="light"] .step-item {
+          color: #888;
+        }
+        [data-theme="light"] .step-item.active {
+          color: #0dcaf0;
+          text-shadow: 0 0 4px #0dcaf0;
+        }
+        [data-theme="light"] .step-item.completed {
+          color: #00b5d7;
+        }
+        [data-theme="light"] .step-item.submitted {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .step-item.disabled {
+          color: #bbb;
+        }
+        [data-theme="light"] .step-circle {
+          background: #e8f8fc;
+          color: #00b5d7;
+          box-shadow: 0 0 6px #e8f8fc;
+        }
+        [data-theme="light"] .step-item.active .step-circle {
+          background: #0dcaf0;
+          color: #fff;
+          box-shadow: 0 0 12px #0dcaf0;
+        }
+        [data-theme="light"] .step-item.submitted .step-circle {
+          background: #00b5d7;
+          color: #fff;
+          box-shadow: 0 0 8px #00b5d7;
+        }
+        [data-theme="light"] .step-check {
+          background: #0dcaf0;
+          color: #fff;
+        }
+        [data-theme="light"] .form {
+          background: #fff;
+        }
+        [data-theme="light"] .facility-section {
+          background: #f5f5f5;
+          border: 1px solid #e0e0e0;
+        }
+        [data-theme="light"] .section-title {
+          color: #0dcaf0;
+        }
+        [data-theme="light"] .submission-status.success {
+          background: linear-gradient(135deg, #e8f8fc, #fff);
+          border: 1px solid #e0e0e0;
+          color: #00b5d7;
+        }
+        [data-theme="light"] .step-completion-notice .alert {
+          background: linear-gradient(135deg, #e8f8fc, #fff);
+          border: 1px solid #e0e0e0;
+          color: #00b5d7;
         }
       `}</style>
     </div>

@@ -365,3 +365,59 @@
     font-size: 0.8rem;
   }
 }
+
+/* Light mode styles for FooterSection component */
+[data-theme="light"] .footer {
+  background: #fff;
+  color: #222;
+  border-top: 1.5px solid #e0e0e0;
+}
+[data-theme="light"] .footer-title {
+  color: #0dcaf0;
+}
+[data-theme="light"] .footer-description,
+[data-theme="light"] .footer-link,
+[data-theme="light"] .footer-links,
+[data-theme="light"] .footer-bottom-content,
+[data-theme="light"] .copyright {
+  color: #333;
+}
+[data-theme="light"] .footer-link:hover {
+  color: #00b5d7;
+}
+[data-theme="light"] .footer-column {
+  border-radius: 0.7rem;
+}
+[data-theme="light"] .social-link {
+  color: #0dcaf0;
+  background: #e8f8fc;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+[data-theme="light"] .social-link:hover {
+  color: #fff;
+  background: #0dcaf0;
+}
+[data-theme="light"] .stats-container {
+  background: #fff;
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .stat-item {
+  color: #0dcaf0;
+}
+[data-theme="light"] .stat-label {
+  color: #333;
+}
+[data-theme="light"] .stat-value {
+  color: #00b5d7;
+}
+[data-theme="light"] .scroll-top-btn {
+  background: #0dcaf0;
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+}
+[data-theme="light"] .scroll-top-btn:hover {
+  background: #00b5d7;
+}

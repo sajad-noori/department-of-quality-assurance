@@ -9,6 +9,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import PropTypes from 'prop-types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const StyledButton = styled(Button)({
   textTransform: 'none',
@@ -50,6 +51,7 @@ const Departments = ({ onStepSubmit }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldRefresh, setShouldRefresh] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const { theme } = useTheme();
 
   const fetchDepartments = async () => {
     if (!user || user.role !== 'institute') return;
@@ -276,7 +278,7 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('name')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'name' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               />
             </div>
@@ -290,7 +292,7 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('newEnrollments')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'newEnrollments' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 min="1300"
                 max={new Date().getFullYear() - 621}
                 disabled={isSubmitting}
@@ -304,13 +306,13 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('totalStudents')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'totalStudents' ? 'focused' : ''}`}
-                style={{ background: "transparent", color: "white" }}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               >
-                <option value="" style={{color: "black"}}>دوره آموزشی را انتخاب کنید</option>
-                <option value="دو ساله" style={{color: "black" }}>دو ساله</option>
-                <option value="سه ساله" style={{color: "black" }}>سه ساله</option>
-                <option value="پنج ساله" style={{color: "black" }}>پنج ساله</option>
+                <option value="" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>دوره آموزشی را انتخاب کنید</option>
+                <option value="دو ساله" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>دو ساله</option>
+                <option value="سه ساله" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>سه ساله</option>
+                <option value="پنج ساله" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>پنج ساله</option>
               </select>
             </div>
             <div className="col-md-4">
@@ -321,12 +323,12 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('graduationCycles')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'graduationCycles' ? 'focused' : ''}`}
-                style={{ background: "transparent", color: "white" }}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 disabled={isSubmitting}
               >
-                <option value="" style={{color: "black" }}>فعال / غیر فعال</option>
-                <option value="فعال" style={{color: "black" }}>فعال</option>
-                <option value="غیر فعال" style={{color: "black" }}>غیر فعال</option>
+                <option value="" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>فعال / غیر فعال</option>
+                <option value="فعال" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>فعال</option>
+                <option value="غیر فعال" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>غیر فعال</option>
               </select>
             </div>
             <div className="col-md-4">
@@ -339,7 +341,7 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('establishmentYear')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'establishmentYear' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 min="0"
                 disabled={isSubmitting}
               />
@@ -354,7 +356,7 @@ const Departments = ({ onStepSubmit }) => {
                 onFocus={() => handleFocus('numberOfStudents')}
                 onBlur={handleBlur}
                 className={`form-control white-placeholder ${focusedField === 'numberOfStudents' ? 'focused' : ''}`}
-                style={{background: "transparent", color: "white"}}
+                style={theme === 'light' ? { background: '#fff', color: '#222' } : { background: 'transparent', color: 'white' }}
                 min="0"
                 disabled={isSubmitting}
               />
@@ -418,6 +420,7 @@ const Departments = ({ onStepSubmit }) => {
                           size="small"
                           onClick={() => handleDelete(entry.id)}
                           startIcon={<DeleteIcon />}
+                          className="delete-btn"
                         >
                           حذف
                         </StyledButton>
@@ -608,6 +611,102 @@ const Departments = ({ onStepSubmit }) => {
             font-size: 0.9rem;
           }
         }
+        ${theme === 'light' ? `
+        .departments-form.glass-bg {
+          background: #fff;
+          color: #222;
+          border: 1px solid #e0f7fa;
+          box-shadow: 0 8px 32px rgba(13,202,240,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+        }
+        .form-title {
+          color: #0dcaf0;
+        }
+        .form-header {
+          color: #0dcaf0;
+        }
+        .form-description {
+          color: #00b5d7;
+        }
+        .success-notification {
+          background: linear-gradient(135deg, #e6ffe6 0%, #e7fff7 100%);
+          border: 1px solid #b2ffb2;
+        }
+        .error-notification {
+          background: linear-gradient(135deg, #fffbe6 0%, #fffde7 100%);
+          border: 1px solid #ffe082;
+        }
+        .notification-content {
+          color: #28a745;
+        }
+        .error-notification .notification-content {
+          color: #ffb300;
+        }
+        .close-button {
+          color: #0dcaf0;
+        }
+        .close-button:hover {
+          background: #e0f7fa;
+        }
+        .form-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .focused {
+          border-color: #0dcaf0 !important;
+          box-shadow: 0 0 0 2px #b2ebf2 !important;
+          background: #e0f7fa !important;
+        }
+        .uploaded-files-section {
+          background: #f7fcfd;
+          border: 1px solid #e0f7fa;
+        }
+        .section-title {
+          color: #00b5d7;
+        }
+        .file-count {
+          color: #00b5d7;
+          background: #e0f7fa;
+        }
+        .table-container {
+          background: #f7fcfd;
+        }
+        .files-table {
+          background: #fff;
+          color: #222;
+        }
+        .files-table th {
+          background: #e0f7fa;
+          color: #00b5d7;
+          border-bottom: 1px solid #b2ebf2;
+        }
+        .files-table td {
+          color: #222;
+          border-bottom: 1px solid #e0f7fa;
+        }
+        .files-table tr:hover {
+          background: #e0f7fa;
+        }
+        .departments-form.glass-bg input::placeholder {
+          color: #666;
+          opacity: 1;
+        }
+        .departments-form.glass-bg select option[disabled] {
+          color: #888;
+        }
+        .delete-btn {
+          background: linear-gradient(135deg, #ff6b6b, #dc3545) !important;
+          color: white !important;
+          font-weight: 600 !important;
+          border-radius: 8px !important;
+          transition: all 0.3s ease !important;
+        }
+        
+        .delete-btn:hover {
+          background: linear-gradient(135deg, #dc3545, #ff6b6b) !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+        }
+        ` : ''}
       `}</style>
     </div>
   );

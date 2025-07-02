@@ -772,3 +772,129 @@
   outline: 2px solid var(--primary-cyan);
   outline-offset: 2px;
 }
+
+/* Light mode styles for FeedbackSection */
+[data-theme="light"] .feedback-section {
+  margin-top: 2rem;
+  background: #fff;
+  color: #222;
+}
+[data-theme="light"] .feedback-hero {
+  color: #0dcaf0;
+}
+[data-theme="light"] .hero-title {
+  color: #0dcaf0;
+}
+[data-theme="light"] .hero-subtitle {
+  color: #333;
+}
+
+[data-theme="light"] .contact-card,
+[data-theme="light"] .form-card {
+  background: #f9f9f9;
+  color: #222;
+  border-radius: 1.1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border: 1px solid #e0e0e0;
+}
+[data-theme="light"] .card-title {
+  color: #0dcaf0;
+}
+[data-theme="light"] .card-subtitle {
+  color: #333;
+}
+[data-theme="light"] .contact-label {
+  color: #0dcaf0;
+}
+[data-theme="light"] .contact-link {
+  color: #00b5d7;
+}
+[data-theme="light"] .contact-link:hover {
+  color: #0dcaf0;
+}
+[data-theme="light"] .copy-btn {
+  background: #e8f8fc;
+  color: #0dcaf0;
+  border-radius: 6px;
+  border: 1px solid #b6eaff;
+}
+[data-theme="light"] .copy-btn.copied {
+  background: #0dcaf0;
+  color: #fff;
+}
+[data-theme="light"] .copied-tooltip {
+  background: #0dcaf0;
+  color: #fff;
+}
+[data-theme="light"] .form-card .cta-badge {
+  background: #e8f8fc;
+  color: #0dcaf0;
+}
+[data-theme="light"] .feedback-form {
+  background: #fff;
+}
+[data-theme="light"] .floating-input,
+[data-theme="light"] .floating-textarea {
+  background: #fff;
+  color: #222;
+  border: 1px solid #b6eaff;
+}
+[data-theme="light"] .floating-input:focus,
+[data-theme="light"] .floating-textarea:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 0 2px #e8f8fc;
+}
+[data-theme="light"] .floating-label {
+  color: #0dcaf0;
+}
+[data-theme="light"] .input-border,
+[data-theme="light"] .textarea-border {
+  background: #e8f8fc;
+}
+[data-theme="light"] .error-message {
+  color: #d32f2f;
+}
+[data-theme="light"] .character-count {
+  color: #888;
+}
+[data-theme="light"] .submit-button {
+  background: linear-gradient(90deg, #0dcaf0 0%, #00b5d7 100%);
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+}
+[data-theme="light"] .submit-button:hover:not(.disabled) {
+  background: linear-gradient(90deg, #00b5d7 0%, #0dcaf0 100%);
+}
+[data-theme="light"] .submit-button.disabled {
+  background: #e0e0e0;
+  color: #aaa;
+  box-shadow: none;
+}
+[data-theme="light"] .button-glow {
+  background: radial-gradient(circle, #0dcaf0 0%, transparent 80%);
+  opacity: 0.12;
+}
+[data-theme="light"] .notification.success {
+  background: #e8f8fc;
+  color: #0dcaf0;
+}
+[data-theme="light"] .notification.error {
+  background: #fff0f0;
+  color: #d32f2f;
+}
+[data-theme="light"] .notification-close {
+  color: #0dcaf0;
+}
+[data-theme="light"] .fade-in-card {
+  background: #f9f9f9;
+}
+[data-theme="light"] .particle-canvas {
+  background: transparent !important;
+}
+[data-theme="light"] .floating-blob-bg {
+  opacity: 0.13;
+}
+[data-theme="light"] .confetti-burst {
+  background: none;
+}

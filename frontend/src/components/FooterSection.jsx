@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaXTwitter, FaWhatsapp, FaYoutube, FaFacebook, FaUsers, FaCalendarDay, FaCalendarWeek, FaCalendar, FaGlobe, FaArrowUp } from "react-icons/fa6";
 import PropTypes from 'prop-types';
 import "../styles/FooterSection.css";
@@ -14,17 +14,26 @@ const FooterSection = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const visitRecordedRef = useRef(false);
 
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // Prevent multiple API calls
+    if (visitRecordedRef.current) {
+      return;
+    }
+
     // Generate or retrieve visitorId
     let visitorId = localStorage.getItem("visitorId");
     if (!visitorId) {
       visitorId = crypto.randomUUID();
       localStorage.setItem("visitorId", visitorId);
     }
+
+    // Mark that we're recording a visit
+    visitRecordedRef.current = true;
 
     // Record the visit, then fetch stats
     fetch("http://localhost:5000/api/visitors/visit", {
@@ -42,6 +51,8 @@ const FooterSection = () => {
       .catch(err => {
         console.error("Error fetching visitor stats:", err);
         setIsLoading(false);
+        // Reset the flag on error so we can retry
+        visitRecordedRef.current = false;
       });
   }, []);
 
@@ -191,19 +202,19 @@ const FooterSection = () => {
               />
               <StatItem 
                 icon={FaCalendarDay} 
-                label="بازدید روزانه" 
+                label="بازدید امروز" 
                 value={visitorStats.daily} 
                 loading={isLoading}
               />
               <StatItem 
                 icon={FaCalendarWeek} 
-                label="بازدید هفتگی" 
+                label="بازدید هفته" 
                 value={visitorStats.weekly} 
                 loading={isLoading}
               />
               <StatItem 
                 icon={FaCalendar} 
-                label="بازدید ماهانه" 
+                label="بازدید ماه" 
                 value={visitorStats.monthly} 
                 loading={isLoading}
               />

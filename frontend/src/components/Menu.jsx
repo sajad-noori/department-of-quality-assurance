@@ -4,6 +4,8 @@ import { FaWhatsapp, FaFacebookF, FaYoutube, FaXTwitter, FaEnvelope } from "reac
 import { FaUserCircle } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { useTheme } from "../contexts/ThemeContext";
+import { useState as useReactState } from "react";
 
 const menuItems = [
   // {
@@ -35,7 +37,7 @@ const menuItems = [
   //   ],
   // },
   {
-    label: "آموزش و ارتقای ظرفیت",
+    label: "ارتقای ظرفیت",
     submenu: [
       "برنامههای آموزشی استادان و کارمندان",
       "ورکشاپها و سیمینارها",
@@ -48,7 +50,7 @@ const menuItems = [
     ],
   },
   {
-    label: "مرکز اسناد و دانلود ها",
+    label: "مرکز اسناد",
     submenu: [
       "رهنمود ها",
       "فورم ها",
@@ -71,6 +73,9 @@ export default function MenuWithUtilityBar() {
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { theme, toggleTheme } = useTheme();
+  const [animating, setAnimating] = useReactState(false);
 
   useEffect(() => {
     // Only initialize once
@@ -256,6 +261,12 @@ export default function MenuWithUtilityBar() {
     }
   };
 
+  const handleThemeToggle = () => {
+    setAnimating(true);
+    toggleTheme();
+    setTimeout(() => setAnimating(false), 400);
+  };
+
   return (
     <>
       <div className={styles.utilityBar} dir="rtl">
@@ -276,6 +287,20 @@ export default function MenuWithUtilityBar() {
         <div className={styles.languageOptions}>
           <div id="google_translate_element"></div>
         </div>
+        <button
+          className={`${styles.themeToggleBtn} ${animating ? styles.themeToggleBtnAnimating : ''}`}
+          onClick={handleThemeToggle}
+          aria-label={theme === "dark" ? "تغییر به حالت روشن" : "تغییر به حالت تاریک"}
+          title={theme === "dark" ? "حالت روشن" : "حالت تاریک"}
+          style={{ margin: "0 1rem", cursor: "pointer", position: "relative" }}
+        >
+          {/* Animated SVG icons for sun/moon with logical colors */}
+          {theme === "dark" ? (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0dcaf0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transition: 'transform 0.4s', transform: animating ? 'rotate(-180deg) scale(1.2)' : 'none'}}><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+          ) : (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transition: 'transform 0.4s', transform: animating ? 'rotate(180deg) scale(1.2)' : 'none'}}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          )}
+        </button>
         <div className={styles.rightOptions}>
           {isLoggedIn ? (
             <button
