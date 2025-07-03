@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaPlay, FaSearch, FaCalendarAlt, FaTag } from "react-icons/fa";
+import { useTheme } from "../contexts/ThemeContext";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -12,6 +13,7 @@ const VideoGallery = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { type } = useParams();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -69,9 +71,11 @@ const VideoGallery = () => {
 
   if (isLoading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>در حال بارگذاری ویدیوها...</p>
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>در حال بارگذاری ویدیوها...</p>
+        </div>
       </div>
     );
   }
@@ -79,6 +83,115 @@ const VideoGallery = () => {
   return (
     <>
       <style>{`
+        .dark-container {
+          background: #121212;
+          min-height: 100vh;
+          color: #eee;
+        }
+        .light-container {
+          background: #fff;
+          min-height: 100vh;
+          color: #222;
+        }
+        .dark-container .container {
+          color: #fff;
+        }
+        .light-container .container {
+          color: #222;
+        }
+        .dark-container .page-title {
+          background: linear-gradient(45deg, #00d4ff, #0099cc);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        .light-container .page-title {
+          background: linear-gradient(45deg, #0dcaf0, #20c997);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 10px rgba(13, 202, 240, 0.08);
+        }
+        .dark-container .page-subtitle {
+          color: #a0a0a0;
+        }
+        .light-container .page-subtitle {
+          color: #20c997;
+        }
+        .dark-container .search-input {
+          background: rgba(255, 255, 255, 0.05);
+          color: #eee;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .light-container .search-input {
+          background: rgba(0, 0, 0, 0.03);
+          color: #222;
+          border: 2px solid #0dcaf0;
+        }
+        .light-container .search-input:focus {
+          border-color: #0dcaf0;
+          background: rgba(13, 202, 240, 0.08);
+          color: #222;
+        }
+        .light-container .search-input::placeholder {
+          color: #888;
+        }
+        .dark-container .search-input::placeholder {
+          color: #888;
+        }
+        .dark-container .video-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #eee;
+        }
+        .light-container .video-card {
+          background: rgba(0, 0, 0, 0.03);
+          border: 1px solid #0dcaf0;
+          color: #222;
+        }
+        .light-container .video-card:hover {
+          box-shadow: 0 20px 40px rgba(13, 202, 240, 0.12);
+          border-color: #20c997;
+        }
+        .light-container .play-button {
+          background: #0dcaf0;
+        }
+        .light-container .play-button:hover {
+          background: #20c997;
+        }
+        .light-container .video-title {
+          color: #222;
+        }
+        .light-container .video-description {
+          color: #555;
+        }
+        .light-container .video-meta {
+          color: #20c997;
+        }
+        .light-container .video-category {
+          background: rgba(13, 202, 240, 0.08);
+          color: #0dcaf0;
+        }
+        .light-container .pagination button {
+          background: #fff;
+          border: 1px solid #0dcaf0;
+          color: #0dcaf0;
+        }
+        .light-container .pagination button:hover:not(:disabled) {
+          background: #0dcaf0;
+          color: #fff;
+          border-color: #20c997;
+        }
+        .light-container .pagination .page-info {
+          background: rgba(13, 202, 240, 0.08);
+          color: #20c997;
+        }
+        .light-container .loading-container {
+          color: #0dcaf0;
+        }
+        .light-container .loading-spinner {
+          border: 3px solid #e0f7fa;
+          border-top: 3px solid #0dcaf0;
+        }
         body {
           background: #121212;
           margin: 0;
@@ -378,107 +491,108 @@ const VideoGallery = () => {
           }
         }
       `}</style>
-
-      <div className="container">
-        <div className="page-header">
-          <h1 className="page-title">ویدیو های آموزشی</h1>
-          <p className="page-subtitle">مجموعه کامل ویدیوهای آموزشی و تخصصی</p>
-        </div>
-
-        <div className="search-container">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="جستجوی ویدیو بر اساس عنوان یا توضیحات..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
-
-        {filteredVideos.length === 0 && !isLoading && (
-          <div className="no-results">
-            {searchTerm ? 'هیچ ویدیویی با این جستجو یافت نشد.' : 'هیچ ویدیویی در این دسته موجود نیست.'}
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
+        <div className="container">
+          <div className="page-header">
+            <h1 className="page-title">ویدیو های آموزشی</h1>
+            <p className="page-subtitle">مجموعه کامل ویدیوهای آموزشی و تخصصی</p>
           </div>
-        )}
 
-        {filteredVideos.length > 0 && (
-          <div className="grid">
-            {paginatedVideos.map((video, index) => (
-              <div
-                key={video.id}
-                className="video-card"
-                tabIndex={0}
-                role="button"
-                onClick={() => handleVideoClick(video)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleVideoClick(video);
-                  }
-                }}
-                onMouseEnter={() => setHoveredVideo(video.id)}
-                onMouseLeave={() => setHoveredVideo(null)}
-                style={{
-                  animationDelay: `${index * 0.1}s`
-                }}
-              >
-                <div className="video-thumbnail">
-                  <video
-                    src={video.videoUrl}
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                  />
-                  <div className="play-button">
-                    <FaPlay />
-                  </div>
-                </div>
-                <div className="video-info">
-                  <h3 className="video-title">{video.title}</h3>
-                  {video.description && (
-                    <p className="video-description">{video.description}</p>
-                  )}
-                  <div className="video-meta">
-                    <span className="video-category">
-                      <FaTag />
-                      {video.category}
-                    </span>
-                    {video.uploaded_at && (
-                      <span>
-                        <FaCalendarAlt style={{ marginLeft: '0.3rem' }} />
-                        {formatDate(video.uploaded_at)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="search-container">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="جستجوی ویدیو بر اساس عنوان یا توضیحات..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
           </div>
-        )}
 
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button 
-              onClick={() => setCurrentPage(p => p - 1)} 
-              disabled={currentPage === 1}
-            >
-              قبلی
-            </button>
-            <div className="page-info">
-              صفحه {currentPage} از {totalPages}
+          {filteredVideos.length === 0 && !isLoading && (
+            <div className="no-results">
+              {searchTerm ? 'هیچ ویدیویی با این جستجو یافت نشد.' : 'هیچ ویدیویی در این دسته موجود نیست.'}
             </div>
-            <button 
-              onClick={() => setCurrentPage(p => p + 1)} 
-              disabled={currentPage === totalPages}
-            >
-              بعدی
-            </button>
-          </div>
-        )}
+          )}
+
+          {filteredVideos.length > 0 && (
+            <div className="grid">
+              {paginatedVideos.map((video, index) => (
+                <div
+                  key={video.id}
+                  className="video-card"
+                  tabIndex={0}
+                  role="button"
+                  onClick={() => handleVideoClick(video)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleVideoClick(video);
+                    }
+                  }}
+                  onMouseEnter={() => setHoveredVideo(video.id)}
+                  onMouseLeave={() => setHoveredVideo(null)}
+                  style={{
+                    animationDelay: `${index * 0.1}s`
+                  }}
+                >
+                  <div className="video-thumbnail">
+                    <video
+                      src={video.videoUrl}
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                    />
+                    <div className="play-button">
+                      <FaPlay />
+                    </div>
+                  </div>
+                  <div className="video-info">
+                    <h3 className="video-title">{video.title}</h3>
+                    {video.description && (
+                      <p className="video-description">{video.description}</p>
+                    )}
+                    <div className="video-meta">
+                      <span className="video-category">
+                        <FaTag />
+                        {video.category}
+                      </span>
+                      {video.uploaded_at && (
+                        <span>
+                          <FaCalendarAlt style={{ marginLeft: '0.3rem' }} />
+                          {formatDate(video.uploaded_at)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                onClick={() => setCurrentPage(p => p - 1)} 
+                disabled={currentPage === 1}
+              >
+                قبلی
+              </button>
+              <div className="page-info">
+                صفحه {currentPage} از {totalPages}
+              </div>
+              <button 
+                onClick={() => setCurrentPage(p => p + 1)} 
+                disabled={currentPage === totalPages}
+              >
+                بعدی
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

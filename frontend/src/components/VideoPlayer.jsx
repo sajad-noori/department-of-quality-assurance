@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 
 const formatDuration = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -26,6 +27,7 @@ const formatUploadDate = (isoString) => {
 const VideoPlayer = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [recommendedVideos, setRecommendedVideos] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(location.state?.video || null);
   const [videoDurations, setVideoDurations] = useState({});
@@ -91,16 +93,94 @@ const VideoPlayer = () => {
   return (
     <>
       <style>{`
-        body {
+        .dark-container {
           background: #121212;
-                    margin: 0;
           color: #eee;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .light-container {
+          background: #fff;
+          color: #222;
+        }
+        .dark-container .page-container {
+          color: #eee;
+        }
+        .light-container .page-container {
+          color: #222;
+        }
+        .dark-container .video-player-container {
+          background: rgba(255,255,255,0.05);
+          box-shadow: 0 8px 32px rgba(0, 212, 255, 0.08);
+        }
+        .light-container .video-player-container {
+          background: rgba(0,0,0,0.03);
+          box-shadow: 0 8px 32px rgba(13, 202, 240, 0.08);
+        }
+        .light-container .video-title {
+          background: linear-gradient(45deg, #0dcaf0, #20c997);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 10px rgba(13, 202, 240, 0.08);
+        }
+        .dark-container .video-title {
+          background: linear-gradient(45deg, #0dcaf0, #00b5d7);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 20px rgba(13, 202, 240, 0.2);
+        }
+        .light-container .video-description {
+          color: #555;
+        }
+        .dark-container .video-description {
+          color: #a9e5ff;
+        }
+        .light-container .recommended-videos {
+          background: rgba(0,0,0,0.03);
+          box-shadow: 0 8px 32px rgba(13, 202, 240, 0.08);
+        }
+        .dark-container .recommended-videos {
+          background: rgba(255,255,255,0.05);
+          box-shadow: 0 8px 32px rgba(0, 212, 255, 0.08);
+        }
+        .light-container .recommended-title {
+          color: #0dcaf0;
+          border-bottom: 1px solid #0dcaf0;
+        }
+        .dark-container .recommended-title {
+          color: #0dcaf0;
+          border-bottom: 1px solid #0dcaf0;
+        }
+        .light-container .recommended-video-card {
+          background: rgba(13,202,240,0.04);
+          box-shadow: 0 1px 6px rgba(13,202,240,0.04);
+        }
+        .dark-container .recommended-video-card {
+          background: rgba(0,212,255,0.04);
+          box-shadow: 0 1px 6px rgba(13,202,240,0.04);
+        }
+        .light-container .recommended-video-card:hover {
+          background: rgba(13,202,240,0.10);
+          box-shadow: 0 4px 16px rgba(13,202,240,0.10);
+        }
+        .dark-container .recommended-video-card:hover {
+          background: rgba(13,202,240,0.10);
+          box-shadow: 0 4px 16px rgba(13,202,240,0.10);
+        }
+        .light-container .recommended-video-title {
+          color: #0dcaf0;
+        }
+        .dark-container .recommended-video-title {
+          color: #a9e5ff;
+        }
+        .light-container .recommended-video-meta {
+          color: #20c997;
+        }
+        .dark-container .recommended-video-meta {
+          color: #00b5d7;
         }
         .page-container {
           display: flex;
           max-width: 1200px;
-          margin: 2rem auto;
+          margin: 0rem auto;
           gap: 2rem;
           padding: 0 1rem;
           flex-wrap: wrap;
@@ -109,9 +189,7 @@ const VideoPlayer = () => {
           flex: 3 1 600px;
           display: flex;
           flex-direction: column;
-          background: rgba(255,255,255,0.05);
           border-radius: 20px;
-          box-shadow: 0 8px 32px rgba(0, 212, 255, 0.08);
           padding: 2rem 2rem 1.5rem 2rem;
           backdrop-filter: blur(10px);
           min-width: 320px;
@@ -128,14 +206,9 @@ const VideoPlayer = () => {
           margin-top: 1.5rem;
           font-size: 2rem;
           font-weight: 900;
-          background: linear-gradient(45deg, #0dcaf0, #00b5d7);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: 0 0 20px rgba(13, 202, 240, 0.2);
         }
         .video-description {
           margin-top: 0.7rem;
-          color: #a9e5ff;
           font-size: 1.1rem;
           line-height: 1.6;
           white-space: pre-line;
@@ -143,9 +216,7 @@ const VideoPlayer = () => {
         .recommended-videos {
           flex: 1.5 1 300px;
           min-width: 260px;
-          background: rgba(255,255,255,0.05);
           border-radius: 20px;
-          box-shadow: 0 8px 32px rgba(0, 212, 255, 0.08);
           padding: 1.5rem 1rem 1rem 1rem;
           backdrop-filter: blur(10px);
           animation: fadeInUp 0.8s cubic-bezier(0.4,0,0.2,1) 0.2s both;
@@ -154,8 +225,6 @@ const VideoPlayer = () => {
           font-size: 1.3rem;
           font-weight: 900;
           margin-bottom: 1.2rem;
-          color: #0dcaf0;
-          border-bottom: 1px solid #0dcaf0;
           padding-bottom: 0.5rem;
           letter-spacing: 0.5px;
         }
@@ -168,13 +237,9 @@ const VideoPlayer = () => {
           border-radius: 12px;
           transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
           padding: 0.5rem;
-          background: rgba(0,212,255,0.04);
-          box-shadow: 0 1px 6px rgba(13,202,240,0.04);
         }
         .recommended-video-card:hover {
-          background: rgba(13,202,240,0.10);
           transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 4px 16px rgba(13,202,240,0.10);
         }
         .recommended-video-thumb {
           width: 120px;
@@ -186,20 +251,17 @@ const VideoPlayer = () => {
         }
         .recommended-video-info {
           flex: 1;
-          color: #eee;
         }
         .recommended-video-title {
           font-weight: 700;
           font-size: 1.05rem;
           margin-bottom: 0.3rem;
-          color: #a9e5ff;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .recommended-video-meta {
           font-size: 0.9rem;
-          color: #00b5d7;
           white-space: pre-line;
         }
         @keyframes fadeInUp {
@@ -235,43 +297,44 @@ const VideoPlayer = () => {
           }
         }
       `}</style>
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
+        <div className="page-container">
+          <div className="video-player-container">
+            <video src={currentVideo.videoUrl} controls ref={videoRef} />
+            <div className="video-title">{currentVideo.title}</div>
+            <div className="video-description">{currentVideo.description}</div>
+          </div>
 
-      <div className="page-container">
-        <div className="video-player-container">
-          <video src={currentVideo.videoUrl} controls ref={videoRef} />
-          <div className="video-title">{currentVideo.title}</div>
-          <div className="video-description">{currentVideo.description}</div>
-        </div>
-
-        <aside className="recommended-videos">
-          <h3 className="recommended-title">ویدیوهای پیشنهادی</h3>
-          {recommendedVideos.map((video) => (
-            <div
-              key={video.id}
-              className="recommended-video-card"
-              onClick={() => handleVideoSelect(video)}
-            >
-              <video
-                className="recommended-video-thumb"
-                src={video.videoUrl}
-                muted
-                autoPlay
-                loop
-                playsInline
-                preload="metadata"
-                style={{ objectFit: "cover" }}
-              />
-              <div className="recommended-video-info">
-                <div className="recommended-video-title">{video.title}</div>
-                <div className="recommended-video-meta">
-                  مدت: {videoDurations[video.id] || "--:--"}
-                  <br />
-                  تاریخ: {formatUploadDate(video.uploadedAt || video.uploaded_at)}
+          <aside className="recommended-videos">
+            <h3 className="recommended-title">ویدیوهای پیشنهادی</h3>
+            {recommendedVideos.map((video) => (
+              <div
+                key={video.id}
+                className="recommended-video-card"
+                onClick={() => handleVideoSelect(video)}
+              >
+                <video
+                  className="recommended-video-thumb"
+                  src={video.videoUrl}
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  preload="metadata"
+                  style={{ objectFit: "cover" }}
+                />
+                <div className="recommended-video-info">
+                  <div className="recommended-video-title">{video.title}</div>
+                  <div className="recommended-video-meta">
+                    مدت: {videoDurations[video.id] || "--:--"}
+                    <br />
+                    تاریخ: {formatUploadDate(video.uploadedAt || video.uploaded_at)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </aside>
+            ))}
+          </aside>
+        </div>
       </div>
     </>
   );

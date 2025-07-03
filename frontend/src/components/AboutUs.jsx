@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 import styles from '../styles/AboutUs.module.css';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 
 const sectionsData = [
   {
@@ -63,11 +64,12 @@ export default function AboutUs() {
   const targetMouse = useRef({ x: 0.5, y: 0.5 });
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
 
   // Always set dark mode
-  useEffect(() => {
-    document.body.dataset.theme = 'dark';
-  }, []);
+  // useEffect(() => {
+  //   document.body.dataset.theme = 'dark';
+  // }, []);
 
   // Animated background: parallax blobs + floating SVGs
   useEffect(() => {
@@ -217,7 +219,76 @@ export default function AboutUs() {
   };
 
   return (
-    <div className={styles.aboutUsRoot} dir="rtl" aria-label="درباره ما">
+    <div className={theme === 'light' ? `${styles.aboutUsRoot} light-container` : `${styles.aboutUsRoot} dark-container`} dir="rtl" aria-label="درباره ما">
+      <style>{`
+        .dark-container {
+          background: #181c24;
+          color: #fff;
+        }
+        .light-container {
+          background: #fff;
+          color: #23283a;
+        }
+        .light-container .${styles.aboutUsTitle} {
+          color: #0dcaf0;
+          text-shadow: 0 0 10px rgba(13,202,240,0.08);
+        }
+        .dark-container .${styles.aboutUsTitle} {
+          color: #a9e5ff;
+        }
+        .light-container .${styles.aboutUsSection} {
+          background: rgba(13,202,240,0.06);
+          color: #23283a;
+          box-shadow: 0 4px 24px rgba(13,202,240,0.08);
+        }
+        .dark-container .${styles.aboutUsSection} {
+          background: rgba(255,255,255,0.05);
+          color: #fff;
+          box-shadow: 0 4px 24px rgba(13,202,240,0.10);
+        }
+        .light-container .${styles.aboutUsHeading} {
+          color: #0dcaf0;
+        }
+        .dark-container .${styles.aboutUsHeading} {
+          color: #a9e5ff;
+        }
+        .light-container .${styles.aboutUsParagraph} {
+          color: #555;
+        }
+        .dark-container .${styles.aboutUsParagraph} {
+          color: #a9e5ff;
+        }
+        .light-container .${styles.aboutUsList} li {
+          color: #20c997;
+        }
+        .dark-container .${styles.aboutUsList} li {
+          color: #a9e5ff;
+        }
+        .light-container .${styles.aboutUsCtaSection} {
+          background: rgba(13,202,240,0.08);
+          color: #0dcaf0;
+        }
+        .dark-container .${styles.aboutUsCtaSection} {
+          background: rgba(255,255,255,0.05);
+          color: #a9e5ff;
+        }
+        .light-container .${styles.aboutUsCtaButton} {
+          background: #0dcaf0;
+          color: #fff;
+        }
+        .light-container .${styles.aboutUsCtaButton}:hover {
+          background: #20c997;
+          color: #fff;
+        }
+        .dark-container .${styles.aboutUsCtaButton} {
+          background: #23283a;
+          color: #a9e5ff;
+        }
+        .dark-container .${styles.aboutUsCtaButton}:hover {
+          background: #0dcaf0;
+          color: #fff;
+        }
+      `}</style>
       {/* Animated background */}
       <canvas ref={bgRef} className={styles.aboutUsAnimatedBg} aria-hidden="true" />
       {floatingSVGs.map((svg) => svg)}
