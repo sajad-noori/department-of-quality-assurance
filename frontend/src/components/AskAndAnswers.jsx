@@ -3,6 +3,7 @@ import { FaChevronDown, FaChevronUp, FaQuestion, FaTimes, FaSearch, FaPaperPlane
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { containsBadWords } from '../utils/badWordsFilter';
 
 const AskAndAnswers = () => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -176,6 +177,10 @@ const AskAndAnswers = () => {
     }
     
     if (userQuestion.trim()) {
+      if (containsBadWords(userQuestion)) {
+        alert('سوال شما حاوی کلمات نامناسب است. لطفاً سوال خود را بدون توهین ارسال کنید.');
+        return;
+      }
       try {
         setSubmitting(true);
         const response = await axios.post('http://localhost:5000/api/questions/submit', {

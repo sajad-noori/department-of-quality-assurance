@@ -1,5 +1,6 @@
 const Question = require('../models/question.model');
 const jwt = require('jsonwebtoken');
+const { containsBadWords } = require('../utils/badWordsFilter');
 
 class QuestionsController {
   // Check authentication status
@@ -91,6 +92,13 @@ class QuestionsController {
         return res.status(400).json({
           success: false,
           message: 'لطفاً سوال خود را وارد کنید'
+        });
+      }
+
+      if (containsBadWords(question)) {
+        return res.status(400).json({
+          success: false,
+          message: 'سوال شما حاوی کلمات نامناسب است. لطفاً سوال خود را بدون توهین ارسال کنید.'
         });
       }
 
