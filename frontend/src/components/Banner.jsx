@@ -163,8 +163,8 @@ export default function Banner() {
               ))}
             </ul>
             <div className="banner__buttons">
-              <a href="/about" className="btn btn--primary">
-                درباره ما
+              <a href="/profile" className="btn btn--primary">
+                 پروسه تضمین کیفیت
               </a>
               <a href="#feedback-section" className="btn btn--outline">
                 تماس با ما

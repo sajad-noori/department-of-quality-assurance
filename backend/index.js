@@ -28,6 +28,7 @@ const profileDocumentRoutes = require("./routes/profile_document.routes");
 const profileImageRoutes = require("./routes/profile_image.routes");
 const stageRoutes = require('./routes/stage.routes');
 const stepProgressRoutes = require('./routes/stepProgress.routes');
+const questionsRoutes = require('./routes/questions.route');
 const fs = require('fs');
 
 require('dotenv').config();
@@ -89,6 +90,7 @@ app.use("/api/profile-documents", profileDocumentRoutes);
 app.use("/api", profileImageRoutes);
 app.use('/api/stages', stageRoutes);
 app.use('/api/step-progress', stepProgressRoutes);
+app.use('/api/questions', questionsRoutes);
 
 // Trust proxy for rate limiting
 app.set('trust proxy', 1);

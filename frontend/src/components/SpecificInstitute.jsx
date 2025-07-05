@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme } from "../contexts/ThemeContext";
 
 const SpecificInstitute = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [center, setCenter] = useState(null);
   const [personnel, setPersonnel] = useState(null);
   const [students, setStudents] = useState([]);
@@ -428,17 +430,27 @@ const SpecificInstitute = () => {
 
   if (loading) {
     return (
-      <div className="text-center p-4" style={{ background: '#121212', minHeight: '100vh' }}>
-        <CircularProgress style={{ color: '#007bff' }} />
-        <div className="mt-3" style={{ color: '#ffffff' }}>در حال بارگذاری...</div>
+      <div className="text-center p-4" style={{ 
+        background: theme === 'light' ? '#f8fafd' : '#121212', 
+        minHeight: '100vh' 
+      }}>
+        <CircularProgress style={{ color: theme === 'light' ? '#0dcaf0' : '#007bff' }} />
+        <div className="mt-3 loading-text" style={{ color: theme === 'light' ? '#23283a' : '#ffffff' }}>در حال بارگذاری...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ background: '#121212', minHeight: '100vh' }} className="px-4 py-8">
-        <div className="alert alert-danger" role="alert" style={{ background: '#1e1e1e', border: '1px solid #dc3545', color: '#ff6b6b' }}>
+      <div style={{ 
+        background: theme === 'light' ? '#f8fafd' : '#121212', 
+        minHeight: '100vh' 
+      }} className="px-4 py-8">
+        <div className="alert alert-danger error-container" role="alert" style={{ 
+          background: theme === 'light' ? '#fff0f0' : '#1e1e1e', 
+          border: '1px solid #dc3545', 
+          color: '#ff6b6b' 
+        }}>
           {error}
         </div>
 
@@ -447,8 +459,8 @@ const SpecificInstitute = () => {
   }
 
   return (
-    <div style={{ 
-      background: '#121212', 
+    <div className="specific-institute-container" style={{ 
+      background: theme === 'light' ? '#f8fafd' : '#121212', 
       minHeight: '100vh', 
       padding: '30px 20px',
       display: 'flex',
@@ -464,7 +476,7 @@ const SpecificInstitute = () => {
         maxWidth: '1200px'
       }}>
         <h1 style={{ 
-          color: '#ffffff', 
+          color: theme === 'light' ? '#23283a' : '#ffffff', 
           fontSize: '2rem',
           fontWeight: 'bold',
           margin: '0',
@@ -483,10 +495,10 @@ const SpecificInstitute = () => {
         maxWidth: '1200px'
       }}>
         <div style={{ 
-          background: '#1e1e1e', 
+          background: theme === 'light' ? '#ffffff' : '#1e1e1e', 
           padding: '20px', 
           borderRadius: '8px', 
-          border: '1px solid #007bff',
+          border: `1px solid ${theme === 'light' ? '#0dcaf0' : '#007bff'}`,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           minWidth: '150px',
@@ -494,14 +506,14 @@ const SpecificInstitute = () => {
         }} 
         onMouseOver={(e) => {
           e.target.style.transform = 'translateY(-2px)';
-          e.target.style.background = '#2a2a2a';
+          e.target.style.background = theme === 'light' ? '#f0f8ff' : '#2a2a2a';
         }} 
         onMouseOut={(e) => {
           e.target.style.transform = 'translateY(0)';
-          e.target.style.background = '#1e1e1e';
+          e.target.style.background = theme === 'light' ? '#ffffff' : '#1e1e1e';
         }}>
           <h2 style={{ 
-            color: '#007bff', 
+            color: theme === 'light' ? '#0dcaf0' : '#007bff', 
             margin: '0', 
             fontSize: '1.2rem',
             fontWeight: '500'
@@ -509,10 +521,10 @@ const SpecificInstitute = () => {
         </div>
         
         <div style={{ 
-          background: '#1e1e1e', 
+          background: theme === 'light' ? '#ffffff' : '#1e1e1e', 
           padding: '20px', 
           borderRadius: '8px', 
-          border: '1px solid #28a745',
+          border: `1px solid ${theme === 'light' ? '#28a745' : '#28a745'}`,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           minWidth: '150px',
@@ -520,11 +532,11 @@ const SpecificInstitute = () => {
         }} 
         onMouseOver={(e) => {
           e.target.style.transform = 'translateY(-2px)';
-          e.target.style.background = '#2a2a2a';
+          e.target.style.background = theme === 'light' ? '#f0fff0' : '#2a2a2a';
         }} 
         onMouseOut={(e) => {
           e.target.style.transform = 'translateY(0)';
-          e.target.style.background = '#1e1e1e';
+          e.target.style.background = theme === 'light' ? '#ffffff' : '#1e1e1e';
         }}>
           <h2 style={{ 
             color: '#28a745', 
@@ -535,10 +547,10 @@ const SpecificInstitute = () => {
         </div>
         
         <div style={{ 
-          background: '#1e1e1e', 
+          background: theme === 'light' ? '#ffffff' : '#1e1e1e', 
           padding: '20px', 
           borderRadius: '8px', 
-          border: '1px solid #ffc107',
+          border: `1px solid ${theme === 'light' ? '#ffc107' : '#ffc107'}`,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           minWidth: '150px',
@@ -546,11 +558,11 @@ const SpecificInstitute = () => {
         }} 
         onMouseOver={(e) => {
           e.target.style.transform = 'translateY(-2px)';
-          e.target.style.background = '#2a2a2a';
+          e.target.style.background = theme === 'light' ? '#fffbf0' : '#2a2a2a';
         }} 
         onMouseOut={(e) => {
           e.target.style.transform = 'translateY(0)';
-          e.target.style.background = '#1e1e1e';
+          e.target.style.background = theme === 'light' ? '#ffffff' : '#1e1e1e';
         }}>
           <h2 style={{ 
             color: '#ffc107', 
@@ -562,26 +574,26 @@ const SpecificInstitute = () => {
       </div>
 
       {/* Educational Center Information and Personnel Data Container */}
-      <div style={{ 
+      <div className="main-container" style={{ 
         borderRadius: '10px', 
         padding: '25px',
-        border: '1px solid #333',
+        border: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333'}`,
         width: '100%',
         maxWidth: '1200px',
         margin: '0 auto',
-        background: '#1a1a1a'
+        background: theme === 'light' ? '#ffffff' : '#1a1a1a'
       }}>
         {/* Educational Center Information */}
         {center && (
           <div>
-            <h3 style={{ 
-              color: '#007bff', 
+            <h3 className="section-title" style={{ 
+              color: theme === 'light' ? '#0dcaf0' : '#007bff', 
               marginBottom: '25px',
               textAlign: 'center',
               fontSize: '1.5rem'
             }}>معلومات عمومی مرکز آموزشی</h3>
             
-            <div style={{ 
+            <div className="table-container" style={{ 
               overflowX: 'auto', 
               borderRadius: '8px', 
               border: '1px solid #333',
@@ -850,20 +862,20 @@ const SpecificInstitute = () => {
         {/* Personnel Information */}
         {personnel && (
           <div style={{ marginTop: '40px' }}>
-            <h3 style={{ 
-              color: '#007bff', 
+            <h3 className="section-title" style={{ 
+              color: theme === 'light' ? '#0dcaf0' : '#007bff', 
               marginBottom: '25px',
               textAlign: 'center',
               fontSize: '1.5rem'
             }}>معلومات کارکنان</h3>
             
-            <div style={{ 
+            <div className="table-container" style={{ 
               overflowX: 'auto', 
               borderRadius: '8px', 
               border: '1px solid #333',
               width: '100%'
             }}>
-              <table style={{ 
+              <table className="personnel-table" style={{ 
                 width: '100%', 
                 borderCollapse: 'collapse',
                 background: '#1e1e1e',
@@ -952,12 +964,10 @@ const SpecificInstitute = () => {
                   }}>
                     <td style={{ 
                       padding: '12px 8px', 
-                      color: '#e2e8f0',
                       fontSize: '0.8rem',
                       borderRight: '1px solid #4a5568',
                       textAlign: 'center',
-                      fontWeight: 'bold',
-                      background: '#1a202c'
+                      fontWeight: 'bold'
                     }}>استادان</td>
                     <td style={{ 
                       padding: '12px 8px', 
@@ -1013,12 +1023,10 @@ const SpecificInstitute = () => {
                   }}>
                     <td style={{ 
                       padding: '12px 8px', 
-                      color: '#e2e8f0',
                       fontSize: '0.8rem',
                       borderRight: '1px solid #4a5568',
                       textAlign: 'center',
-                      fontWeight: 'bold',
-                      background: '#1a202c'
+                      fontWeight: 'bold'
                     }}>کارکن تخنیکی</td>
                     <td style={{ 
                       padding: '12px 8px', 
@@ -1074,12 +1082,10 @@ const SpecificInstitute = () => {
                   }}>
                     <td style={{ 
                       padding: '12px 8px', 
-                      color: '#e2e8f0',
                       fontSize: '0.8rem',
                       borderRight: '1px solid #4a5568',
                       textAlign: 'center',
-                      fontWeight: 'bold',
-                      background: '#1a202c'
+                      fontWeight: 'bold'
                     }}>کارکن اداری</td>
                     <td style={{ 
                       padding: '12px 8px', 
@@ -1135,12 +1141,10 @@ const SpecificInstitute = () => {
                   }}>
                     <td style={{ 
                       padding: '12px 8px', 
-                      color: '#e2e8f0',
                       fontSize: '0.8rem',
                       borderRight: '1px solid #4a5568',
                       textAlign: 'center',
-                      fontWeight: 'bold',
-                      background: '#1a202c'
+                      fontWeight: 'bold'
                     }}>کارکن خدماتی</td>
                     <td style={{ 
                       padding: '12px 8px', 
@@ -1425,18 +1429,18 @@ const SpecificInstitute = () => {
         {/* Vision Mission Information */}
         {visionMission && (
           <div style={{ marginTop: '40px' }}>
-            <h3 style={{ 
-              color: '#007bff', 
+            <h3 className="section-title" style={{ 
+              color: theme === 'light' ? '#0dcaf0' : '#007bff', 
               marginBottom: '25px',
               textAlign: 'center',
               fontSize: '1.5rem'
             }}>دیدگاه، ماموریت و اهداف استراتیژیک</h3>
             
-            <div style={{ 
+            <div className="vision-mission-container" style={{ 
               borderRadius: '8px', 
-              border: '1px solid #333',
+              border: `1px solid ${theme === 'light' ? '#e0e0e0' : '#333'}`,
               width: '100%',
-              background: '#1e1e1e',
+              background: theme === 'light' ? '#ffffff' : '#1e1e1e',
               padding: '20px'
             }}>
               <div style={{ marginBottom: '25px' }}>
@@ -1447,75 +1451,69 @@ const SpecificInstitute = () => {
                   borderBottom: '1px solid #333',
                   paddingBottom: '8px'
                 }}>دیدگاه مرکز آموزشی</h4>
-                <div style={{ 
-                  color: '#e2e8f0',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.6',
-                  padding: '15px',
-                  background: '#2d3748',
-                  borderRadius: '6px',
-                  border: '1px solid #4a5568',
-                  whiteSpace: 'pre-wrap',
-                  minHeight: '80px'
-                }}>
-                  {visionMission.vision || 'هیچ دیدگاهی ثبت نشده است'}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '25px' }}>
-                <h4 style={{ 
-                  color: '#007bff', 
-                  marginBottom: '15px',
-                  fontSize: '1.1rem',
-                  borderBottom: '1px solid #333',
-                  paddingBottom: '8px'
-                }}>ماموریت مرکز آموزشی</h4>
-                <div style={{ 
-                  color: '#e2e8f0',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.6',
-                  padding: '15px',
-                  background: '#2d3748',
-                  borderRadius: '6px',
-                  border: '1px solid #4a5568',
-                  whiteSpace: 'pre-wrap',
-                  minHeight: '80px'
-                }}>
-                  {visionMission.mission || 'هیچ ماموریتی ثبت نشده است'}
-                </div>
-              </div>
-
-              <div>
-                <h4 style={{ 
-                  color: '#007bff', 
-                  marginBottom: '15px',
-                  fontSize: '1.1rem',
-                  borderBottom: '1px solid #333',
-                  paddingBottom: '8px'
-                }}>اهداف استراتیژیک مرکز آموزشی</h4>
-                <div style={{ 
-                  color: '#e2e8f0',
-                  fontSize: '0.9rem',
-                  lineHeight: '1.6',
-                  padding: '15px',
-                  background: '#2d3748',
-                  borderRadius: '6px',
-                  border: '1px solid #4a5568',
-                  whiteSpace: 'pre-wrap',
-                  minHeight: '80px'
-                }}>
-                  {visionMission.strategic_goals || 'هیچ هدف استراتیژیکی ثبت نشده است'}
-                </div>
+                              <div className="vision-mission-content" style={{ 
+                fontSize: '0.9rem',
+                lineHeight: '1.6',
+                padding: '15px',
+                borderRadius: '6px',
+                border: `1px solid ${theme === 'light' ? '#e0e0e0' : '#4a5568'}`,
+                whiteSpace: 'pre-wrap',
+                minHeight: '80px'
+              }}>
+                {visionMission.vision || 'هیچ دیدگاهی ثبت نشده است'}
               </div>
             </div>
+
+            <div style={{ marginBottom: '25px' }}>
+              <h4 style={{ 
+                color: theme === 'light' ? '#0dcaf0' : '#007bff', 
+                marginBottom: '15px',
+                fontSize: '1.1rem',
+                borderBottom: '1px solid #333',
+                paddingBottom: '8px'
+              }}>ماموریت مرکز آموزشی</h4>
+              <div className="vision-mission-content" style={{ 
+                fontSize: '0.9rem',
+                lineHeight: '1.6',
+                padding: '15px',
+                borderRadius: '6px',
+                border: `1px solid ${theme === 'light' ? '#e0e0e0' : '#4a5568'}`,
+                whiteSpace: 'pre-wrap',
+                minHeight: '80px'
+              }}>
+                {visionMission.mission || 'هیچ ماموریتی ثبت نشده است'}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ 
+                color: theme === 'light' ? '#0dcaf0' : '#007bff', 
+                marginBottom: '15px',
+                fontSize: '1.1rem',
+                borderBottom: '1px solid #333',
+                paddingBottom: '8px'
+              }}>اهداف استراتیژیک مرکز آموزشی</h4>
+              <div className="vision-mission-content" style={{ 
+                fontSize: '0.9rem',
+                lineHeight: '1.6',
+                padding: '15px',
+                borderRadius: '6px',
+                border: `1px solid ${theme === 'light' ? '#e0e0e0' : '#4a5568'}`,
+                whiteSpace: 'pre-wrap',
+                minHeight: '80px'
+              }}>
+                {visionMission.strategic_goals || 'هیچ هدف استراتیژیکی ثبت نشده است'}
+              </div>
+            </div>
+          </div>
           </div>
         )}
 
         {/* Standards Information */}
         {standards.length > 0 && (
           <div style={{ marginTop: '40px' }}>
-            <h3 style={{ 
-              color: '#007bff', 
+            <h3 className="section-title" style={{ 
+              color: theme === 'light' ? '#0dcaf0' : '#007bff', 
               marginBottom: '25px',
               textAlign: 'center',
               fontSize: '1.5rem'
@@ -1666,9 +1664,10 @@ const SpecificInstitute = () => {
                         fontWeight: '500'
                       }}>
                         <button 
+                          className="download-button"
                           onClick={() => handleDownloadFile(standard.id, standard.original_file_name)}
                           style={{
-                            background: '#007bff',
+                            background: theme === 'light' ? '#0dcaf0' : '#007bff',
                             color: '#ffffff',
                             border: 'none',
                             padding: '6px 12px',
@@ -1678,8 +1677,8 @@ const SpecificInstitute = () => {
                             transition: 'background-color 0.2s ease',
                             fontWeight: '500'
                           }}
-                          onMouseOver={(e) => e.target.style.background = '#0056b3'}
-                          onMouseOut={(e) => e.target.style.background = '#007bff'}
+                          onMouseOver={(e) => e.target.style.background = theme === 'light' ? '#00b5d7' : '#0056b3'}
+                          onMouseOut={(e) => e.target.style.background = theme === 'light' ? '#0dcaf0' : '#007bff'}
                         >
                           دانلود
                         </button>
@@ -2274,7 +2273,7 @@ const SpecificInstitute = () => {
               fontSize: '1.5rem'
             }}>دخیل سازی ذینفعان در پروسه آموزشی</h3>
             
-            <div style={{ 
+            <div className="stakeholder-container" style={{ 
               borderRadius: '8px', 
               border: '1px solid #333',
               width: '100%',
@@ -2283,13 +2282,13 @@ const SpecificInstitute = () => {
             }}>
               <div style={{ marginBottom: '25px' }}>
                 <h4 style={{ 
-                  color: '#007bff', 
+                  color: theme === 'light' ? '#0dcaf0' : '#007bff', 
                   marginBottom: '15px',
                   fontSize: '1.1rem',
                   borderBottom: '1px solid #333',
                   paddingBottom: '8px'
                 }}>شیوه های دخیل سازی و میزان مشارکت ذینفعان</h4>
-                <div style={{ 
+                <div className="stakeholder-content" style={{ 
                   color: '#e2e8f0',
                   fontSize: '0.9rem',
                   lineHeight: '1.6',
@@ -2452,9 +2451,10 @@ const SpecificInstitute = () => {
                           fontWeight: '500'
                         }}>
                           <button 
+                            className="download-button"
                             onClick={() => handleDownloadDocument(document.file_path, document.file_name)}
                             style={{
-                              background: '#007bff',
+                              background: theme === 'light' ? '#0dcaf0' : '#007bff',
                               color: '#ffffff',
                               border: 'none',
                               padding: '6px 12px',
@@ -2464,8 +2464,8 @@ const SpecificInstitute = () => {
                               transition: 'background-color 0.2s ease',
                               fontWeight: '500'
                             }}
-                            onMouseOver={(e) => e.target.style.background = '#0056b3'}
-                            onMouseOut={(e) => e.target.style.background = '#007bff'}
+                            onMouseOver={(e) => e.target.style.background = theme === 'light' ? '#00b5d7' : '#0056b3'}
+                            onMouseOut={(e) => e.target.style.background = theme === 'light' ? '#0dcaf0' : '#007bff'}
                           >
                             دانلود
                           </button>
@@ -2839,6 +2839,165 @@ const SpecificInstitute = () => {
           </div>
         )}
       </div>
+      
+      {/* Theme-aware styling */}
+      <style>{`
+        ${theme === 'light' ? `
+          /* Light theme styles */
+          .specific-institute-container {
+            background: #f8fafd !important;
+            color: #23283a !important;
+          }
+          .specific-institute-container .table-container {
+            border: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container table {
+            background: #ffffff !important;
+          }
+          .specific-institute-container thead tr {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%) !important;
+            border-bottom: 2px solid #0dcaf0 !important;
+          }
+          .specific-institute-container th {
+            color: #23283a !important;
+            border-right: 1px solid #b6eaff !important;
+          }
+          .specific-institute-container tbody tr {
+            background: #f8fafd !important;
+            border-bottom: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container tbody tr:nth-child(even) {
+            background: #ffffff !important;
+          }
+          .specific-institute-container td {
+            color: #23283a !important;
+            border-right: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container .section-title {
+            color: #0dcaf0 !important;
+          }
+          .specific-institute-container .main-container {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container .vision-mission-container {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container .vision-mission-content {
+            background: #f8fafd !important;
+            border: 1px solid #e0e0e0 !important;
+            color: #23283a !important;
+          }
+          .specific-institute-container .stakeholder-container {
+            background: #ffffff !important;
+            border: 1px solid #e0e0e0 !important;
+          }
+          .specific-institute-container .stakeholder-content {
+            background: #f8fafd !important;
+            border: 1px solid #e0e0e0 !important;
+            color: #23283a !important;
+          }
+          .specific-institute-container .download-button {
+            background: #0dcaf0 !important;
+            color: #ffffff !important;
+          }
+          .specific-institute-container .download-button:hover {
+            background: #00b5d7 !important;
+          }
+          .specific-institute-container .loading-text {
+            color: #23283a !important;
+          }
+          .specific-institute-container .error-container {
+            background: #fff0f0 !important;
+            border: 1px solid #dc3545 !important;
+            color: #ff6b6b !important;
+          }
+          /* Personnel table first column styling for light theme */
+          .specific-institute-container .personnel-table td:first-child {
+            color: #23283a !important;
+            background: #f0f8ff !important;
+            font-weight: bold !important;
+          }
+        ` : `
+          /* Dark theme styles */
+          .specific-institute-container {
+            background: #121212 !important;
+            color: #ffffff !important;
+          }
+          .specific-institute-container .table-container {
+            border: 1px solid #333 !important;
+          }
+          .specific-institute-container table {
+            background: #1e1e1e !important;
+          }
+          .specific-institute-container thead tr {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+            border-bottom: 2px solid #007bff !important;
+          }
+          .specific-institute-container th {
+            color: #ffffff !important;
+            border-right: 1px solid #4a5568 !important;
+          }
+          .specific-institute-container tbody tr {
+            background: #2d3748 !important;
+            border-bottom: 1px solid #4a5568 !important;
+          }
+          .specific-institute-container tbody tr:nth-child(even) {
+            background: #1a202c !important;
+          }
+          .specific-institute-container td {
+            color: #e2e8f0 !important;
+            border-right: 1px solid #4a5568 !important;
+          }
+          .specific-institute-container .section-title {
+            color: #007bff !important;
+          }
+          .specific-institute-container .main-container {
+            background: #1a1a1a !important;
+            border: 1px solid #333 !important;
+          }
+          .specific-institute-container .vision-mission-container {
+            background: #1e1e1e !important;
+            border: 1px solid #333 !important;
+          }
+          .specific-institute-container .vision-mission-content {
+            background: #2d3748 !important;
+            border: 1px solid #4a5568 !important;
+            color: #e2e8f0 !important;
+          }
+          .specific-institute-container .stakeholder-container {
+            background: #1e1e1e !important;
+            border: 1px solid #333 !important;
+          }
+          .specific-institute-container .stakeholder-content {
+            background: #2d3748 !important;
+            border: 1px solid #4a5568 !important;
+            color: #e2e8f0 !important;
+          }
+          .specific-institute-container .download-button {
+            background: #007bff !important;
+            color: #ffffff !important;
+          }
+          .specific-institute-container .download-button:hover {
+            background: #0056b3 !important;
+          }
+          .specific-institute-container .loading-text {
+            color: #ffffff !important;
+          }
+          .specific-institute-container .error-container {
+            background: #1e1e1e !important;
+            border: 1px solid #dc3545 !important;
+            color: #ff6b6b !important;
+          }
+          /* Personnel table first column styling for dark theme */
+          .specific-institute-container .personnel-table td:first-child {
+            color: #e2e8f0 !important;
+            background: #1a202c !important;
+            font-weight: bold !important;
+          }
+        `}
+      `}</style>
     </div>
   );
 };

@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from '@mui/material/CircularProgress';
 import debounce from 'lodash/debounce';
+import { useTheme } from "../contexts/ThemeContext";
 
 const EmployeeProfile = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +20,7 @@ const EmployeeProfile = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [totalCenters, setTotalCenters] = useState(0);
   const [stageCounts, setStageCounts] = useState({ stage1: 0, stage2: 0, stage3: 0, total: 0 });
+  const [unansweredQuestionsCount, setUnansweredQuestionsCount] = useState(0);
   const [updatingStage, setUpdatingStage] = useState(null);
   const usersPerPage = 15;
 
@@ -82,6 +85,21 @@ const EmployeeProfile = () => {
     }
   };
 
+  const fetchUnansweredQuestionsCount = async () => {
+    try {
+      const response = await axios.get(
+        'http://localhost:5000/api/questions/admin/unanswered-count',
+        {
+          withCredentials: true,
+        }
+      );
+      setUnansweredQuestionsCount(response.data.count || 0);
+    } catch (err) {
+      console.error('Error fetching unanswered questions count:', err);
+      setUnansweredQuestionsCount(0);
+    }
+  };
+
   // Debounced search function
   const debouncedFetchEducationalCenters = useCallback(
     debounce(() => {
@@ -93,6 +111,7 @@ const EmployeeProfile = () => {
   useEffect(() => {
     debouncedFetchEducationalCenters();
     fetchStageCounts();
+    fetchUnansweredQuestionsCount();
     return () => {
       debouncedFetchEducationalCenters.cancel();
     };
@@ -158,9 +177,11 @@ const EmployeeProfile = () => {
 
   if (loading) {
     return (
-      <div className="text-center p-4" style={{ background: '#121212', minHeight: '100vh' }}>
+      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+        <div className="text-center p-4">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">در حال بارگذاری...</span>
+          </div>
         </div>
       </div>
     );
@@ -168,56 +189,248 @@ const EmployeeProfile = () => {
 
   if (error) {
     return (
-      <div className="alert alert-danger m-4" role="alert" style={{ background: '#1e1e1e', border: '1px solid #dc3545', color: '#ff6b6b' }}>
+      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+        <div className="alert alert-danger m-4" role="alert">
         {error}
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="alert alert-warning m-4" role="alert" style={{ background: '#1e1e1e', border: '1px solid #ffc107', color: '#ffd54f' }}>
+      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+        <div className="alert alert-warning m-4" role="alert">
         کاربر یافت نشد
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: '100%', background: '#121212', minHeight: '100vh' }} className="px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-center" style={{ color: '#ffffff' }}>مدیریت مراکز آموزشی</h1>
+    <div className={`${theme === 'light' ? 'light-container' : 'dark-container'} px-4 py-8`} style={{ width: '100%', maxWidth: '100%', minHeight: '100vh' }}>
+      <style>{`
+        .dark-container {
+          background: #121212;
+          color: #ffffff;
+        }
+        .light-container {
+          background: #fff;
+          color: #23283a;
+        }
+        .light-container .card {
+          background: #f8fafd !important;
+          border: 1px solid #b6eaff !important;
+          color: #23283a !important;
+        }
+        .dark-container .card {
+          background: #1e1e1e !important;
+          border: 1px solid #333 !important;
+          color: #ffffff !important;
+        }
+        .light-container .card-title {
+          color: #0dcaf0 !important;
+        }
+        .dark-container .card-title {
+          color: #007bff !important;
+        }
+        .light-container .card-text {
+          color: #20c997 !important;
+        }
+        .dark-container .card-text {
+          color: #cccccc !important;
+        }
+        .light-container .alert-danger {
+          background: #fff0f0 !important;
+          border: 1px solid #ff6b6b !important;
+          color: #ff6b6b !important;
+        }
+        .dark-container .alert-danger {
+          background: #1e1e1e !important;
+          border: 1px solid #dc3545 !important;
+          color: #ff6b6b !important;
+        }
+        .light-container .alert-warning {
+          background: #fffbe6 !important;
+          border: 1px solid #ffd54f !important;
+          color: #ffc107 !important;
+        }
+        .dark-container .alert-warning {
+          background: #1e1e1e !important;
+          border: 1px solid #ffc107 !important;
+          color: #ffd54f !important;
+        }
+        /* --- TABLE LIGHT MODE --- */
+        .light-container .table {
+          background: #fff !important;
+          color: #23283a !important;
+        }
+        .light-container thead {
+          background: #e0f7fa !important;
+        }
+        .light-container th, .light-container td {
+          background: #fff !important;
+          color: #23283a !important;
+          border-color: #b6eaff !important;
+        }
+        .light-container tr {
+          background: #fff !important;
+        }
+        .light-container tr:nth-child(even) {
+          background: #f8fafd !important;
+        }
+        /* --- END TABLE LIGHT MODE --- */
+        .dark-container .table {
+          background: #121212 !important;
+          color: #ffffff !important;
+        }
+        .dark-container thead {
+          background: #1e1e1e !important;
+        }
+        .dark-container th, .dark-container td {
+          border-color: #333 !important;
+        }
+        .dark-container tr {
+          background: #121212 !important;
+        }
+        .dark-container tr:nth-child(even) {
+          background: #1a1a1a !important;
+        }
+        .light-container .form-check-label {
+          color: #20c997 !important;
+        }
+        .dark-container .form-check-label {
+          color: #ffffff !important;
+        }
+        .light-container .form-check-input:checked {
+          background-color: #0dcaf0 !important;
+          border-color: #0dcaf0 !important;
+        }
+        .dark-container .form-check-input:checked {
+          background-color: #007bff !important;
+          border-color: #007bff !important;
+        }
+        .light-container .form-check-input {
+          background-color: #fff !important;
+          border-color: #b6eaff !important;
+        }
+        .dark-container .form-check-input {
+          background-color: #1e1e1e !important;
+          border-color: #333 !important;
+        }
+        .light-container .page-link {
+          background: #fff !important;
+          border-color: #0dcaf0 !important;
+          color: #0dcaf0 !important;
+        }
+        .dark-container .page-link {
+          background: #1e1e1e !important;
+          border-color: #333 !important;
+          color: #ffffff !important;
+        }
+        .light-container .page-item.active .page-link {
+          background: #0dcaf0 !important;
+          color: #fff !important;
+          border-color: #20c997 !important;
+        }
+        .dark-container .page-item.active .page-link {
+          background: #007bff !important;
+          color: #fff !important;
+          border-color: #007bff !important;
+        }
+        .light-container .rounded-lg {
+          background: #fff !important;
+          color: #23283a !important;
+          border: 1px solid #b6eaff !important;
+        }
+        .dark-container .rounded-lg {
+          background: #1e1e1e !important;
+          color: #ffffff !important;
+          border: 1px solid #333 !important;
+        }
+        .light-container .fw-bold {
+          color: #23283a !important;
+        }
+        .dark-container .fw-bold {
+          color: #ffffff !important;
+        }
+        @keyframes pulse {
+          0% {
+            transform: translate(-50%, -50%) scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+          }
+          70% {
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+          }
+        }
+      `}</style>
+      <h1 className="text-2xl font-bold mb-6 text-center">مدیریت مراکز آموزشی</h1>
       
       {/* Statistics Cards */}
-      <div className="row mb-6">
-        <div className="col-md-3 mb-3">
-          <div className="card text-center" style={{ background: '#1e1e1e', border: '1px solid #333', color: '#ffffff' }}>
+      <div className="row mb-6 d-flex justify-content-center">
+        <div className="col-md-2 mb-2">
+          <div className="card text-center">
             <div className="card-body">
-              <h5 className="card-title" style={{ color: '#007bff' }}>{stageCounts.total}</h5>
-              <p className="card-text" style={{ color: '#cccccc' }}>کل مراکز</p>
+              <h5 className="card-title">{stageCounts.total}</h5>
+              <p className="card-text">کل مراکز</p>
             </div>
           </div>
         </div>
-        <div className="col-md-3 mb-3">
-          <div className="card text-center" style={{ background: '#1e1e1e', border: '1px solid #333', color: '#ffffff' }}>
+        <div className="col-md-2 mb-2">
+          <div className="card text-center">
             <div className="card-body">
-              <h5 className="card-title" style={{ color: '#28a745' }}>{stageCounts.stage3}</h5>
-              <p className="card-text" style={{ color: '#cccccc' }}>تایید شده</p>
+              <h5 className="card-title">{stageCounts.stage3}</h5>
+              <p className="card-text">تایید شده</p>
             </div>
           </div>
         </div>
-        <div className="col-md-3 mb-3">
-          <div className="card text-center" style={{ background: '#1e1e1e', border: '1px solid #333', color: '#ffffff' }}>
+        <div className="col-md-2 mb-2">
+          <div className="card text-center">
             <div className="card-body">
-              <h5 className="card-title" style={{ color: '#ffc107' }}>{stageCounts.stage2}</h5>
-              <p className="card-text" style={{ color: '#cccccc' }}>در حال بررسی</p>
+              <h5 className="card-title">{stageCounts.stage2}</h5>
+              <p className="card-text">در حال بررسی</p>
             </div>
           </div>
         </div>
-        <div className="col-md-3 mb-3">
-          <div className="card text-center" style={{ background: '#1e1e1e', border: '1px solid #333', color: '#ffffff' }}>
+        <div className="col-md-2 mb-2">
+          <div className="card text-center">
             <div className="card-body">
-              <h5 className="card-title" style={{ color: '#17a2b8' }}>{stageCounts.stage1}</h5>
-              <p className="card-text" style={{ color: '#cccccc' }}>در انتظار</p>
+              <h5 className="card-title">{stageCounts.stage1}</h5>
+              <p className="card-text">در انتظار</p>
             </div>
+          </div>
+        </div>
+
+        <div className="col-md-2 mb-2">
+          <div className="card text-center position-relative" 
+               style={{ cursor: 'pointer' }}
+               onClick={() => navigate('/answer-to-questions')}
+               onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+               onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            <div className="card-body">
+              <h5 className="card-title">سوالات </h5>
+              <p className="card-text">مدیریت سوالات</p>
+            </div>
+            {unansweredQuestionsCount > 0 && (
+              <div 
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '0.5rem 0.75rem',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 1000,
+                  animation: 'pulse 2s infinite'
+                }}
+              >
+                {unansweredQuestionsCount}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -251,7 +464,7 @@ const EmployeeProfile = () => {
 
       {/* Error Message */}
       {centersError && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert" style={{ background: '#1e1e1e', border: '1px solid #dc3545', color: '#ff6b6b' }}>
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {centersError}
           <button type="button" className="btn-close" onClick={() => setCentersError(null)} style={{ filter: 'invert(1)' }}></button>
         </div>

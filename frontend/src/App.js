@@ -28,6 +28,8 @@ import Step2 from './components/Step2';
 import Step3 from './components/Step3';
 import Goals from './components/Goals';
 import AllNews from './components/AllNews';
+import AskAndAnswers from './components/AskAndAnswers';
+import AnswerToQuestions from './pages/AnswerToQuestions';
 
 
 function App() {
@@ -121,6 +123,15 @@ function App() {
             }
           />
 
+<Route
+            path="/answer-to-questions"
+            element={
+              <RoleBasedRoute allowedRoles={['employee']}>
+                <AnswerToQuestions />
+              </RoleBasedRoute>
+            }
+          />
+
 
 
         <Route
@@ -202,6 +213,7 @@ function App() {
                   <NewsSection />
                   <Goals />
                   <FeedbackSection />
+                  <AskAndAnswers />
                 </>
               }
             />
