@@ -660,8 +660,6 @@ function VideoUploadDashboard() {
         return 'برنامه های آموزشی استادان و کارمندان';
       case 'workshops-seminars':
         return 'ورکشاپ ها و سیمینار ها';
-      case 'technical-capacity-courses':
-        return 'دوره های ارتقا ظرفیت تخنیکی و مسلکی';
       case 'online-programs':
         return 'برنامه های آنلاین آموزشی';
       default:
@@ -780,8 +778,7 @@ function VideoUploadDashboard() {
             <option value="">انتخاب کنید</option>
             <option value="teacher-staff-programs">برنامه های آموزشی استادان و کارمندان</option>
             <option value="workshops-seminars">ورکشاپ ها و سیمینار ها</option>
-            <option value="technical-capacity-courses">دوره های ارتقا ظرفیت تخنیکی و مسلکی</option>
-            <option value="online-programs">برنامه های آنلاین آموزشی</option>
+           <option value="online-programs">برنامه های آنلاین آموزشی</option>
           </select>
           {categoryError && <div style={errorMessageStyle}>{categoryError}</div>}
         </div>

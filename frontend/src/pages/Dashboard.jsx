@@ -33,10 +33,10 @@ const resources = [
     color: '#9C27B0'
   },
   { 
-    title: 'رهنمود ارزیابی مؤسستات', 
-    description: 'دستورالعمل‌های دقیق برای ارزیابی مؤسسات آموزشی.', 
-    route: '/guidelines/institution-eval',
-    icon: '🏛️',
+    title: 'اطلاع رسانی', 
+    description: 'تمامی افراد، انستیوت و کارمندان را اطلاع رسانی نمایید.', 
+    route: '/dashboard/Announcements',
+    icon: '📢',
     color: '#607D8B'
   },
   // { title: 'رهنمود ارزیابی برنامه های آموزشی', description: 'ارزیابی محتوای آموزشی بر اساس معیارهای کیفیت.', route: '/guidelines/program-eval' },

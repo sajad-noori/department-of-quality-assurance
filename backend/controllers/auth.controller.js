@@ -25,13 +25,11 @@ function validateEmail(email) {
 
 exports.register = async (req, res) => {
   try {
-    console.log('Registration request received:', { name: req.body.name, email: req.body.email });
     const { name, email, password } = req.body;
 
     // Input validation
     if (!name || name.trim().length < 3) {
-      console.log('Name validation failed');
-      return res.status(400).json({ message: 'نام باید حداقل ۳ حرف باشد' });
+     return res.status(400).json({ message: 'نام باید حداقل ۳ حرف باشد' });
     }
     if (!validateEmail(email)) {
       console.log('Email validation failed');
@@ -129,8 +127,8 @@ exports.verify = async (req, res) => {
 
     // Create user in database
     const sql = `
-      INSERT INTO users (name, email, password, role)
-      VALUES (?, ?, ?, 'user')
+      INSERT INTO users (name, email, password, role, is_verified)
+      VALUES (?, ?, ?, 'user', 1)
     `;
     
     const [result] = await db.promise().query(sql, [

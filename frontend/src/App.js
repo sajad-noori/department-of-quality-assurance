@@ -30,6 +30,7 @@ import Goals from './components/Goals';
 import AllNews from './components/AllNews';
 import AskAndAnswers from './components/AskAndAnswers';
 import AnswerToQuestions from './pages/AnswerToQuestions';
+import Announcements from './components/dashboard/Announcements';
 
 
 function App() {
@@ -57,6 +58,15 @@ function App() {
           element={
             <AdminRoute>
               <Dashboard />
+            </AdminRoute>
+          }
+        />
+
+<Route
+          path="/dashboard/Announcements"
+          element={
+            <AdminRoute>
+              <Announcements />
             </AdminRoute>
           }
         />
