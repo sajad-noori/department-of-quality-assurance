@@ -1168,8 +1168,12 @@ const Announcements = () => {
             )}
           </button>
           
-
+          <a href="/dashboard/see-all-announcements" className="btn" style={buttonSecondaryStyle}>
+                 دیدن تمام اعلانات
+              </a>
           
+
+
           <button
             type="button"
             style={buttonSecondaryStyle}

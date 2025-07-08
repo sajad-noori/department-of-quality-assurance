@@ -31,6 +31,7 @@ import AllNews from './components/AllNews';
 import AskAndAnswers from './components/AskAndAnswers';
 import AnswerToQuestions from './pages/AnswerToQuestions';
 import Announcements from './components/dashboard/Announcements';
+import SeeAllAnnouncements from './components/SeeAllAnnouncements';
 
 
 function App() {
@@ -70,7 +71,14 @@ function App() {
             </AdminRoute>
           }
         />
-
+<Route
+          path="/dashboard/see-all-announcements"
+          element={
+            <AdminRoute>
+              <SeeAllAnnouncements />
+            </AdminRoute>
+          }
+        />
         
         <Route
           path="/public-news"

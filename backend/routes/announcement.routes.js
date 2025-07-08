@@ -13,6 +13,9 @@ router.post('/', upload.single('attachment'), AnnouncementController.createAnnou
 // Get all announcements with pagination and filtering
 router.get('/', AnnouncementController.getAnnouncements);
 
+// Get all announcements (simple version without pagination)
+router.get('/all', AnnouncementController.getAllAnnouncements);
+
 // Get recipients by type
 router.get('/recipients/list', AnnouncementController.getRecipients);
 

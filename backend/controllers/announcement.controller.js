@@ -112,6 +112,45 @@ class AnnouncementController {
     }
   }
 
+  // Get all announcements (simple version without pagination)
+  static async getAllAnnouncements(req, res) {
+    try {
+      const db = require('../config/db');
+      
+      const query = `
+        SELECT a.*, u.name as creator_name, u.email as creator_email
+        FROM announcements a
+        LEFT JOIN users u ON a.created_by = u.id
+        ORDER BY a.created_at DESC
+      `;
+      
+      db.execute(query, (err, rows) => {
+        if (err) {
+          console.error('Database error in getAllAnnouncements:', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error fetching announcements',
+            error: err.message
+          });
+        }
+        
+        res.status(200).json({
+          success: true,
+          data: rows || [],
+          count: (rows || []).length
+        });
+      });
+      
+    } catch (error) {
+      console.error('Error fetching all announcements:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching announcements',
+        error: error.message
+      });
+    }
+  }
+
   // Get announcement by ID
   static async getAnnouncementById(req, res) {
     try {
@@ -195,20 +234,53 @@ class AnnouncementController {
   static async deleteAnnouncement(req, res) {
     try {
       const { id } = req.params;
-      const deleted = await Announcement.delete(id);
-
-      if (!deleted) {
-        return res.status(404).json({
-          success: false,
-          message: 'Announcement not found'
+      const db = require('../config/db');
+      
+      // First check if announcement exists
+      const checkQuery = `SELECT id FROM announcements WHERE id = ?`;
+      db.execute(checkQuery, [id], (checkErr, checkRows) => {
+        if (checkErr) {
+          console.error('Database error checking announcement:', checkErr);
+          return res.status(500).json({
+            success: false,
+            message: 'Error checking announcement',
+            error: checkErr.message
+          });
+        }
+        
+        if (!checkRows || checkRows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: 'Announcement not found'
+          });
+        }
+        
+        // Delete the announcement
+        const deleteQuery = `DELETE FROM announcements WHERE id = ?`;
+        db.execute(deleteQuery, [id], (deleteErr, deleteResult) => {
+          if (deleteErr) {
+            console.error('Database error deleting announcement:', deleteErr);
+            return res.status(500).json({
+              success: false,
+              message: 'Error deleting announcement',
+              error: deleteErr.message
+            });
+          }
+          
+          if (deleteResult.affectedRows > 0) {
+            res.status(200).json({
+              success: true,
+              message: 'Announcement deleted successfully'
+            });
+          } else {
+            res.status(404).json({
+              success: false,
+              message: 'Announcement not found'
+            });
+          }
         });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'Announcement deleted successfully'
       });
-
+      
     } catch (error) {
       console.error('Error deleting announcement:', error);
       res.status(500).json({
@@ -223,10 +295,9 @@ class AnnouncementController {
   static async getRecipients(req, res) {
     try {
       const { target_audience = 'all' } = req.query;
-      console.log('Fetching recipients for target_audience:', target_audience);
       
       const recipients = await Announcement.getRecipientsByType(target_audience);
-      console.log('Recipients fetched:', recipients);
+
 
       res.status(200).json({
         success: true,
@@ -267,9 +338,8 @@ class AnnouncementController {
   // Get available roles
   static async getAvailableRoles(req, res) {
     try {
-      console.log('getAvailableRoles called');
       const roles = await Announcement.getAvailableRoles();
-      console.log('Roles fetched:', roles);
+
 
       res.status(200).json({
         success: true,

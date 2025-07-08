@@ -62,6 +62,26 @@ class AnnouncementsAPI {
     }
   }
 
+  // Get all announcements (simple version without pagination)
+  static async getAllAnnouncements() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/announcements/all`, {
+        method: 'GET',
+        headers: await this.getAuthHeaders(),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching all announcements:', error);
+      throw error;
+    }
+  }
+
   // Get announcement by ID
   static async getAnnouncementById(id) {
     try {

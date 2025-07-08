@@ -142,7 +142,6 @@ class Announcement {
           query = `SELECT id, name, email, role FROM users WHERE is_verified = 1`;
       }
       
-      console.log('Executing query:', query);
       
       db.execute(query, params, (err, rows) => {
         if (err) {
@@ -151,8 +150,6 @@ class Announcement {
           return;
         }
         
-        console.log('Query result:', rows);
-        console.log('Processed rows:', rows);
         resolve(Array.isArray(rows) ? rows : []);
       });
     });
@@ -170,7 +167,6 @@ class Announcement {
             return;
           }
           
-          console.log('Total users in database:', userCountResult[0]?.count || 0);
           
           // Get distinct roles
           db.execute('SELECT DISTINCT role FROM users WHERE role IS NOT NULL AND role != ""', (err, rows) => {
@@ -180,7 +176,6 @@ class Announcement {
               return;
             }
             
-            console.log('Raw roles query result:', rows);
             
             if (!Array.isArray(rows)) {
               console.error('Rows is not an array:', rows);
@@ -192,7 +187,6 @@ class Announcement {
               .map(row => row && row.role ? row.role : null)
               .filter(role => role && role.trim() !== '');
             
-            console.log('Final processed roles:', roles);
             resolve(roles);
           });
         });
