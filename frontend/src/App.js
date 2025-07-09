@@ -34,6 +34,7 @@ import Announcements from './components/dashboard/Announcements';
 import SeeAllAnnouncements from './components/SeeAllAnnouncements';
 import Questionnaires from './components/Questionnaires';
 import Questionnaire from './components/dashboard/Questionnaire';
+import CheckingQuestionnaires from './pages/CheckingQuestionnaires';
 
 
 function App() {
@@ -161,7 +162,14 @@ function App() {
             }
           />
 
-
+<Route
+            path="/checking-questionnaires"
+            element={
+              <RoleBasedRoute allowedRoles={['employee']}>
+                <CheckingQuestionnaires />
+              </RoleBasedRoute>
+            }
+          />
 
         <Route
           path="/news/edit/:id"

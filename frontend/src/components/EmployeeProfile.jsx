@@ -398,11 +398,30 @@ const EmployeeProfile = () => {
           </div>
         </div>
         <div className="col-md-2 mb-2">
-          <div className="card text-center">
+          <div className="card text-center position-relative" 
+               style={{ cursor: 'pointer' }}
+               onClick={() => navigate('/checking-questionnaires')}
+               onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+               onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          >
             <div className="card-body">
-              <h5 className="card-title">{stageCounts.stage1}</h5>
-              <p className="card-text">در انتظار</p>
+              <h5 className="card-title">پرسش نامه ها</h5>
+              <p className="card-text">تحلیل پرسش نامه ها</p>
             </div>
+            {unansweredQuestionsCount > 0 && (
+              <div 
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '0.5rem 0.75rem',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 1000,
+                  animation: 'pulse 2s infinite'
+                }}
+              >
+                {unansweredQuestionsCount}
+              </div>
+            )}
           </div>
         </div>
 

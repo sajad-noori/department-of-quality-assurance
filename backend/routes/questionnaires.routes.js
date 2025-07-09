@@ -5,6 +5,7 @@ const { verifyToken } = require('../middleware/verifyToken');
 const { checkRole } = require('../middleware/auth.middleware');
 const multer = require('multer');
 const path = require('path');
+const { uploadFilledQuestionnaire } = require('../utils/multer');
 
 // Set storage for questionnaire files
 const storage = multer.diskStorage({
@@ -46,5 +47,8 @@ router.delete('/:id', checkRole('admin'), QuestionnairesController.deleteQuestio
 
 // PUT /api/questionnaires/:id (admin only)
 router.put('/:id', checkRole('admin'), upload.single('file'), QuestionnairesController.updateQuestionnaire);
+
+// POST /api/questionnaires/filled (user uploads filled questionnaire)
+router.post('/filled', verifyToken, uploadFilledQuestionnaire.single('file'), QuestionnairesController.uploadFilledQuestionnaire);
 
 module.exports = router; 

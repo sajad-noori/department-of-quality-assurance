@@ -1,5 +1,6 @@
 const Questionnaire = require('../models/questionnaire.model');
 const path = require('path');
+const FilledQuestionnaire = require('../models/filled_questionnaire.model');
 
 class QuestionnairesController {
   // Create a new questionnaire
@@ -124,6 +125,36 @@ class QuestionnairesController {
       });
     } catch (error) {
       res.status(500).json({ success: false, message: 'Error updating questionnaire', error: error.message });
+    }
+  }
+
+  // Upload a filled questionnaire
+  static async uploadFilledQuestionnaire(req, res) {
+    try {
+      const { questionnaire_id } = req.body;
+      const user_id = req.user.id;
+      if (!questionnaire_id) {
+        return res.status(400).json({ success: false, message: 'questionnaire_id is required' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'فایل الزامی است' });
+      }
+      const file_name = req.file.filename;
+      const file_url = `questionnaires/${file_name}`;
+      const filledId = await FilledQuestionnaire.create({
+        questionnaire_id,
+        user_id,
+        file_name,
+        file_url
+      });
+      res.status(201).json({
+        success: true,
+        message: 'پرسشنامه با موفقیت ارسال شد',
+        data: { id: filledId, questionnaire_id, user_id, file_name, file_url }
+      });
+    } catch (error) {
+      console.error('Error uploading filled questionnaire:', error);
+      res.status(500).json({ success: false, message: 'خطا در ارسال پرسشنامه', error: error.message });
     }
   }
 }

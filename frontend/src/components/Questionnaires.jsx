@@ -65,6 +65,10 @@ function Questionnaires() {
   const [error, setError] = useState('');
   const [questionnaires, setQuestionnaires] = useState([]);
   const fileInputs = useRef({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
 
   // Fetch questionnaires from backend
   useEffect(() => {
@@ -100,6 +104,33 @@ function Questionnaires() {
     (q.description && q.description.includes(search))
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedQuestionnaires = filtered.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  // Auto-clear success message after 10 seconds
+  useEffect(() => {
+    if (uploadMessage && uploadMessage.includes('موفقیت')) {
+      const timer = setTimeout(() => {
+        setUploadMessage('');
+      }, 10000); // 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [uploadMessage]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   // Download link uses backend file_url
   const getFileUrl = (file_url) => file_url ? `http://localhost:5000/uploads/${file_url}` : '#';
 
@@ -109,12 +140,37 @@ function Questionnaires() {
     }
   };
 
-  const handleFileChange = (e, q) => {
+  const handleFileChange = async (e, q) => {
     const file = e.target.files[0];
-    if (file) {
-      alert(`فایل "${file.name}" برای پرسشنامه "${q.title}" انتخاب شد.`);
-      // Here you can implement real upload logic
+    if (!file) return;
+    setUploadMessage('');
+    // Only allow PDF, DOC, DOCX
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadMessage('فقط فایل PDF یا Word مجاز است.');
+      e.target.value = '';
+      return;
     }
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('questionnaire_id', q.id);
+    try {
+      const res = await fetch('/api/questionnaires/filled', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUploadMessage('پرسشنامه با موفقیت ارسال شد.');
+      } else {
+        setUploadMessage(data.message || 'خطا در ارسال پرسشنامه');
+      }
+    } catch (err) {
+      setUploadMessage('خطا در ارتباط با سرور');
+    }
+    setUploading(false);
     e.target.value = '';
   };
 
@@ -166,6 +222,18 @@ function Questionnaires() {
           </div>
         </div>
 
+        {/* Show upload message */}
+        {uploadMessage && (
+          <div className="row justify-content-center mb-4">
+            <div className="col-12 col-lg-8">
+              <div className={`alert ${uploadMessage.includes('موفقیت') ? 'alert-success' : 'alert-danger'} d-flex align-items-center text-center ${theme === 'light' ? 'light-alert' : 'dark-alert'}`} role="alert">
+                <i className={`fas ${uploadMessage.includes('موفقیت') ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
+                <div className="responsive-text">{uploadMessage}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="row justify-content-center">
@@ -203,7 +271,7 @@ function Questionnaires() {
         {/* Questionnaires Grid */}
         {!loading && !error && filtered.length > 0 && (
           <div className="row g-3">
-            {filtered.map((q) => (
+            {paginatedQuestionnaires.map((q) => (
               <div key={q.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <div className={`card h-100 hover-shadow ${theme === 'light' ? 'light-card' : 'dark-card'}`}> 
                   <div className="card-body d-flex flex-column text-center">
@@ -235,17 +303,29 @@ function Questionnaires() {
                       target="_blank"
                       rel="noopener noreferrer"
                       disabled={!q.file_url}
+                      title="پرسش نامه را دانلود نموده بعد از تکمیل نمودن آنرا با استفاده از کلید اپلود، اپلود نمایید."
                     >
                       <i className="fas fa-eye me-1"></i>
                       دانلود
                     </a>
                     <button
-                      className="btn btn-outline-info btn-sm w-100 touch-target"
+                      className={`btn ${uploading ? 'btn-secondary' : 'btn-outline-info'} btn-sm w-100 touch-target`}
                       type="button"
                       onClick={() => handleUploadClick(q.id)}
+                      disabled={uploading}
+                      title="پرسش نامه خانه پری شده را با استفاده از این قسمت اضافه نمایید."
                     >
-                      <span role="img" aria-label="upload" style={{ marginLeft: 4 }}>📤</span>
-                      اپلود پرسش نامه شما
+                      {uploading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          در حال ارسال...
+                        </>
+                      ) : (
+                        <>
+                          <span role="img" aria-label="upload" style={{ marginLeft: 4 }}>📤</span>
+                          اپلود پرسش نامه شما
+                        </>
+                      )}
                     </button>
                     <input
                       type="file"
@@ -257,6 +337,47 @@ function Questionnaires() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="row justify-content-center mt-4">
+            <div className="col-12 col-lg-8">
+              <nav aria-label="Page navigation">
+                <ul className="pagination justify-content-center">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      title="صفحه قبلی"
+                    >
+                      قبلی
+                    </button>
+                  </li>
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                      <button 
+                        className="page-link" 
+                        onClick={() => handlePageChange(i + 1)}
+                        title={`صفحه ${i + 1}`}
+                      >
+                        {i + 1}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      title="صفحه بعدی"
+                    >
+                      بعدی
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           </div>
         )}
       </div>
@@ -348,6 +469,16 @@ function Questionnaires() {
           border: 1px solid #0dcaf0 !important;
           color: #0dcaf0 !important;
         }
+        .alert-success {
+          background: rgba(25, 135, 84, 0.1) !important;
+          border: 1px solid #198754 !important;
+          color: #198754 !important;
+        }
+        .dark-alert.alert-success {
+          background: rgba(25, 135, 84, 0.2) !important;
+          border: 1px solid #20c997 !important;
+          color: #20c997 !important;
+        }
         .btn-outline-light {
           border-color: rgba(255, 255, 255, 0.3) !important;
           color: rgba(255, 255, 255, 0.8) !important;
@@ -430,6 +561,88 @@ function Questionnaires() {
           background: linear-gradient(45deg, #138496, #1ea085) !important;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+        }
+        .btn-outline-info {
+          border: 1px solid #0dcaf0 !important;
+          color: #0dcaf0 !important;
+          background: transparent !important;
+          transition: all 0.3s ease;
+        }
+        .btn-outline-info:hover {
+          background: #0dcaf0 !important;
+          color: #ffffff !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
+        }
+        .btn-outline-info:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .btn-secondary {
+          background: #6c757d !important;
+          border-color: #6c757d !important;
+          color: #ffffff !important;
+        }
+        .btn-secondary:disabled {
+          opacity: 0.8;
+          cursor: not-allowed;
+        }
+        .spinner-border-sm {
+          width: 1rem;
+          height: 1rem;
+        }
+        /* Pagination Styles */
+        .pagination {
+          margin-bottom: 0;
+        }
+        .page-link {
+          color: #0dcaf0 !important;
+          background-color: transparent !important;
+          border: 1px solid #0dcaf0 !important;
+          margin: 0 2px;
+          border-radius: 6px !important;
+          transition: all 0.3s ease;
+        }
+        .page-link:hover {
+          background-color: #0dcaf0 !important;
+          color: #ffffff !important;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(13, 202, 240, 0.3);
+        }
+        .page-item.active .page-link {
+          background-color: #0dcaf0 !important;
+          border-color: #0dcaf0 !important;
+          color: #ffffff !important;
+        }
+        .page-item.disabled .page-link {
+          color: #6c757d !important;
+          border-color: #6c757d !important;
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .page-item.disabled .page-link:hover {
+          background-color: transparent !important;
+          color: #6c757d !important;
+          transform: none;
+          box-shadow: none;
+        }
+        /* Dark theme pagination */
+        .dark-container .page-link {
+          color: #20c997 !important;
+          border-color: #20c997 !important;
+        }
+        .dark-container .page-link:hover {
+          background-color: #20c997 !important;
+          color: #ffffff !important;
+        }
+        .dark-container .page-item.active .page-link {
+          background-color: #20c997 !important;
+          border-color: #20c997 !important;
+        }
+        .dark-container .page-item.disabled .page-link {
+          color: rgba(255, 255, 255, 0.5) !important;
+          border-color: rgba(255, 255, 255, 0.3) !important;
         }
         /* Responsive Design */
         .responsive-title {
