@@ -32,6 +32,8 @@ import AskAndAnswers from './components/AskAndAnswers';
 import AnswerToQuestions from './pages/AnswerToQuestions';
 import Announcements from './components/dashboard/Announcements';
 import SeeAllAnnouncements from './components/SeeAllAnnouncements';
+import Questionnaires from './components/Questionnaires';
+import Questionnaire from './components/dashboard/Questionnaire';
 
 
 function App() {
@@ -59,6 +61,15 @@ function App() {
           element={
             <AdminRoute>
               <Dashboard />
+            </AdminRoute>
+          }
+        />
+
+<Route
+          path="/dashboard/questionnaires"
+          element={
+            <AdminRoute>
+              <Questionnaire />
             </AdminRoute>
           }
         />
@@ -221,6 +232,7 @@ function App() {
             <Route path="/documents/:type" element={<DocumentsPage />} />
             <Route path="/training/:type" element={<VideoGallery />} />
             <Route path="/video" element={<VideoPlayer />} />
+            <Route path="/questionnaires" element={<Questionnaires />} />
             <Route path="*" element={<NotFoundPage />} />
             {/* ✅ Homepage (default route) */}
             <Route

@@ -34,9 +34,17 @@ const resources = [
   },
   { 
     title: 'اطلاع رسانی', 
-    description: 'تمامی افراد، انستیوت و کارمندان را اطلاع رسانی نمایید.', 
+    description: 'تمامی افراد، انستیتوت و کارمندان را اطلاع رسانی نمایید.', 
     route: '/dashboard/Announcements',
     icon: '📢',
+    color: '#607D8B'
+  },
+
+  { 
+    title: 'پرسشنامه ها', 
+    description: 'اپلود پرسش نامه ها از این طریق میباشد.', 
+    route: '/dashboard/questionnaires',
+    icon: '📝',
     color: '#607D8B'
   },
   // { title: 'رهنمود ارزیابی برنامه های آموزشی', description: 'ارزیابی محتوای آموزشی بر اساس معیارهای کیفیت.', route: '/guidelines/program-eval' },

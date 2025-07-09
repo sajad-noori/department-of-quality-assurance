@@ -51,7 +51,8 @@ const menuItems = [
       "فورم ها",
       "اسناد تقنینی",
       "ستندرد ها",
-      "چک لیست ها"
+      "چک لیست ها",
+      "پرسش نامه ها"
     ],
   },
 
@@ -244,6 +245,15 @@ export default function MenuWithUtilityBar() {
         break;
       case "اسناد تقنینی":
         navigate("/documents/legal-doc");
+        break;
+      case "ستندرد ها":
+        navigate("/documents/standards");
+        break;
+      case "چک لیست ها":
+        navigate("/documents/check-list");
+        break;
+      case "پرسش نامه ها":
+        navigate("/questionnaires");
         break;
       case "برنامه های آموزشی استادان و کارمندان":
         navigate("/training/teacher-staff-programs");
