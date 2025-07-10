@@ -51,4 +51,13 @@ router.put('/:id', checkRole('admin'), upload.single('file'), QuestionnairesCont
 // POST /api/questionnaires/filled (user uploads filled questionnaire)
 router.post('/filled', verifyToken, uploadFilledQuestionnaire.single('file'), QuestionnairesController.uploadFilledQuestionnaire);
 
+// GET /api/questionnaires/:id/filled (get all filled questionnaires for a questionnaire)
+router.get('/:id/filled', QuestionnairesController.getFilledQuestionnaires);
+
+// GET /api/questionnaires/filled/user (get all filled questionnaires for the current user)
+router.get('/filled/user', verifyToken, QuestionnairesController.getFilledQuestionnairesForUser);
+
+// PATCH /api/questionnaires/filled/:id/check (mark a filled questionnaire as checked)
+router.patch('/filled/:id/check', verifyToken, QuestionnairesController.checkFilledQuestionnaire);
+
 module.exports = router; 

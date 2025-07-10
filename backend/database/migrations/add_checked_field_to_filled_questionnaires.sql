@@ -1,0 +1,1 @@
+ALTER TABLE filled_questionnaires ADD COLUMN checked BOOLEAN NOT NULL DEFAULT FALSE; 

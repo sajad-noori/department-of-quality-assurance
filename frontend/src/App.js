@@ -35,6 +35,7 @@ import SeeAllAnnouncements from './components/SeeAllAnnouncements';
 import Questionnaires from './components/Questionnaires';
 import Questionnaire from './components/dashboard/Questionnaire';
 import CheckingQuestionnaires from './pages/CheckingQuestionnaires';
+import FilledQuestionnairesList from './components/FilledQuestionnairesList';
 
 
 function App() {
@@ -241,6 +242,7 @@ function App() {
             <Route path="/training/:type" element={<VideoGallery />} />
             <Route path="/video" element={<VideoPlayer />} />
             <Route path="/questionnaires" element={<Questionnaires />} />
+            <Route path="/filled-questionnaires/:id" element={<FilledQuestionnairesList />} />
             <Route path="*" element={<NotFoundPage />} />
             {/* ✅ Homepage (default route) */}
             <Route

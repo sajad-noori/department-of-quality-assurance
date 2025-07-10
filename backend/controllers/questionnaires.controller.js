@@ -139,6 +139,11 @@ class QuestionnairesController {
       if (!req.file) {
         return res.status(400).json({ success: false, message: 'فایل الزامی است' });
       }
+      // Prevent duplicate upload
+      const existing = await FilledQuestionnaire.findByQuestionnaireIdAndUserId(questionnaire_id, user_id);
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.' });
+      }
       const file_name = req.file.filename;
       const file_url = `questionnaires/${file_name}`;
       const filledId = await FilledQuestionnaire.create({
@@ -155,6 +160,54 @@ class QuestionnairesController {
     } catch (error) {
       console.error('Error uploading filled questionnaire:', error);
       res.status(500).json({ success: false, message: 'خطا در ارسال پرسشنامه', error: error.message });
+    }
+  }
+
+  // Get all filled questionnaires for a questionnaire
+  static async getFilledQuestionnaires(req, res) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ success: false, message: 'questionnaire_id is required' });
+      }
+      const filled = await FilledQuestionnaire.findByQuestionnaireId(id);
+      res.status(200).json({ success: true, data: filled });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: error.message });
+    }
+  }
+
+  // Get all filled questionnaires for the current user
+  static async getFilledQuestionnairesForUser(req, res) {
+    try {
+      const user_id = req.user.id;
+      const db = require('../config/db');
+      db.execute('SELECT * FROM filled_questionnaires WHERE user_id = ?', [user_id], (err, rows) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: err.message });
+        }
+        res.status(200).json({ success: true, data: rows });
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: error.message });
+    }
+  }
+
+  // Mark a filled questionnaire as checked
+  static async checkFilledQuestionnaire(req, res) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ success: false, message: 'filled questionnaire id is required' });
+      }
+      const updated = await FilledQuestionnaire.setChecked(id);
+      if (updated) {
+        res.status(200).json({ success: true, message: 'پرسشنامه به عنوان خوانده شده علامت‌گذاری شد' });
+      } else {
+        res.status(404).json({ success: false, message: 'پرسشنامه پیدا نشد' });
+      }
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'خطا در بروزرسانی وضعیت', error: error.message });
     }
   }
 }

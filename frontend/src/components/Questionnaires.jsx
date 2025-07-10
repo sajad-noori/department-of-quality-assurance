@@ -65,10 +65,11 @@ function Questionnaires() {
   const [error, setError] = useState('');
   const [questionnaires, setQuestionnaires] = useState([]);
   const fileInputs = useRef({});
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState({});
   const [uploadMessage, setUploadMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
+  const [uploaded, setUploaded] = useState({});
 
   // Fetch questionnaires from backend
   useEffect(() => {
@@ -76,9 +77,22 @@ function Questionnaires() {
     setError('');
     fetch('/api/questionnaires', { credentials: 'include' })
       .then(res => res.json())
-      .then(data => {
+      .then(async data => {
         if (data.success) {
           setQuestionnaires(data.data || []);
+          // Fetch filled questionnaires for this user
+          try {
+            const filledRes = await fetch('/api/questionnaires/filled/user', { credentials: 'include' });
+            const filledData = await filledRes.json();
+            if (filledData.success && Array.isArray(filledData.data)) {
+              // Build uploaded state: { [questionnaire_id]: true }
+              const uploadedMap = {};
+              filledData.data.forEach(fq => { uploadedMap[fq.questionnaire_id] = true; });
+              setUploaded(uploadedMap);
+            }
+          } catch (err) {
+            // Ignore error, just don't set uploaded
+          }
         } else {
           setError(data.message || 'خطا در دریافت پرسشنامه‌ها');
         }
@@ -151,7 +165,7 @@ function Questionnaires() {
       e.target.value = '';
       return;
     }
-    setUploading(true);
+    setUploading(prev => ({ ...prev, [q.id]: true }));
     const formData = new FormData();
     formData.append('file', file);
     formData.append('questionnaire_id', q.id);
@@ -164,13 +178,14 @@ function Questionnaires() {
       const data = await res.json();
       if (data.success) {
         setUploadMessage('پرسشنامه با موفقیت ارسال شد.');
+        setUploaded(prev => ({ ...prev, [q.id]: true }));
       } else {
         setUploadMessage(data.message || 'خطا در ارسال پرسشنامه');
       }
     } catch (err) {
       setUploadMessage('خطا در ارتباط با سرور');
     }
-    setUploading(false);
+    setUploading(prev => ({ ...prev, [q.id]: false }));
     e.target.value = '';
   };
 
@@ -309,16 +324,21 @@ function Questionnaires() {
                       دانلود
                     </a>
                     <button
-                      className={`btn ${uploading ? 'btn-secondary' : 'btn-outline-info'} btn-sm w-100 touch-target`}
+                      className={`btn ${uploading[q.id] || uploaded[q.id] ? 'btn-secondary' : 'btn-outline-info'} btn-sm w-100 touch-target`}
                       type="button"
                       onClick={() => handleUploadClick(q.id)}
-                      disabled={uploading}
-                      title="پرسش نامه خانه پری شده را با استفاده از این قسمت اضافه نمایید."
+                      disabled={uploading[q.id] || uploaded[q.id]}
+                      title={uploaded[q.id] ? 'شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.' : 'پرسش نامه خانه پری شده را با استفاده از این قسمت اضافه نمایید.'}
                     >
-                      {uploading ? (
+                      {uploading[q.id] ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                           در حال ارسال...
+                        </>
+                      ) : uploaded[q.id] ? (
+                        <>
+                          <i className="fas fa-check-circle me-2 text-success"></i>
+                          ارسال شد
                         </>
                       ) : (
                         <>
