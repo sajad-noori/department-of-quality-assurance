@@ -539,6 +539,8 @@ export default function GuidelinesDashboard() {
     guidelines: files.filter(file => file.category === 'guideline').length,
     forms: files.filter(file => file.category === 'form').length,
     legal: files.filter(file => file.category === 'legal').length,
+    standards: files.filter(file => file.category === 'standards').length,
+    check_list: files.filter(file => file.category === 'check-list').length,
   };
 
   if (fetching) {
@@ -556,7 +558,7 @@ export default function GuidelinesDashboard() {
     <div style={containerStyle}>
       <div style={headerStyle}>
         <h1 style={titleStyle}>مرکز اسناد و دانلودها</h1>
-        <p style={subtitleStyle}>مدیریت رهنمودها، فورم‌ها و اسناد تقنینی</p>
+        <p style={subtitleStyle}>مدیریت رهنمودها، فورم‌ها، اسناد تقنینی، ستندرد ها و چک لیست ها</p>
         
         <div style={statsContainerStyle}>
           <div style={statItemStyle}>
@@ -574,6 +576,14 @@ export default function GuidelinesDashboard() {
           <div style={statItemStyle}>
             <div style={statValueStyle}>{stats.legal}</div>
             <div style={statLabelStyle}>اسناد تقنینی</div>
+          </div>
+          <div style={statItemStyle}>
+            <div style={statValueStyle}>{stats.standards}</div>
+            <div style={statLabelStyle}>ستندرد ها</div>
+          </div>
+          <div style={statItemStyle}>
+            <div style={statValueStyle}>{stats.check_list}</div>
+            <div style={statLabelStyle}>چک لیست ها</div>
           </div>
         </div>
       </div>
@@ -629,6 +639,8 @@ export default function GuidelinesDashboard() {
               <option value="guideline">رهنمود ها</option>
               <option value="form">فورم ها</option>
               <option value="legal">اسناد تقنینی</option>
+              <option value="standards">ستندرد ها</option>
+              <option value="check-list">چک لیست ها</option>
             </select>
           </div>
 

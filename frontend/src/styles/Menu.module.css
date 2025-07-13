@@ -272,6 +272,11 @@ a {
     padding-left: 1rem;
     border-radius: 0.8rem;
   }
+  
+  [data-theme="light"] .submenu {
+    background: linear-gradient(90deg, #f8f9fa 60%, var(--primary-cyan) 100%);
+    border: 1px solid #e0e0e0;
+  }
 
   .submenuItem a {
     padding: 0.5rem 1rem;
@@ -279,6 +284,31 @@ a {
 
   .menuItem[data-open="true"] > .submenu {
     display: block;
+  }
+  
+  /* Mobile logo styling */
+  .menu li:first-child,
+  .menu li:last-child {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+    width: 100%;
+  }
+  
+  .menu li:first-child {
+    border-bottom: 1px solid rgba(13,202,240,0.2);
+    margin-bottom: 0.5rem;
+  }
+  
+  .menu li:last-child {
+    border-top: 1px solid rgba(13,202,240,0.2);
+    margin-top: 0.5rem;
+  }
+  
+  .logo {
+    height: 60px;
+    width: 60px;
+    object-fit: contain;
   }
 }
 
@@ -341,9 +371,13 @@ a {
   background: linear-gradient(90deg, #ffffff 30%, #0dcaf0 100%);
   color: #333333;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-
 }
 
+[data-theme="light"] .menuOpen {
+  background: #ffffff !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+}
 
 [data-theme="light"] .menuLink {
   color: #000000;
@@ -404,4 +438,15 @@ a {
 
 [data-theme="light"] .caret {
   color: #333333;
+}
+
+/* Light theme mobile logo styling */
+@media (max-width: 768px) {
+  [data-theme="light"] .menu li:first-child {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  
+  [data-theme="light"] .menu li:last-child {
+    border-top: 1px solid rgba(0,0,0,0.1);
+  }
 }

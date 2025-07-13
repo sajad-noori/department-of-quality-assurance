@@ -18,17 +18,7 @@ const slides = [
     description:
       'مأموریت ما ارتقاء کیفیت آموزش‌های فنی و حرفه‌ای از طریق ارزیابی، نظارت و همکاری مستمر با مؤسسات آموزشی است.',
   },
-  {
-    component: <img src={CustomerServiceImg} alt="خدمات مشتری - Customer Service Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
-    title: 'اداره تعلیمات تخنیکی و مسلکی',
-    slogans: [
-      'همکاری با مؤسسات آموزشی',
-      'بهبود مستمر برنامه‌ها',
-      'ایجاد استانداردهای روز',
-    ],
-    description:
-      'ما با همکاری نزدیک با مؤسسات، استانداردهای آموزشی را به سطح جهانی می‌رسانیم.',
-  },
+
   {
     component: <img src={OfficeWorkImg} alt="دفتر کار - Office Work Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
     title: 'آموزش، توسعه و پیشرفت',
@@ -42,9 +32,9 @@ const slides = [
   },
   {
     component: <img src={TeamPresentationImg} alt="ارائه تیمی - Team Presentation Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
-    title: 'علوم و فناوری',
+    title: 'علوم و تکنالوژی',
     slogans: [
-      'پیشرفت علمی و فناوری',
+      'پیشرفت علمی و تکنالوژی',
       'نوآوری در آموزش',
       'تحقیق و توسعه',
     ],

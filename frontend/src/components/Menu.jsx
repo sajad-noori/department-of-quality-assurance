@@ -37,20 +37,21 @@ const menuItems = [
   //   ],
   // },
   {
-    label: "توانمند سازی",
+    label: "برنامه های آموزشی",
     submenu: [
       "برنامه های آموزشی استادان و کارمندان",
-      "ورکشاپ ها و سیمینارها",
+      "ورکشاپ ها",
+      "سیمینارها",
       "برنامه های آنلاین آموزشی",
     ],
   },
   {
     label: "مرکز اسناد",
     submenu: [
-      "رهنمود ها",
-      "فورم ها",
-      "اسناد تقنینی",
       "ستندرد ها",
+      "رهنمود ها",
+      "اسناد تقنینی",
+      "فورم ها",
       "چک لیست ها",
       "پرسش نامه ها"
     ],
@@ -72,7 +73,7 @@ const menuItems = [
   },
 
 
-  { label: "اخبار و رویداد های", submenu: [] },
+  { label: "اخبار و اطلاعات", submenu: [] },
   { label: "تماس با ما", submenu: [] },
   { label: "درباره ما", submenu: [] },
 ];
@@ -258,26 +259,14 @@ export default function MenuWithUtilityBar() {
       case "برنامه های آموزشی استادان و کارمندان":
         navigate("/training/teacher-staff-programs");
         break;
-      case "ورکشاپ ها و سیمینارها":
-        navigate("/training/workshops-seminars");
+      case "ورکشاپ ها":
+        navigate("/training/workshops");
         break;
-      case "دورههای ارتقای ظرفیت تخنیکی و مسلکی":
-        navigate("/training/technical-capacity-courses");
-        break;
+        case "سیمینارها":
+          navigate("/training/seminars");
+          break;
       case "برنامه های آنلاین آموزشی":
         navigate("/training/online-programs");
-        break;
-      case "اسناد و منابع آموزشی قابل دانلود":
-        navigate("/training/downloadable-resources");
-        break;
-      case "تقویم آموزشها":
-        navigate("/training/calendar");
-        break;
-      case "فرصتهای آموزشی ملی و بینالمللی":
-        navigate("/training/national-international-opportunities");
-        break;
-      case "گزارش فعالیتهای آموزشی گذشته":
-        navigate("/training/past-activities-report");
         break;
       default:
         console.log("Clicked submenu:", label);
@@ -415,7 +404,7 @@ export default function MenuWithUtilityBar() {
                 <Link to="/about" className={styles.menuLink} onClick={() => setMenuOpen(false)}>
                   {item.label}
                 </Link>
-              ) : item.label === "اخبار و رویداد های" ? (
+              ) : item.label === "اخبار و اطلاعات" ? (
                 <a href="#news-section" className={styles.menuLink} onClick={handleNewsClick}>
                   {item.label}
                 </a>
