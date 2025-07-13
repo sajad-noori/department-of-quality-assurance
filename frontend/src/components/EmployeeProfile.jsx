@@ -4,6 +4,7 @@ import axios from "axios";
 import CircularProgress from '@mui/material/CircularProgress';
 import debounce from 'lodash/debounce';
 import { useTheme } from "../contexts/ThemeContext";
+import { questionnairesAPI } from "../api/questionnaires";
 
 const EmployeeProfile = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const EmployeeProfile = () => {
   const [totalCenters, setTotalCenters] = useState(0);
   const [stageCounts, setStageCounts] = useState({ stage1: 0, stage2: 0, stage3: 0, total: 0 });
   const [unansweredQuestionsCount, setUnansweredQuestionsCount] = useState(0);
+  const [totalUncheckedFilledCount, setTotalUncheckedFilledCount] = useState(0);
   const [updatingStage, setUpdatingStage] = useState(null);
   const usersPerPage = 15;
 
@@ -100,6 +102,20 @@ const EmployeeProfile = () => {
     }
   };
 
+  const fetchTotalUncheckedFilledCount = async () => {
+    try {
+      const response = await questionnairesAPI.getTotalUncheckedFilledCount();
+      if (response.success) {
+        setTotalUncheckedFilledCount(response.data.count || 0);
+      } else {
+        setTotalUncheckedFilledCount(0);
+      }
+    } catch (err) {
+      console.error('Error fetching total unchecked filled count:', err);
+      setTotalUncheckedFilledCount(0);
+    }
+  };
+
   // Debounced search function
   const debouncedFetchEducationalCenters = useCallback(
     debounce(() => {
@@ -112,6 +128,7 @@ const EmployeeProfile = () => {
     debouncedFetchEducationalCenters();
     fetchStageCounts();
     fetchUnansweredQuestionsCount();
+    fetchTotalUncheckedFilledCount();
     return () => {
       debouncedFetchEducationalCenters.cancel();
     };
@@ -408,7 +425,7 @@ const EmployeeProfile = () => {
               <h5 className="card-title">پرسش نامه ها</h5>
               <p className="card-text">تحلیل پرسش نامه ها</p>
             </div>
-            {unansweredQuestionsCount > 0 && (
+            {totalUncheckedFilledCount > 0 && (
               <div 
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 style={{
@@ -419,7 +436,7 @@ const EmployeeProfile = () => {
                   animation: 'pulse 2s infinite'
                 }}
               >
-                {unansweredQuestionsCount}
+                {totalUncheckedFilledCount}
               </div>
             )}
           </div>

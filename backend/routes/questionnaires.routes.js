@@ -3,6 +3,7 @@ const router = express.Router();
 const QuestionnairesController = require('../controllers/questionnaires.controller');
 const { verifyToken } = require('../middleware/verifyToken');
 const { checkRole } = require('../middleware/auth.middleware');
+const { questionnaireLimiter } = require('../middleware/rateLimiter');
 const multer = require('multer');
 const path = require('path');
 const { uploadFilledQuestionnaire } = require('../utils/multer');
@@ -52,12 +53,18 @@ router.put('/:id', checkRole('admin'), upload.single('file'), QuestionnairesCont
 router.post('/filled', verifyToken, uploadFilledQuestionnaire.single('file'), QuestionnairesController.uploadFilledQuestionnaire);
 
 // GET /api/questionnaires/:id/filled (get all filled questionnaires for a questionnaire)
-router.get('/:id/filled', QuestionnairesController.getFilledQuestionnaires);
+router.get('/:id/filled',checkRole("employee"), QuestionnairesController.getFilledQuestionnaires);
 
 // GET /api/questionnaires/filled/user (get all filled questionnaires for the current user)
 router.get('/filled/user', verifyToken, QuestionnairesController.getFilledQuestionnairesForUser);
 
 // PATCH /api/questionnaires/filled/:id/check (mark a filled questionnaire as checked)
-router.patch('/filled/:id/check', verifyToken, QuestionnairesController.checkFilledQuestionnaire);
+router.patch('/filled/:id/check', verifyToken, checkRole("employee"), QuestionnairesController.checkFilledQuestionnaire);
+
+// GET /api/questionnaires/:id/filled/unchecked-count (get count of unchecked filled questionnaires)
+router.get('/:id/filled/unchecked-count', questionnaireLimiter, checkRole("employee"), QuestionnairesController.getUncheckedFilledCount);
+
+// GET /api/questionnaires/filled/total-unchecked-count (get total count of unchecked filled questionnaires)
+router.get('/filled/total-unchecked-count', questionnaireLimiter, checkRole("employee"), QuestionnairesController.getTotalUncheckedFilledCount);
 
 module.exports = router; 

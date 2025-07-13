@@ -5,3 +5,9 @@ exports.authLimiter = rateLimit({
   max: 50,
   message: 'Too many requests, try again later.',
 });
+
+exports.questionnaireLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // 30 requests per minute
+  message: 'Too many questionnaire requests, try again later.',
+});

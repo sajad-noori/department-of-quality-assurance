@@ -144,4 +144,44 @@ export const questionnairesAPI = {
       throw error;
     }
   },
+
+  // Get count of unchecked filled questionnaires for a questionnaire
+  getUncheckedFilledCount: async (questionnaireId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/questionnaires/${questionnaireId}/filled/unchecked-count`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching unchecked filled questionnaires count:', error);
+      throw error;
+    }
+  },
+
+  // Get total count of unchecked filled questionnaires
+  getTotalUncheckedFilledCount: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/questionnaires/filled/total-unchecked-count`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching total unchecked filled questionnaires count:', error);
+      throw error;
+    }
+  },
 }; 

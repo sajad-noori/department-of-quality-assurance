@@ -210,6 +210,86 @@ class QuestionnairesController {
       res.status(500).json({ success: false, message: 'خطا در بروزرسانی وضعیت', error: error.message });
     }
   }
+
+  // Get count of unchecked filled questionnaires for a questionnaire
+  static async getUncheckedFilledCount(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Input validation and sanitization
+      if (!id || isNaN(parseInt(id)) || parseInt(id) <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Valid questionnaire_id is required' 
+        });
+      }
+      
+      const questionnaireId = parseInt(id);
+      
+      const db = require('../config/db');
+      const query = `
+        SELECT COUNT(*) as count 
+        FROM filled_questionnaires 
+        WHERE questionnaire_id = ? AND checked = 0
+      `;
+      
+      db.execute(query, [questionnaireId], (err, rows) => {
+        if (err) {
+          console.error('Database error in getUncheckedFilledCount:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching unchecked count' 
+          });
+        }
+        
+        const count = rows[0] ? parseInt(rows[0].count) : 0;
+        res.status(200).json({ 
+          success: true, 
+          data: { count: count } 
+        });
+      });
+    } catch (error) {
+      console.error('Error in getUncheckedFilledCount:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching unchecked count' 
+      });
+    }
+  }
+
+  // Get total count of unchecked filled questionnaires
+  static async getTotalUncheckedFilledCount(req, res) {
+    try {
+      const db = require('../config/db');
+      const query = `
+        SELECT COUNT(*) as count 
+        FROM filled_questionnaires 
+        WHERE checked = 0
+      `;
+      
+      db.execute(query, (err, rows) => {
+        if (err) {
+          console.error('Database error in getTotalUncheckedFilledCount:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching total unchecked count' 
+          });
+        }
+        
+        const count = rows[0] ? parseInt(rows[0].count) : 0;
+        res.status(200).json({ 
+          success: true, 
+          data: { count: count } 
+        });
+      });
+    } catch (error) {
+      console.error('Error in getTotalUncheckedFilledCount:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching total unchecked count' 
+      });
+    }
+  }
 }
 
 module.exports = QuestionnairesController; 

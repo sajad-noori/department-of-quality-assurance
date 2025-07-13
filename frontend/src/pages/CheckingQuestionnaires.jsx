@@ -56,7 +56,27 @@ const CheckingQuestionnaires = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
+  const [uncheckedCounts, setUncheckedCounts] = useState({});
   const navigate = useNavigate();
+
+  // Fetch unchecked counts for all questionnaires
+  const fetchUncheckedCounts = async (questionnairesList) => {
+    const counts = {};
+    for (const questionnaire of questionnairesList) {
+      try {
+        const response = await questionnairesAPI.getUncheckedFilledCount(questionnaire.id);
+        if (response.success) {
+          counts[questionnaire.id] = response.data.count || 0;
+        } else {
+          counts[questionnaire.id] = 0;
+        }
+      } catch (err) {
+        console.error(`Error fetching unchecked count for questionnaire ${questionnaire.id}:`, err);
+        counts[questionnaire.id] = 0;
+      }
+    }
+    setUncheckedCounts(counts);
+  };
 
   // Fetch questionnaires on component mount
   useEffect(() => {
@@ -68,7 +88,11 @@ const CheckingQuestionnaires = () => {
         
         if (response.success) {
           console.log('Questionnaires data:', response.data); // Debug log
-          setQuestionnaires(response.data || []);
+          const questionnairesData = response.data || [];
+          setQuestionnaires(questionnairesData);
+          
+          // Fetch unchecked counts for all questionnaires
+          await fetchUncheckedCounts(questionnairesData);
         } else {
           setError(response.message || 'خطا در دریافت پرسشنامه‌ها');
         }
@@ -196,9 +220,25 @@ const CheckingQuestionnaires = () => {
           <div className="row g-3">
             {paginatedQuestionnaires.map((q) => {
               console.log('Rendering questionnaire:', q); // Debug log
+              const uncheckedCount = uncheckedCounts[q.id] || 0;
               return (
               <div key={q.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div className={`card h-100 hover-shadow ${theme === 'light' ? 'light-card' : 'dark-card'}`}> 
+                <div className={`card h-100 hover-shadow ${theme === 'light' ? 'light-card' : 'dark-card'}`} style={{ position: 'relative' }}> 
+                  {/* Notification Badge */}
+                  {uncheckedCount > 0 && (
+                    <div 
+                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '0.5rem 0.75rem',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 1000,
+                        animation: 'pulse 2s infinite'
+                      }}
+                    >
+                      {uncheckedCount}
+                    </div>
+                  )}
                   <div className="card-body d-flex flex-column text-center">
                     <div className="d-flex align-items-start mb-3">
                       <div className="me-3 fs-2 flex-shrink-0">
@@ -472,6 +512,20 @@ const CheckingQuestionnaires = () => {
         .dark-container .text-muted,
         .dark-container .text-secondary {
           color: #b0b0b0 !important;
+        }
+        @keyframes pulse {
+          0% {
+            transform: translate(-50%, -50%) scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+          }
+          70% {
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+          }
         }
       `}</style>
     </div>
