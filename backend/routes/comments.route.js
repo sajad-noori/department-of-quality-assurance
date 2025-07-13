@@ -9,4 +9,8 @@ const { authLimiter } = require('../middleware/rateLimiter');
 router.get('/', commentsController.getComments);
 router.post('/', [authenticate, validateComment, authLimiter], commentsController.addComment);
 
+// Reply routes
+router.get('/:commentId/replies', commentsController.getReplies);
+router.post('/:commentId/replies', [authenticate, validateComment, authLimiter], commentsController.addReply);
+
 module.exports = router;

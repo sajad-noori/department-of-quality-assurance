@@ -289,6 +289,13 @@ const Comments = ({ newsId }) => {
   const [user, setUser] = useState(null);
   const [textareaFocused, setTextareaFocused] = useState(false);
   
+  // Reply state
+  const [replyForms, setReplyForms] = useState(new Set());
+  const [replyTexts, setReplyTexts] = useState({});
+  const [submittingReplies, setSubmittingReplies] = useState(new Set());
+  const [expandedReplies, setExpandedReplies] = useState(new Set());
+  const [replies, setReplies] = useState({});
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -360,6 +367,92 @@ const Comments = ({ newsId }) => {
     const newItemsPerPage = parseInt(e.target.value);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1); // Reset to first page
+  };
+
+  // Reply handling functions
+  const handleReplyClick = (commentId) => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+    setReplyForms(prev => new Set([...prev, commentId]));
+    setReplyTexts(prev => ({ ...prev, [commentId]: '' }));
+  };
+
+  const handleReplyCancel = (commentId) => {
+    setReplyForms(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(commentId);
+      return newSet;
+    });
+    setReplyTexts(prev => {
+      const newTexts = { ...prev };
+      delete newTexts[commentId];
+      return newTexts;
+    });
+  };
+
+  const handleReplySubmit = async (commentId) => {
+    const replyText = replyTexts[commentId];
+    if (!replyText || !replyText.trim()) return;
+
+    setSubmittingReplies(prev => new Set([...prev, commentId]));
+    
+    try {
+      const response = await axios.post(
+        `/api/news/${newsId}/comments/${commentId}/replies`,
+        { comment: replyText },
+        { withCredentials: true }
+      );
+      
+      // Add reply to the replies state
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: [...(prev[commentId] || []), response.data]
+      }));
+      
+      // Update comment reply count
+      setComments(prev => prev.map(comment => 
+        comment.id === commentId 
+          ? { ...comment, reply_count: (comment.reply_count || 0) + 1 }
+          : comment
+      ));
+      
+      // Clear reply form
+      handleReplyCancel(commentId);
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      alert('خطا در ارسال پاسخ');
+    } finally {
+      setSubmittingReplies(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(commentId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleShowReplies = async (commentId) => {
+    if (expandedReplies.has(commentId)) {
+      setExpandedReplies(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(commentId);
+        return newSet;
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/news/${newsId}/comments/${commentId}/replies`);
+      setReplies(prev => ({
+        ...prev,
+        [commentId]: response.data
+      }));
+      setExpandedReplies(prev => new Set([...prev, commentId]));
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      alert('خطا در دریافت پاسخ‌ها');
+    }
   };
 
   const handleButtonHover = (e) => {
@@ -715,7 +808,149 @@ const Comments = ({ newsId }) => {
                 📅 {formatDate(c.created_at)}
               </span>
             </div>
-            <p style={isLight ? commentTextStyleLight : commentTextStyle}>{c.comment}</p>
+            <p style={isLight ? commentTextStyleLight : commentTextStyle}>
+              {c.comment.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+            </p>
+            
+            {/* Reply Actions */}
+            <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handleReplyClick(c.id)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid #00d4ff',
+                  color: '#00d4ff',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = '#00d4ff';
+                  e.currentTarget.style.color = '#000';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#00d4ff';
+                }}
+              >
+                💬 پاسخ
+              </button>
+              
+              {(c.reply_count || 0) > 0 && (
+                <button
+                  onClick={() => handleShowReplies(c.id)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #666',
+                    color: '#666',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = '#666';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#666';
+                  }}
+                >
+                  📄 {expandedReplies.has(c.id) ? 'مخفی کردن' : `نمایش ${c.reply_count || 0} پاسخ`}
+                </button>
+              )}
+            </div>
+
+            {/* Reply Form */}
+            {replyForms.has(c.id) && (
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: isLight ? '#f0f8ff' : '#1a1a1a', borderRadius: '6px', border: `1px solid ${isLight ? '#e0f7fa' : '#333'}` }}>
+                <textarea
+                  value={replyTexts[c.id] || ''}
+                  onChange={(e) => setReplyTexts(prev => ({ ...prev, [c.id]: e.target.value }))}
+                  placeholder="پاسخ خود را اینجا بنویسید..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    fontSize: '0.875rem',
+                    border: `1px solid ${isLight ? '#e0f7fa' : '#333'}`,
+                    borderRadius: '4px',
+                    backgroundColor: isLight ? '#fff' : '#1a1a1a',
+                    color: isLight ? '#222' : '#fff',
+                    outline: 'none',
+                    resize: 'vertical',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => handleReplySubmit(c.id)}
+                    disabled={submittingReplies.has(c.id) || !replyTexts[c.id]?.trim()}
+                    style={{
+                      backgroundColor: submittingReplies.has(c.id) || !replyTexts[c.id]?.trim() ? '#666' : '#00d4ff',
+                      border: 'none',
+                      color: submittingReplies.has(c.id) || !replyTexts[c.id]?.trim() ? '#999' : '#000',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '4px',
+                      cursor: submittingReplies.has(c.id) || !replyTexts[c.id]?.trim() ? 'not-allowed' : 'pointer',
+                      fontSize: '0.75rem',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {submittingReplies.has(c.id) ? '⏳ در حال ارسال...' : '📤 ارسال پاسخ'}
+                  </button>
+                  <button
+                    onClick={() => handleReplyCancel(c.id)}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid #666',
+                      color: '#666',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    ❌ لغو
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Replies Section */}
+            {expandedReplies.has(c.id) && replies[c.id] && (
+              <div style={{ marginTop: '1rem', paddingLeft: '1rem', borderLeft: `2px solid ${isLight ? '#e0f7fa' : '#333'}` }}>
+                {replies[c.id].map((reply) => (
+                  <div
+                    key={reply.id}
+                    style={{
+                      backgroundColor: isLight ? '#f8fcfd' : '#2a2a2a',
+                      border: `1px solid ${isLight ? '#e0f7fa' : '#333'}`,
+                      borderRadius: '6px',
+                      padding: '0.75rem',
+                      marginBottom: '0.5rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '600', color: isLight ? '#00b5d7' : '#00d4ff' }}>
+                        👤 {reply.author || "کاربر ناشناس"}
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: isLight ? '#666' : '#666' }}>
+                        📅 {formatDate(reply.created_at)}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: isLight ? '#222' : '#fff', margin: 0 }}>
+                      {reply.reply_text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </li>
         ))}
       </ul>

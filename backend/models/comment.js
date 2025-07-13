@@ -7,7 +7,7 @@ const db = require('../config/db');
  */
 const getCommentsByNewsId = (newsId) => {
   const sql = `
-    SELECT c.id, c.news_id, c.user_id, c.comment, c.created_at, u.name AS author
+    SELECT c.id, c.news_id, c.user_id, c.comment, c.created_at, c.reply_count, u.name AS author
     FROM comments c
     LEFT JOIN users u ON c.user_id = u.id
     WHERE c.news_id = ?
@@ -38,7 +38,7 @@ const addComment = (newsId, userId, comment) => {
       // Return the inserted comment with created_at fetched
       const insertedId = results.insertId;
       const selectSql = `
-        SELECT c.id, c.news_id, c.user_id, c.comment, c.created_at, u.name AS author
+        SELECT c.id, c.news_id, c.user_id, c.comment, c.created_at, c.reply_count, u.name AS author
         FROM comments c
         LEFT JOIN users u ON c.user_id = u.id
         WHERE c.id = ?
@@ -51,7 +51,90 @@ const addComment = (newsId, userId, comment) => {
   });
 };
 
+/**
+ * Get all replies for a comment with author info
+ * @param {number} commentId
+ * @returns {Promise<Array>}
+ */
+const getRepliesByCommentId = (commentId) => {
+  const sql = `
+    SELECT cr.id, cr.parent_comment_id, cr.user_id, cr.reply_text, cr.created_at, u.name AS author
+    FROM comment_replies cr
+    LEFT JOIN users u ON cr.user_id = u.id
+    WHERE cr.parent_comment_id = ?
+    ORDER BY cr.created_at ASC
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [commentId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+};
+
+/**
+ * Get a comment by ID
+ * @param {number} commentId
+ * @returns {Promise<Object>} comment object
+ */
+const getCommentById = (commentId) => {
+  const sql = `
+    SELECT c.id, c.news_id, c.user_id, c.comment, c.created_at, c.reply_count, u.name AS author
+    FROM comments c
+    LEFT JOIN users u ON c.user_id = u.id
+    WHERE c.id = ?
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [commentId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0] || null);
+    });
+  });
+};
+
+/**
+ * Add a new reply to a comment
+ * @param {number} commentId
+ * @param {number} userId
+ * @param {string} replyText
+ * @returns {Promise<Object>} inserted reply
+ */
+const addReply = (commentId, userId, replyText) => {
+  const sql = `
+    INSERT INTO comment_replies (parent_comment_id, user_id, reply_text) VALUES (?, ?, ?)
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [commentId, userId, replyText], (err, results) => {
+      if (err) return reject(err);
+      
+      // Update reply count in comments table
+      const updateCountSql = `
+        UPDATE comments SET reply_count = reply_count + 1 WHERE id = ?
+      `;
+      db.query(updateCountSql, [commentId], (err2) => {
+        if (err2) return reject(err2);
+        
+        // Return the inserted reply with created_at fetched
+        const insertedId = results.insertId;
+        const selectSql = `
+          SELECT cr.id, cr.parent_comment_id, cr.user_id, cr.reply_text, cr.created_at, u.name AS author
+          FROM comment_replies cr
+          LEFT JOIN users u ON cr.user_id = u.id
+          WHERE cr.id = ?
+        `;
+        db.query(selectSql, [insertedId], (err3, res3) => {
+          if (err3) return reject(err3);
+          resolve(res3[0]);
+        });
+      });
+    });
+  });
+};
+
 module.exports = {
   getCommentsByNewsId,
   addComment,
+  getCommentById,
+  getRepliesByCommentId,
+  addReply,
 };
