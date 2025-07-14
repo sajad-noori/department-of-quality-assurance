@@ -331,7 +331,6 @@ const AskAndAnswers = () => {
           >
             <FaQuestion />
             <span>سوال دارید؟</span>
-            <div className="shortcut-hint">Ctrl+K</div>
           </button>
         ) : (
           // Expanded state - full FAQ interface
@@ -701,22 +700,6 @@ const AskAndAnswers = () => {
           transform: translateY(0);
         }
 
-        .shortcut-hint {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: rgba(0, 0, 0, 0.8);
-          color: white;
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 10px;
-          opacity: 0;
-          transition: opacity 0.3s ease;
-        }
-
-        .faq-widget-toggle:hover .shortcut-hint {
-          opacity: 1;
-        }
 
         .faq-widget.expanded {
           bottom: 20px;

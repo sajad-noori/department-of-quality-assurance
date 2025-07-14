@@ -1,7 +1,438 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
+
+// Logs component for viewing user activity
+const UserLogs = ({ userId, userName, onClose }) => {
+  // PropTypes validation
+  UserLogs.propTypes = {
+    userId: PropTypes.number.isRequired,
+    userName: PropTypes.string.isRequired,
+    onClose: PropTypes.func.isRequired
+  };
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [actionFilter, setActionFilter] = useState('');
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/logs/user/${userId}?page=${currentPage}&limit=10&action=${actionFilter}`,
+        { withCredentials: true }
+      );
+      setLogs(response.data.data.logs);
+      setTotalPages(response.data.data.pagination.totalPages);
+      setError(null);
+    } catch (err) {
+      setError('خطا در دریافت فعالیت های کاربر');
+      console.error('Error fetching logs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [userId, currentPage, actionFilter]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('fa-IR');
+  };
+
+  const getActionLabel = (action) => {
+    const actionLabels = {
+      'login': 'ورود به سیستم',
+      'comment': 'نظر',
+      'download': 'دانلود',
+      'visit': 'بازدید',
+      'question': 'سوال',
+      'admin_action': 'عملیات مدیریتی'
+    };
+    return actionLabels[action] || action;
+  };
+
+  const getRoleBadgeStyle = (role) => {
+    switch (role) {
+      case 'admin':
+        return roleBadgeAdminStyle;
+      case 'institute':
+        return roleBadgeInstituteStyle;
+      case 'employee':
+        return roleBadgeEmployeeStyle;
+      default:
+        return roleBadgeUserStyle;
+    }
+  };
+
+  const modalStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  };
+
+  const modalContentStyle = {
+    backgroundColor: '#1a1a1a',
+    borderRadius: '12px',
+    padding: '2rem',
+    maxWidth: '800px',
+    width: '90%',
+    maxHeight: '80vh',
+    overflow: 'auto',
+    border: '1px solid #333333',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+  };
+
+  const closeButtonStyle = {
+    position: 'absolute',
+    top: '1rem',
+    right: '1rem',
+    background: 'none',
+    border: 'none',
+    color: '#ffffff',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    padding: '0.5rem',
+  };
+
+  return (
+    <div style={modalStyle} onClick={onClose}>
+      <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+        <button style={closeButtonStyle} onClick={onClose}>✕</button>
+        
+        <h2 style={{ color: '#ffffff', marginBottom: '1rem', textAlign: 'center' }}>
+          فعالیت های کاربر: {userName}
+        </h2>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">همه عملیات</option>
+            <option value="login">ورود</option>
+            <option value="comment">نظر</option>
+            <option value="download">دانلود</option>
+            <option value="visit">بازدید</option>
+            <option value="question">سوال</option>
+            <option value="admin_action">عملیات مدیریتی</option>
+          </select>
+        </div>
+
+        {loading ? (
+          <div style={loadingStyle}>
+            <div style={spinnerStyle}></div>
+            <span>در حال بارگذاری...</span>
+          </div>
+        ) : error ? (
+          <div style={errorMessageStyle}>
+            <span>❌ {error}</span>
+          </div>
+        ) : logs.length === 0 ? (
+          <div style={emptyStateStyle}>
+            <div style={emptyStateIconStyle}>📝</div>
+            <h4 style={{ color: '#ffffff', marginBottom: '0.5rem' }}>
+              هیچ فعالیتی یافت نشد
+            </h4>
+            <p style={{ color: '#999999' }}>
+              این کاربر هنوز هیچ فعالیتی نداشته است
+            </p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={tableStyle}>
+              <thead style={tableHeaderStyle}>
+                <tr>
+                  <th style={tableHeaderCellStyle}>عملیات</th>
+                  <th style={tableHeaderCellStyle}>جزئیات</th>
+                  <th style={tableHeaderCellStyle}>IP</th>
+                  <th style={tableHeaderCellStyle}>تاریخ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td style={tableCellStyle}>
+                      <span style={getRoleBadgeStyle(log.action)}>
+                        {getActionLabel(log.action)}
+                      </span>
+                    </td>
+                    <td style={tableCellStyle}>{log.details || '-'}</td>
+                    <td style={tableCellStyle}>{log.ip_address || '-'}</td>
+                    <td style={tableCellStyle}>{formatDate(log.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div style={paginationStyle}>
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}
+            >
+              قبلی
+            </button>
+            
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => setCurrentPage(index + 1)}
+                style={currentPage === index + 1 ? activePageButtonStyle : pageButtonStyle}
+              >
+                {index + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}
+            >
+              بعدی
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// All Logs component for viewing all user activity
+const AllLogsModal = ({ onClose }) => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [actionFilter, setActionFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [instituteFilter, setInstituteFilter] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [dateFilter, setDateFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  // Unique list of institutes from logs
+  const instituteOptions = Array.from(
+    new Set(logs.map(log => log.institute_name).filter(Boolean))
+  );
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:5000/api/logs?page=${currentPage}&limit=10&action=${actionFilter}&search=${search}`,
+        { withCredentials: true }
+      );
+      setLogs(response.data.data.logs || response.data.data || response.data.logs || []);
+      setTotalPages(response.data.data?.pagination?.totalPages || response.data.totalPages || 1);
+      setError(null);
+    } catch (err) {
+      setError('خطا در دریافت فعالیت ها');
+      console.error('Error fetching all logs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    // eslint-disable-next-line
+  }, [currentPage, actionFilter, search]);
+
+  // Filtering and sorting
+  let filteredLogs = logs;
+  if (instituteFilter) {
+    filteredLogs = filteredLogs.filter(log => log.institute_name === instituteFilter);
+  }
+  if (dateFrom) {
+    filteredLogs = filteredLogs.filter(log => log.created_at && log.created_at.slice(0, 10) >= dateFrom);
+  }
+  if (dateTo) {
+    filteredLogs = filteredLogs.filter(log => log.created_at && log.created_at.slice(0, 10) <= dateTo);
+  }
+  // Sorting
+  if (sortField) {
+    filteredLogs = [...filteredLogs].sort((a, b) => {
+      let aValue = a[sortField] || '';
+      let bValue = b[sortField] || '';
+      if (sortField === 'created_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const formatDate = (dateString) => new Date(dateString).toLocaleString('fa-IR');
+
+  const getActionLabel = (action) => {
+    const actionLabels = {
+      'login': 'ورود به سیستم',
+      'comment': 'نظر',
+      'download': 'دانلود',
+      'visit': 'بازدید',
+      'question': 'سوال',
+      'admin_action': 'عملیات مدیریتی',
+      'system_cleanup': 'پاکسازی سیستم'
+    };
+    return actionLabels[action] || action;
+  };
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={onClose}>
+      <div style={{ backgroundColor: '#1a1a1a', borderRadius: '12px', padding: '2rem', maxWidth: '1000px', width: '95%', maxHeight: '85vh', overflow: 'auto', border: '1px solid #333', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', position: 'relative' }} onClick={e => e.stopPropagation()}>
+        <button style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer', padding: '0.5rem' }} onClick={onClose}>✕</button>
+        <h2 style={{ color: '#fff', marginBottom: '1rem', textAlign: 'center' }}>فعالیت های کلی سیستم</h2>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <select value={actionFilter} onChange={e => setActionFilter(e.target.value)} style={selectStyle}>
+            <option value="">همه عملیات</option>
+            <option value="login">ورود</option>
+            <option value="comment">نظر</option>
+            <option value="download">دانلود</option>
+            <option value="question">سوال</option>
+            <option value="admin_action">عملیات مدیریتی</option>
+            <option value="system_cleanup">پاکسازی سیستم</option>
+          </select>
+          <input
+            type="text"
+            placeholder="جستجو نام/ایمیل کاربر..."
+            value={search}
+            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+            style={{ ...searchInputStyle, minWidth: 200 }}
+          />
+          <select value={instituteFilter} onChange={e => setInstituteFilter(e.target.value)} style={selectStyle}>
+            <option value="">همه مراکز آموزشی</option>
+            {instituteOptions.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <label style={{ color: '#ccc', fontSize: '0.85rem', marginBottom: 2 }}>از تاریخ</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              style={{ ...searchInputStyle, minWidth: 140 }}
+            />
+            <span style={{ color: '#00d4ff', fontSize: '0.9rem' }}>
+              {new Date(dateFrom || new Date().toISOString().slice(0, 10)).toLocaleDateString('fa-IR')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <label style={{ color: '#ccc', fontSize: '0.85rem', marginBottom: 2 }}>تا تاریخ</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              style={{ ...searchInputStyle, minWidth: 140 }}
+            />
+            <span style={{ color: '#00d4ff', fontSize: '0.9rem' }}>
+              {new Date(dateTo || new Date().toISOString().slice(0, 10)).toLocaleDateString('fa-IR')}
+            </span>
+          </div>
+        </div>
+        {loading ? (
+          <div style={loadingStyle}>
+            <div style={spinnerStyle}></div>
+            <span>در حال بارگذاری...</span>
+          </div>
+        ) : error ? (
+          <div style={errorMessageStyle}>
+            <span>❌ {error}</span>
+          </div>
+        ) : filteredLogs.length === 0 ? (
+          <div style={emptyStateStyle}>
+            <div style={emptyStateIconStyle}>📝</div>
+            <h4 style={{ color: '#fff', marginBottom: '0.5rem' }}>هیچ فعالیتی یافت نشد</h4>
+            <p style={{ color: '#999' }}>هنوز هیچ فعالیتی ثبت نشده است</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={tableStyle}>
+              <thead style={tableHeaderStyle}>
+                <tr>
+                  <th style={tableHeaderCellStyle}>نام کاربر</th>
+                  <th style={tableHeaderCellStyle}>ایمیل</th>
+                  <th style={tableHeaderCellStyle}>عملیات</th>
+                  <th style={tableHeaderCellStyle}>جزئیات</th>
+                  <th style={tableHeaderCellStyle}>IP</th>
+                  <th
+                    style={{ ...tableHeaderCellStyle, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => handleSort('created_at') }
+                  >
+                    تاریخ {sortField === 'created_at' && (sortOrder === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th
+                    style={{ ...tableHeaderCellStyle, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => handleSort('institute_name') }
+                  >
+                    نام مرکز آموزشی {sortField === 'institute_name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLogs.map(log => (
+                  <tr key={log.id}>
+                    <td style={tableCellStyle}>{log.user_name || '-'}</td>
+                    <td style={tableCellStyle}>{log.user_email || '-'}</td>
+                    <td style={tableCellStyle}>{getActionLabel(log.action)}</td>
+                    <td style={tableCellStyle}>{log.details || '-'}</td>
+                    <td style={tableCellStyle}>{log.ip_address || '-'}</td>
+                    <td style={tableCellStyle}>{formatDate(log.created_at)}</td>
+                    <td style={tableCellStyle}>{log.institute_name || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {totalPages > 1 && (
+          <div style={paginationStyle}>
+            <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}>قبلی</button>
+            {[...Array(totalPages)].map((_, idx) => (
+              <button key={idx + 1} onClick={() => setCurrentPage(idx + 1)} style={currentPage === idx + 1 ? activePageButtonStyle : pageButtonStyle}>{idx + 1}</button>
+            ))}
+            <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}>بعدی</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+AllLogsModal.propTypes = {
+  onClose: PropTypes.func.isRequired
+};
 
 const containerStyle = {
   backgroundColor: '#0a0a0a',
@@ -341,6 +772,9 @@ const UserManagement = () => {
   const [updateSuccess, setUpdateSuccess] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showAllLogs, setShowAllLogs] = useState(false);
   const navigate = useNavigate();
   const usersPerPage = 15;
 
@@ -472,6 +906,16 @@ const UserManagement = () => {
     Object.assign(e.currentTarget.style, style);
   };
 
+  const handleViewLogs = (user) => {
+    setSelectedUser(user);
+    setShowLogs(true);
+  };
+
+  const handleCloseLogs = () => {
+    setShowLogs(false);
+    setSelectedUser(null);
+  };
+
   const stats = {
     total: users.length,
     admins: users.filter(user => user.role === 'admin').length,
@@ -516,6 +960,17 @@ const UserManagement = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>مدیریت کاربران</h1>
         <p style={subtitleStyle}>کنترل و مدیریت کاربران سیستم</p>
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0' }}>
+          <button
+            style={buttonStyle}
+            onMouseEnter={e => handleButtonHover(e)}
+            onMouseLeave={e => handleButtonLeave(e)}
+            onClick={() => setShowAllLogs(true)}
+          >
+            <span>📋</span>
+            <span>مشاهده همه فعالیت ها</span>
+          </button>
+        </div>
         
         <div style={statsContainerStyle}>
           <div style={statItemStyle}>
@@ -608,6 +1063,7 @@ const UserManagement = () => {
                   <th style={tableHeaderCellStyle}>ایمیل</th>
                   <th style={tableHeaderCellStyle}>نقش</th>
                   <th style={tableHeaderCellStyle}>عملیات</th>
+                  <th style={tableHeaderCellStyle}>فعالیت ها</th>
                 </tr>
               </thead>
               <tbody>
@@ -673,6 +1129,17 @@ const UserManagement = () => {
                         </button>
                       )}
                     </td>
+                    <td style={tableCellStyle}>
+                      <button
+                        style={buttonStyle}
+                        onMouseEnter={(e) => handleButtonHover(e)}
+                        onMouseLeave={(e) => handleButtonLeave(e)}
+                        onClick={() => handleViewLogs(user)}
+                      >
+                        <span>📊</span>
+                        <span>مشاهده فعالیت</span>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -717,6 +1184,17 @@ const UserManagement = () => {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+
+      {showLogs && selectedUser && (
+        <UserLogs
+          userId={selectedUser.id}
+          userName={selectedUser.name}
+          onClose={handleCloseLogs}
+        />
+      )}
+      {showAllLogs && (
+        <AllLogsModal onClose={() => setShowAllLogs(false)} />
+      )}
     </div>
   );
 };

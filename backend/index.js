@@ -31,6 +31,7 @@ const stepProgressRoutes = require('./routes/stepProgress.routes');
 const questionsRoutes = require('./routes/questions.route');
 const announcementRoutes = require('./routes/announcement.routes');
 const questionnairesRoutes = require('./routes/questionnaires.routes');
+const logsRoutes = require('./routes/logs.routes');
 
 const fs = require('fs');
 
@@ -96,6 +97,7 @@ app.use('/api/step-progress', stepProgressRoutes);
 app.use('/api/questions', questionsRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/questionnaires', questionnairesRoutes);
+app.use('/api/logs', logsRoutes);
 
 // Trust proxy for rate limiting
 app.set('trust proxy', 1);

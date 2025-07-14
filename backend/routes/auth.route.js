@@ -3,6 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middleware/auth.middleware');
+const { logLogin } = require('../middleware/logging.middleware');
 
 // Rate limiting configuration
 const authLimiter = rateLimit({
@@ -38,7 +39,7 @@ const verifyResetCodeLimiter = rateLimit({
 // Apply rate limiting to routes
 router.post('/register', authLimiter, authController.register);
 router.post('/verify', verifyLimiter, authController.verify);
-router.post('/login', authLimiter, authController.login);
+router.post('/login', [authLimiter, logLogin()], authController.login);
 router.post('/resend-code', authLimiter, authController.resendCode);
 router.post('/forgot-password', forgotPasswordLimiter, authController.forgotPassword);
 router.post('/verify-reset-code', verifyResetCodeLimiter, authController.verifyResetCode);

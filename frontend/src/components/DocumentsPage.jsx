@@ -152,10 +152,31 @@ const DocumentsPage = () => {
     }
   };
 
-  const handleDownload = (doc) => {
-    // Track download (you can implement analytics here)
-    console.log(`Downloading: ${doc.name}`);
-    window.open(`http://localhost:5000/uploads/files/${doc.fileName}`, '_blank');
+  const handleDownload = async (doc) => {
+    try {
+      // Track download with logging
+      console.log(`Downloading: ${doc.name}`);
+      
+      // Use the new download endpoint that includes logging
+      const response = await axios.get(`http://localhost:5000/api/docs-center-and-uploads/download/${doc.fileName}`, {
+        withCredentials: true,
+        responseType: 'blob'
+      });
+      
+      // Create blob and download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.name || doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('خطا در دانلود فایل');
+    }
   };
 
   return (

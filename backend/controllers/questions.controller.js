@@ -40,17 +40,7 @@ class QuestionsController {
   // Get user's questions
   static getUserQuestions(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      Question.getUserQuestions(decoded.id)
+      Question.getUserQuestions(req.user.id)
         .then(questions => {
           res.json({
             success: true,
@@ -76,16 +66,6 @@ class QuestionsController {
   // Submit a new question
   static submitQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'برای ارسال سوال، لطفاً ابتدا وارد حساب کاربری خود شوید'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const { question, category = 'general', priority = 'medium' } = req.body;
 
       if (!question || question.trim().length === 0) {
@@ -103,7 +83,7 @@ class QuestionsController {
       }
 
       Question.create({
-        user_id: decoded.id,
+        user_id: req.user.id,
         question: question.trim(),
         category,
         priority
@@ -134,19 +114,8 @@ class QuestionsController {
   // Get all questions (admin/employee only)
   static getAllQuestions(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -188,19 +157,8 @@ class QuestionsController {
   // Get pending questions (admin only)
   static getPendingQuestions(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin
-      if (decoded.role !== 'admin') {
+      if (req.user.role !== 'admin') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -233,19 +191,8 @@ class QuestionsController {
   // Reply to a question (admin/employee only)
   static replyToQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -267,7 +214,7 @@ class QuestionsController {
         is_replied: true,
         is_faq,
         status,
-        replied_by: decoded.id
+        replied_by: req.user.id
       })
         .then(result => {
           if (result.affectedRows === 0) {
@@ -301,19 +248,8 @@ class QuestionsController {
   // Edit a question (admin/employee only)
   static editQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -363,19 +299,8 @@ class QuestionsController {
   // Edit a reply (admin/employee only)
   static editReply(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -425,16 +350,6 @@ class QuestionsController {
   // Edit user's own question
   static editUserQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const { questionId } = req.params;
       const { question } = req.body;
 
@@ -455,7 +370,7 @@ class QuestionsController {
             });
           }
 
-          if (questionData.user_id !== decoded.id) {
+          if (questionData.user_id !== req.user.id) {
             return res.status(403).json({
               success: false,
               message: 'شما فقط می‌توانید سوالات خود را ویرایش کنید'
@@ -504,16 +419,6 @@ class QuestionsController {
   // Delete user's own question
   static deleteUserQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const { questionId } = req.params;
 
       // Check if question belongs to the user
@@ -526,7 +431,7 @@ class QuestionsController {
             });
           }
 
-          if (questionData.user_id !== decoded.id) {
+          if (questionData.user_id !== req.user.id) {
             return res.status(403).json({
               success: false,
               message: 'شما فقط می‌توانید سوالات خود را حذف کنید'
@@ -567,19 +472,8 @@ class QuestionsController {
   // Delete a question (admin/employee only)
   static deleteQuestion(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'
@@ -655,19 +549,8 @@ class QuestionsController {
   // Get unanswered questions count (admin/employee)
   static getUnansweredQuestionsCount(req, res) {
     try {
-      const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-      
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'توکن احراز هویت یافت نشد'
-        });
-      }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
       // Check if user is admin or employee
-      if (decoded.role !== 'admin' && decoded.role !== 'employee') {
+      if (req.user.role !== 'admin' && req.user.role !== 'employee') {
         return res.status(403).json({
           success: false,
           message: 'دسترسی غیرمجاز'

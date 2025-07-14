@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const { authenticate } = require('../middleware/auth.middleware');
 const { authLimiter } = require('../middleware/rateLimiter');
+const { logDownload } = require('../middleware/logging.middleware');
 
 // Controller functions
 const {
@@ -93,5 +95,43 @@ router.get("/documents", getDocumentsByType);
 
 // Protected routes
 router.delete("/:id", [authenticate, authLimiter], deleteDocument);
+
+// Download route with logging
+router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(__dirname, "..", "uploads", "files", filename);
+  
+  // Check if file exists
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "فایل یافت نشد" });
+  }
+  
+  // Get file info for logging
+  const db = require("../config/db");
+  db.execute(
+    "SELECT name, category FROM docs_center_and_uploads WHERE fileName = ?",
+    [filename],
+    (err, results) => {
+      if (err) {
+        console.error("Error fetching document info:", err);
+      }
+      
+      const documentName = results.length > 0 ? results[0].name : filename;
+      const category = results.length > 0 ? results[0].category : 'unknown';
+      
+      // Set the filename for the logging middleware
+      req.params.filename = filename;
+      req.documentInfo = { name: documentName, category: category };
+      
+      // Send the file
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Error downloading file:", err);
+          return res.status(500).json({ message: "خطا در دانلود فایل" });
+        }
+      });
+    }
+  );
+});
 
 module.exports = router; 
