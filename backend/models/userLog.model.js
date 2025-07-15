@@ -246,10 +246,26 @@ const deleteOldLogs = (daysOld = 90) => {
   });
 };
 
+/**
+ * Check if a visit log exists for a user for today
+ * @param {number} userId - User ID
+ * @returns {Promise<boolean>} True if exists, false otherwise
+ */
+const hasVisitLogToday = (userId) => {
+  const sql = `SELECT COUNT(*) as count FROM user_logs WHERE user_id = ? AND action = 'visit' AND DATE(created_at) = CURDATE()`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].count > 0);
+    });
+  });
+};
+
 module.exports = {
   createUserLog,
   getUserLogs,
   getAllLogsWithUserInfo,
   getLogStatistics,
-  deleteOldLogs
+  deleteOldLogs,
+  hasVisitLogToday
 }; 

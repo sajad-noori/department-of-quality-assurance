@@ -257,11 +257,40 @@ const getLogActions = async (req, res) => {
   }
 };
 
+/**
+ * Log a daily visit for the authenticated user (only once per day)
+ * @route POST /api/logs/visit
+ * @access Authenticated users
+ */
+const logDailyVisit = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Check if already logged today
+    const alreadyLogged = await userLogModel.hasVisitLogToday(userId);
+    if (alreadyLogged) {
+      return res.status(200).json({ success: true, message: 'Visit already logged for today' });
+    }
+    // Log the visit
+    await userLogModel.createUserLog(
+      userId,
+      'visit',
+      'User visited the site',
+      req.ip,
+      req.headers['user-agent']
+    );
+    res.status(201).json({ success: true, message: 'Visit logged for today' });
+  } catch (error) {
+    console.error('Error logging daily visit:', error);
+    res.status(500).json({ success: false, message: 'خطا در ثبت بازدید روزانه' });
+  }
+};
+
 module.exports = {
   getAllLogs,
   getUserLogs,
   getLogStatistics,
   cleanupOldLogs,
   exportLogs,
-  getLogActions
+  getLogActions,
+  logDailyVisit
 }; 

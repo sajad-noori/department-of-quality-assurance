@@ -3,7 +3,10 @@ const router = express.Router();
 const logsController = require('../controllers/logs.controller');
 const { authenticate, checkRole } = require('../middleware/auth.middleware');
 
-// All routes require admin authentication
+// Log daily visit (for all authenticated users)
+router.post('/visit', authenticate, logsController.logDailyVisit);
+
+// All routes below require admin authentication
 router.use(authenticate);
 router.use(checkRole(['admin']));
 

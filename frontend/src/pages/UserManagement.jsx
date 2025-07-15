@@ -319,6 +319,7 @@ const AllLogsModal = ({ onClose }) => {
             <option value="login">ورود</option>
             <option value="comment">نظر</option>
             <option value="download">دانلود</option>
+            <option value="visit">بازدید</option>
             <option value="question">سوال</option>
             <option value="admin_action">عملیات مدیریتی</option>
             <option value="system_cleanup">پاکسازی سیستم</option>
