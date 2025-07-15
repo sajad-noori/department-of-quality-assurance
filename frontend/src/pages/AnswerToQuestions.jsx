@@ -1,7 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { useTheme } from '../contexts/ThemeContext';
-import { FaReply, FaEye, FaEyeSlash, FaChevronLeft, FaChevronRight, FaSpinner, FaFilter, FaSearch, FaTimes, FaCheck, FaClock, FaEdit, FaTrash } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLocation } from "react-router-dom";
+import {
+  FaReply,
+  FaEye,
+  FaEyeSlash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaSpinner,
+  FaFilter,
+  FaSearch,
+  FaTimes,
+  FaCheck,
+  FaClock,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 
 const AnswerToQuestions = () => {
   const { theme } = useTheme();
@@ -13,30 +28,34 @@ const AnswerToQuestions = () => {
   const [itemsPerPage] = useState(10);
   const [userRole, setUserRole] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyText, setReplyText] = useState("");
   const [submittingReply, setSubmittingReply] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [editText, setEditText] = useState('');
+  const [editText, setEditText] = useState("");
   const [submittingEdit, setSubmittingEdit] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState(null);
   const [editingReply, setEditingReply] = useState(null);
-  const [editReplyText, setEditReplyText] = useState('');
+  const [editReplyText, setEditReplyText] = useState("");
   const [submittingEditReply, setSubmittingEditReply] = useState(false);
   const [showReplied, setShowReplied] = useState(true);
   const [showPending, setShowPending] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState('date'); // 'date', 'status'
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
+  const [sortBy, setSortBy] = useState("date"); // 'date', 'status'
+  const [sortOrder, setSortOrder] = useState("desc"); // 'asc', 'desc'
   const [lastActivity, setLastActivity] = useState(Date.now());
   const searchInputRef = useRef(null);
   const replyTextareaRef = useRef(null);
+  const location = useLocation();
+  const questionRefs = React.useRef({});
+  const [highlightedId, setHighlightedId] = useState(null);
 
   // Auto-refresh questions every 30 seconds if user is active
   useEffect(() => {
     const timer = setTimeout(() => {
       const timeSinceActivity = Date.now() - lastActivity;
-      if (timeSinceActivity < 5 * 60 * 1000) { // 5 minutes
+      if (timeSinceActivity < 5 * 60 * 1000) {
+        // 5 minutes
         fetchQuestions();
       }
     }, 30000);
@@ -52,14 +71,17 @@ const AnswerToQuestions = () => {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/questions/auth/check', {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/questions/auth/check",
+          {
+            withCredentials: true,
+          }
+        );
         if (response.data.authenticated) {
           setUserRole(response.data.user.role);
         }
       } catch (err) {
-        console.error('Error checking user role:', err);
+        console.error("Error checking user role:", err);
       }
     };
 
@@ -69,72 +91,92 @@ const AnswerToQuestions = () => {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/questions/admin/all?page=${currentPage}&limit=${itemsPerPage}`, {
-        withCredentials: true,
-      });
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/questions/admin/all?page=${currentPage}&limit=${itemsPerPage}`,
+        {
+          withCredentials: true,
+        }
+      );
+
       if (response.data.success) {
         setQuestions(response.data.data.questions || []);
         setTotalPages(response.data.data.totalPages || 1);
       } else {
-        setError('خطا در دریافت سوالات');
+        setError("خطا در دریافت سوالات");
       }
-      } catch (err) {
-        console.error('Error fetching questions:', err);
+    } catch (err) {
+      console.error("Error fetching questions:", err);
       if (err.response?.status === 403) {
-        setError('شما دسترسی لازم برای مشاهده این صفحه را ندارید');
+        setError("شما دسترسی لازم برای مشاهده این صفحه را ندارید");
       } else {
-        setError('خطا در دریافت سوالات');
+        setError("خطا در دریافت سوالات");
       }
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchQuestions();
   }, [currentPage, itemsPerPage]);
 
+  // Scroll to and highlight specific question if requested
+  useEffect(() => {
+    if (location.state && location.state.scrollToQuestionId) {
+      setHighlightedId(location.state.scrollToQuestionId);
+      setTimeout(() => {
+        const ref = questionRefs.current[location.state.scrollToQuestionId];
+        if (ref) {
+          ref.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 400);
+    }
+  }, [questions, location.state]);
+
   const handleReply = async (questionId) => {
     if (!replyText.trim()) {
-      alert('لطفاً پاسخ خود را وارد کنید');
+      alert("لطفاً پاسخ خود را وارد کنید");
       return;
     }
 
     try {
       setSubmittingReply(true);
-      const response = await axios.put(`http://localhost:5000/api/questions/admin/${questionId}/reply`, {
-        answer: replyText.trim(),
-        is_faq: true, // Set to true so it appears in FAQ
-        status: 'replied'
-      }, {
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/questions/admin/${questionId}/reply`,
+        {
+          answer: replyText.trim(),
+          is_faq: true, // Set to true so it appears in FAQ
+          status: "replied",
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
         // Show success animation
         const textarea = replyTextareaRef.current;
         if (textarea) {
-          textarea.style.transform = 'scale(1.02)';
-          textarea.style.transition = 'transform 0.2s ease';
+          textarea.style.transform = "scale(1.02)";
+          textarea.style.transition = "transform 0.2s ease";
           setTimeout(() => {
-            textarea.style.transform = 'scale(1)';
+            textarea.style.transform = "scale(1)";
           }, 200);
         }
 
-        alert('پاسخ با موفقیت ثبت شد و به سوالات متداول اضافه شد');
+        alert("پاسخ با موفقیت ثبت شد و به سوالات متداول اضافه شد");
         setReplyingTo(null);
-        setReplyText('');
-        
+        setReplyText("");
+
         // Refresh questions
         await fetchQuestions();
       }
     } catch (err) {
-      console.error('Error submitting reply:', err);
+      console.error("Error submitting reply:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در ثبت پاسخ');
+        alert("خطا در ثبت پاسخ");
       }
     } finally {
       setSubmittingReply(false);
@@ -143,32 +185,36 @@ const AnswerToQuestions = () => {
 
   const handleEditQuestion = async (questionId) => {
     if (!editText.trim()) {
-      alert('لطفاً متن سوال را وارد کنید');
+      alert("لطفاً متن سوال را وارد کنید");
       return;
     }
 
     try {
       setSubmittingEdit(true);
-      const response = await axios.put(`http://localhost:5000/api/questions/admin/${questionId}/edit`, {
-        question: editText.trim()
-      }, {
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/questions/admin/${questionId}/edit`,
+        {
+          question: editText.trim(),
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
-        alert('سوال با موفقیت ویرایش شد');
+        alert("سوال با موفقیت ویرایش شد");
         setEditingQuestion(null);
-        setEditText('');
-        
+        setEditText("");
+
         // Refresh questions
         await fetchQuestions();
       }
     } catch (err) {
-      console.error('Error editing question:', err);
+      console.error("Error editing question:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در ویرایش سوال');
+        alert("خطا در ویرایش سوال");
       }
     } finally {
       setSubmittingEdit(false);
@@ -176,28 +222,31 @@ const AnswerToQuestions = () => {
   };
 
   const handleDeleteQuestion = async (questionId) => {
-    if (!window.confirm('آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟')) {
+    if (!window.confirm("آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟")) {
       return;
     }
 
     try {
       setDeletingQuestion(questionId);
-      const response = await axios.delete(`http://localhost:5000/api/questions/admin/${questionId}`, {
-        withCredentials: true,
-      });
+      const response = await axios.delete(
+        `http://localhost:5000/api/questions/admin/${questionId}`,
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
-        alert('سوال با موفقیت حذف شد');
-        
+        alert("سوال با موفقیت حذف شد");
+
         // Refresh questions
         await fetchQuestions();
       }
     } catch (err) {
-      console.error('Error deleting question:', err);
+      console.error("Error deleting question:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در حذف سوال');
+        alert("خطا در حذف سوال");
       }
     } finally {
       setDeletingQuestion(null);
@@ -206,32 +255,36 @@ const AnswerToQuestions = () => {
 
   const handleEditReply = async (questionId) => {
     if (!editReplyText.trim()) {
-      alert('لطفاً متن پاسخ را وارد کنید');
+      alert("لطفاً متن پاسخ را وارد کنید");
       return;
     }
 
     try {
       setSubmittingEditReply(true);
-      const response = await axios.put(`http://localhost:5000/api/questions/admin/${questionId}/edit-reply`, {
-        answer: editReplyText.trim()
-      }, {
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/questions/admin/${questionId}/edit-reply`,
+        {
+          answer: editReplyText.trim(),
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
-        alert('پاسخ با موفقیت ویرایش شد');
+        alert("پاسخ با موفقیت ویرایش شد");
         setEditingReply(null);
-        setEditReplyText('');
-        
+        setEditReplyText("");
+
         // Refresh questions
         await fetchQuestions();
       }
     } catch (err) {
-      console.error('Error editing reply:', err);
+      console.error("Error editing reply:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در ویرایش پاسخ');
+        alert("خطا در ویرایش پاسخ");
       }
     } finally {
       setSubmittingEditReply(false);
@@ -247,30 +300,30 @@ const AnswerToQuestions = () => {
         </span>
       );
     }
-    
+
     switch (status) {
-      case 'pending':
+      case "pending":
         return (
           <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
             <FaClock />
             در انتظار
           </span>
         );
-      case 'in_progress':
+      case "in_progress":
         return (
           <span className="badge bg-info d-flex align-items-center gap-1">
             <FaSpinner className="spinner" />
             در حال بررسی
           </span>
         );
-      case 'replied':
+      case "replied":
         return (
           <span className="badge bg-success d-flex align-items-center gap-1">
             <FaCheck />
             پاسخ داده شده
           </span>
         );
-      case 'closed':
+      case "closed":
         return (
           <span className="badge bg-secondary d-flex align-items-center gap-1">
             بسته شده
@@ -287,50 +340,60 @@ const AnswerToQuestions = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('fa-IR');
+    return date.toLocaleString("fa-IR");
   };
 
   const getTimeAgo = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'همین الان';
+
+    if (diffInMinutes < 1) return "همین الان";
     if (diffInMinutes < 60) return `${diffInMinutes} دقیقه پیش`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} ساعت پیش`;
+    if (diffInMinutes < 1440)
+      return `${Math.floor(diffInMinutes / 60)} ساعت پیش`;
     return `${Math.floor(diffInMinutes / 1440)} روز پیش`;
   };
 
   const filteredAndSortedQuestions = questions
-    .filter(question => {
+    .filter((question) => {
       // Filter by search query
-      if (searchQuery && !question.question.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (
+        searchQuery &&
+        !question.question.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
         return false;
       }
-      
+
       // Filter by status
       if (question.is_replied && !showReplied) return false;
       if (!question.is_replied && !showPending) return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === 'date') {
+      if (sortBy === "date") {
         const dateA = new Date(a.submitted_at);
         const dateB = new Date(b.submitted_at);
-        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-      } else if (sortBy === 'status') {
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+      } else if (sortBy === "status") {
         const statusA = a.is_replied ? 1 : 0;
         const statusB = b.is_replied ? 1 : 0;
-        return sortOrder === 'desc' ? statusB - statusA : statusA - statusB;
+        return sortOrder === "desc" ? statusB - statusA : statusA - statusB;
       }
       return 0;
     });
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <div className="text-center">
-          <FaSpinner className="spinner text-primary mb-3" style={{ fontSize: '2rem' }} />
+          <FaSpinner
+            className="spinner text-primary mb-3"
+            style={{ fontSize: "2rem" }}
+          />
           <p className="text-muted">در حال بارگذاری سوالات...</p>
         </div>
       </div>
@@ -339,7 +402,10 @@ const AnswerToQuestions = () => {
 
   if (error) {
     return (
-      <div className="alert alert-danger d-flex align-items-center gap-2" role="alert">
+      <div
+        className="alert alert-danger d-flex align-items-center gap-2"
+        role="alert"
+      >
         <FaTimes />
         {error}
       </div>
@@ -347,7 +413,10 @@ const AnswerToQuestions = () => {
   }
 
   return (
-    <div className={`${theme === 'dark' ? 'dark-container' : 'light-container'}`} style={{ minHeight: '100vh', padding: 0, margin: 0 }}>
+    <div
+      className={`${theme === "dark" ? "dark-container" : "light-container"}`}
+      style={{ minHeight: "100vh", padding: 0, margin: 0 }}
+    >
       <style>{`
         .dark-container {
           background: #121212;
@@ -618,13 +687,23 @@ const AnswerToQuestions = () => {
         .badge .spinner {
           font-size: 0.7rem;
         }
+        .highlighted-question {
+          box-shadow: 0 0 0 4px #0dcaf0, 0 0 0 2.5px #0dcaf0;
+          border: 2.5px solid #0dcaf0;
+          background: #e0f7fa;
+        }
       `}</style>
-      
+
       <div className="row">
         <div className="col-12">
-          <div className="d-flex justify-content-center align-items-center mb-4" style={{ padding: '20px' }}>
+          <div
+            className="d-flex justify-content-center align-items-center mb-4"
+            style={{ padding: "20px" }}
+          >
             <div className="text-center">
-              <h1 className="text-2xl font-bold mb-3">مدیریت سوالات و پاسخ‌ها</h1>
+              <h1 className="text-2xl font-bold mb-3">
+                مدیریت سوالات و پاسخ‌ها
+              </h1>
               <button
                 className="btn btn-outline-primary btn-sm"
                 onClick={() => setShowFilters(!showFilters)}
@@ -636,27 +715,43 @@ const AnswerToQuestions = () => {
           </div>
 
           {/* Statistics */}
-          <div className="stats" style={{ padding: '0 20px', display: 'flex', justifyContent: 'center' }}>
+          <div
+            className="stats"
+            style={{
+              padding: "0 20px",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             <div className="stat-item">
               <div className="stat-number">{questions.length}</div>
               <div className="stat-label">کل سوالات</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">{questions.filter(q => !q.is_replied).length}</div>
+              <div className="stat-number">
+                {questions.filter((q) => !q.is_replied).length}
+              </div>
               <div className="stat-label">در انتظار پاسخ</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">{questions.filter(q => q.is_replied).length}</div>
+              <div className="stat-number">
+                {questions.filter((q) => q.is_replied).length}
+              </div>
               <div className="stat-label">پاسخ داده شده</div>
             </div>
             <div className="stat-item">
-              <div className="stat-number">{questions.filter(q => q.is_faq).length}</div>
+              <div className="stat-number">
+                {questions.filter((q) => q.is_faq).length}
+              </div>
               <div className="stat-label">سوالات FAQ</div>
             </div>
           </div>
-          
+
           {/* Search and Filters */}
-          <div className={`filters ${showFilters ? 'expanded' : 'collapsed'}`} style={{ margin: '0 20px 20px 20px' }}>
+          <div
+            className={`filters ${showFilters ? "expanded" : "collapsed"}`}
+            style={{ margin: "0 20px 20px 20px" }}
+          >
             <div className="row">
               <div className="col-md-6">
                 <div className="search-container">
@@ -674,7 +769,7 @@ const AnswerToQuestions = () => {
                   {searchQuery && (
                     <button
                       className="clear-search"
-                      onClick={() => setSearchQuery('')}
+                      onClick={() => setSearchQuery("")}
                       title="پاک کردن جستجو"
                     >
                       <FaTimes />
@@ -698,11 +793,11 @@ const AnswerToQuestions = () => {
                   <button
                     className="btn btn-outline-secondary btn-sm"
                     onClick={() => {
-                      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+                      setSortOrder(sortOrder === "desc" ? "asc" : "desc");
                       updateActivity();
                     }}
                   >
-                    {sortOrder === 'desc' ? '↓' : '↑'}
+                    {sortOrder === "desc" ? "↓" : "↑"}
                   </button>
                 </div>
               </div>
@@ -748,13 +843,28 @@ const AnswerToQuestions = () => {
           {/* Questions List */}
           {filteredAndSortedQuestions.length > 0 ? (
             filteredAndSortedQuestions.map((question, index) => (
-              <div 
-                key={question.id} 
-                className={`card question-card ${question.is_replied ? 'replied' : 'pending'}`}
-                style={{ animationDelay: `${index * 0.1}s`, margin: '0 20px 20px 20px' }}
+              <div
+                key={question.id}
+                ref={(el) => (questionRefs.current[question.id] = el)}
+                className={`card question-card ${
+                  question.is_replied ? "replied" : "pending"
+                }${
+                  highlightedId === question.id ? " highlighted-question" : ""
+                }`}
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  margin: "0 20px 20px 20px",
+                  ...(highlightedId === question.id
+                    ? {
+                        boxShadow: "0 0 0 4px #0dcaf0",
+                        border: "2.5px solid #0dcaf0",
+                        background: "#e0f7fa",
+                      }
+                    : {}),
+                }}
                 onClick={updateActivity}
               >
-              <div className="card-body">
+                <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
                     <h5 className="card-title mb-0">
                       {editingQuestion === question.id ? (
@@ -781,7 +891,7 @@ const AnswerToQuestions = () => {
                             className="btn btn-outline-secondary btn-sm"
                             onClick={() => {
                               setEditingQuestion(null);
-                              setEditText('');
+                              setEditText("");
                             }}
                             disabled={submittingEdit}
                           >
@@ -797,7 +907,7 @@ const AnswerToQuestions = () => {
                       {question.is_faq && (
                         <span className="badge bg-info">FAQ</span>
                       )}
-                      {userRole === 'employee' && (
+                      {(userRole === "employee" || userRole === "admin") && (
                         <div className="d-flex gap-1">
                           <button
                             className="btn btn-outline-warning btn-sm"
@@ -825,18 +935,26 @@ const AnswerToQuestions = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="question-meta">
-                    <div><strong>ارسال شده توسط:</strong> {question.user_name || 'کاربر ناشناس'}</div>
-                    <div><strong>تاریخ ارسال:</strong> {formatDate(question.submitted_at)}</div>
-                    <div className="time-ago">{getTimeAgo(question.submitted_at)}</div>
+                    <div>
+                      <strong>ارسال شده توسط:</strong>{" "}
+                      {question.user_name || "کاربر ناشناس"}
+                    </div>
+                    <div>
+                      <strong>تاریخ ارسال:</strong>{" "}
+                      {formatDate(question.submitted_at)}
+                    </div>
+                    <div className="time-ago">
+                      {getTimeAgo(question.submitted_at)}
+                    </div>
                   </div>
 
-                {question.answer && (
-                  <div className="mt-3">
+                  {question.answer && (
+                    <div className="mt-3">
                       <div className="d-flex justify-content-between align-items-start">
-                    <strong>پاسخ:</strong>
-                        {userRole === 'employee' && (
+                        <strong>پاسخ:</strong>
+                        {(userRole === "employee" || userRole === "admin") && (
                           <button
                             className="btn btn-outline-warning btn-sm"
                             onClick={() => {
@@ -874,7 +992,7 @@ const AnswerToQuestions = () => {
                               className="btn btn-outline-secondary btn-sm"
                               onClick={() => {
                                 setEditingReply(null);
-                                setEditReplyText('');
+                                setEditReplyText("");
                               }}
                               disabled={submittingEditReply}
                             >
@@ -883,7 +1001,7 @@ const AnswerToQuestions = () => {
                           </div>
                         </div>
                       ) : (
-                    <p className="mt-2">{question.answer}</p>
+                        <p className="mt-2">{question.answer}</p>
                       )}
                       {question.replied_at && (
                         <small className="text-muted">
@@ -894,111 +1012,113 @@ const AnswerToQuestions = () => {
                   )}
 
                   {/* Reply Form for Employees */}
-                  {userRole === 'employee' && !question.is_replied && (
-                    <div className="mt-3">
-                      {replyingTo === question.id ? (
-                        <div className="reply-form">
-                          <div className="alert alert-info mb-3">
-                            <small>
-                              <strong>نکته:</strong> پاسخ شما به عنوان سوال متداول در بخش FAQ نمایش داده خواهد شد.
-                            </small>
-                          </div>
-                          <textarea
-                            ref={replyTextareaRef}
-                            className="form-control mb-3"
-                            rows="4"
-                            placeholder="پاسخ خود را اینجا بنویسید..."
-                            value={replyText}
-                            onChange={(e) => {
-                              setReplyText(e.target.value);
-                              updateActivity();
-                            }}
-                            disabled={submittingReply}
-                          />
-                          <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleReply(question.id)}
-                              disabled={submittingReply}
-                            >
-                              {submittingReply ? (
-                                <>
-                                  <FaSpinner className="spinner me-2" />
-                                  در حال ارسال...
-                                </>
-                              ) : (
-                                <>
-                                  <FaReply className="me-2" />
-                                  ارسال پاسخ و اضافه به FAQ
-                                </>
-                              )}
-                            </button>
-                            <button
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => {
-                                setReplyingTo(null);
-                                setReplyText('');
+                  {(userRole === "employee" || userRole === "admin") &&
+                    !question.is_replied && (
+                      <div className="mt-3">
+                        {replyingTo === question.id ? (
+                          <div className="reply-form">
+                            <div className="alert alert-info mb-3">
+                              <small>
+                                <strong>نکته:</strong> پاسخ شما به عنوان سوال
+                                متداول در بخش FAQ نمایش داده خواهد شد.
+                              </small>
+                            </div>
+                            <textarea
+                              ref={replyTextareaRef}
+                              className="form-control mb-3"
+                              rows="4"
+                              placeholder="پاسخ خود را اینجا بنویسید..."
+                              value={replyText}
+                              onChange={(e) => {
+                                setReplyText(e.target.value);
+                                updateActivity();
                               }}
                               disabled={submittingReply}
-                            >
-                              انصراف
-                            </button>
+                            />
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => handleReply(question.id)}
+                                disabled={submittingReply}
+                              >
+                                {submittingReply ? (
+                                  <>
+                                    <FaSpinner className="spinner me-2" />
+                                    در حال ارسال...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaReply className="me-2" />
+                                    ارسال پاسخ و اضافه به FAQ
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => {
+                                  setReplyingTo(null);
+                                  setReplyText("");
+                                }}
+                                disabled={submittingReply}
+                              >
+                                انصراف
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => {
-                            setReplyingTo(question.id);
-                            updateActivity();
-                          }}
-                        >
-                          <FaReply className="me-2" />
-                          پاسخ به این سوال
-                        </button>
-                      )}
-                  </div>
-                )}
+                        ) : (
+                          <button
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => {
+                              setReplyingTo(question.id);
+                              updateActivity();
+                            }}
+                          >
+                            <FaReply className="me-2" />
+                            پاسخ به این سوال
+                          </button>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-5" style={{ padding: '0 20px' }}>
-              <div style={{ color: theme === 'dark' ? '#888888' : '#6c757d' }}>
-                {searchQuery ? 'نتیجه‌ای یافت نشد' : 'هیچ سوالی یافت نشد'}
+            <div className="text-center py-5" style={{ padding: "0 20px" }}>
+              <div style={{ color: theme === "dark" ? "#888888" : "#6c757d" }}>
+                {searchQuery ? "نتیجه‌ای یافت نشد" : "هیچ سوالی یافت نشد"}
               </div>
             </div>
           )}
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination-container" style={{ padding: '0 20px' }}>
+            <div className="pagination-container" style={{ padding: "0 20px" }}>
               <button
                 className="btn btn-outline-primary"
                 onClick={() => {
-                  setCurrentPage(prev => Math.max(1, prev - 1));
+                  setCurrentPage((prev) => Math.max(1, prev - 1));
                   updateActivity();
                 }}
                 disabled={currentPage === 1}
               >
                 <FaChevronLeft />
               </button>
-              
+
               <div className="pagination-info">
                 صفحه {currentPage} از {totalPages}
-      </div>
+              </div>
 
               <button
                 className="btn btn-outline-primary"
                 onClick={() => {
-                  setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1));
                   updateActivity();
                 }}
                 disabled={currentPage === totalPages}
               >
                 <FaChevronRight />
               </button>
-          </div>
+            </div>
           )}
         </div>
       </div>

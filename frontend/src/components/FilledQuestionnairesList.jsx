@@ -1,32 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { questionnairesAPI } from '../api/questionnaires';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useEffect, useState } from "react";
+import { useParams, useLocation } from "react-router-dom";
+import { questionnairesAPI } from "../api/questionnaires";
+import { useTheme } from "../contexts/ThemeContext";
 
 const FilledQuestionnairesList = () => {
   const { id } = useParams();
   const location = useLocation();
   const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [filled, setFilled] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
-  const title = location.state && location.state.title ? 'پرسش نامه های پر شده مربوط به ' + location.state.title : 'پرسشنامه‌های پرشده';
+  const title =
+    location.state && location.state.title
+      ? "پرسش نامه های پر شده مربوط به " + location.state.title
+      : "پرسشنامه‌های پرشده";
+  const filledRefs = React.useRef({});
+  const [highlightedId, setHighlightedId] = useState(null);
 
   useEffect(() => {
     const fetchFilled = async () => {
       setLoading(true);
-      setError('');
+      setError("");
       try {
         const res = await questionnairesAPI.getFilledQuestionnaires(id);
         if (res.success) {
           setFilled(res.data || []);
         } else {
-          setError(res.message || 'خطا در دریافت پرسشنامه‌های پرشده');
+          setError(res.message || "خطا در دریافت پرسشنامه‌های پرشده");
         }
       } catch (err) {
-        setError('خطا در ارتباط با سرور');
+        setError("خطا در ارتباط با سرور");
       }
       setLoading(false);
     };
@@ -44,20 +49,64 @@ const FilledQuestionnairesList = () => {
     setCurrentPage(1);
   }, [id]);
 
+  // Scroll to and highlight specific filled questionnaire if requested
+  useEffect(() => {
+    if (location.state && location.state.highlightFilledId) {
+      setHighlightedId(location.state.highlightFilledId);
+      setTimeout(() => {
+        const ref = filledRefs.current[location.state.highlightFilledId];
+        if (ref) {
+          ref.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 400);
+    }
+  }, [filled, location.state]);
+
   return (
-    <div className={theme === 'light' ? 'light-container' : 'dark-container'} dir="rtl">
+    <div
+      className={theme === "light" ? "light-container" : "dark-container"}
+      dir="rtl"
+    >
       <div className="container py-4">
-        <h2 className={`mb-4 ${theme === 'light' ? 'light-text' : 'dark-text'}`}>{title}</h2>
+        <h2
+          className={`mb-4 ${theme === "light" ? "light-text" : "dark-text"}`}
+        >
+          {title}
+        </h2>
         {loading && <div>در حال بارگذاری...</div>}
         {error && <div className="alert alert-danger">{error}</div>}
-        {!loading && !error && filled.length === 0 && <div>هیچ پرسشنامه پرشده‌ای یافت نشد.</div>}
+        {!loading && !error && filled.length === 0 && (
+          <div>هیچ پرسشنامه پرشده‌ای یافت نشد.</div>
+        )}
         {!loading && !error && filled.length > 0 && (
           <>
             <ul className="list-group">
-              {paginatedFilled.map(f => (
-                <li key={f.id} className="list-group-item d-flex justify-content-between align-items-center">
+              {paginatedFilled.map((f) => (
+                <li
+                  key={f.id}
+                  ref={(el) => (filledRefs.current[f.id] = el)}
+                  className={`list-group-item d-flex justify-content-between align-items-center${
+                    highlightedId === f.id ? " highlighted-filled" : ""
+                  }`}
+                  style={
+                    highlightedId === f.id
+                      ? {
+                          boxShadow: "0 0 0 4px #0dcaf0",
+                          border: "2.5px solid #0dcaf0",
+                          background: "#e0f7fa",
+                        }
+                      : {}
+                  }
+                >
                   <span>
-                    {f.file_name} <span className="text-muted">({f.filled_at ? new Date(f.filled_at).toLocaleString('fa-IR') : ''})</span>
+                    {f.file_name}{" "}
+                    <span className="text-muted">
+                      (
+                      {f.filled_at
+                        ? new Date(f.filled_at).toLocaleString("fa-IR")
+                        : ""}
+                      )
+                    </span>
                   </span>
                   <div className="d-flex align-items-center gap-2">
                     <a
@@ -70,7 +119,11 @@ const FilledQuestionnairesList = () => {
                       دانلود
                     </a>
                     {f.checked ? (
-                      <button className="check-btn checked" disabled title="خوانده شده">
+                      <button
+                        className="check-btn checked"
+                        disabled
+                        title="خوانده شده"
+                      >
                         <span className="checkmark">✔</span>
                       </button>
                     ) : (
@@ -79,8 +132,16 @@ const FilledQuestionnairesList = () => {
                         title="علامت‌گذاری به عنوان خوانده شده"
                         onClick={async () => {
                           try {
-                            await questionnairesAPI.checkFilledQuestionnaire(f.id);
-                            setFilled(prev => prev.map(item => item.id === f.id ? { ...item, checked: true } : item));
+                            await questionnairesAPI.checkFilledQuestionnaire(
+                              f.id
+                            );
+                            setFilled((prev) =>
+                              prev.map((item) =>
+                                item.id === f.id
+                                  ? { ...item, checked: true }
+                                  : item
+                              )
+                            );
                           } catch {}
                         }}
                       >
@@ -94,7 +155,11 @@ const FilledQuestionnairesList = () => {
             {totalPages > 1 && (
               <nav aria-label="Page navigation" className="mt-4">
                 <ul className="pagination justify-content-center">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                  <li
+                    className={`page-item ${
+                      currentPage === 1 ? "disabled" : ""
+                    }`}
+                  >
                     <button
                       className="page-link"
                       onClick={() => setCurrentPage(currentPage - 1)}
@@ -104,7 +169,12 @@ const FilledQuestionnairesList = () => {
                     </button>
                   </li>
                   {Array.from({ length: totalPages }, (_, i) => (
-                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                    <li
+                      key={i + 1}
+                      className={`page-item ${
+                        currentPage === i + 1 ? "active" : ""
+                      }`}
+                    >
                       <button
                         className="page-link"
                         onClick={() => setCurrentPage(i + 1)}
@@ -114,7 +184,11 @@ const FilledQuestionnairesList = () => {
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <li
+                    className={`page-item ${
+                      currentPage === totalPages ? "disabled" : ""
+                    }`}
+                  >
                     <button
                       className="page-link"
                       onClick={() => setCurrentPage(currentPage + 1)}
@@ -232,6 +306,11 @@ const FilledQuestionnairesList = () => {
         }
         .dark-container .text-muted {
           color: #b0b0b0 !important;
+        }
+        .highlighted-filled {
+          box-shadow: 0 0 0 4px #0dcaf0, 0 0 0 2.5px #0dcaf0;
+          border: 2.5px solid #0dcaf0;
+          background: #e0f7fa;
         }
       `}</style>
     </div>

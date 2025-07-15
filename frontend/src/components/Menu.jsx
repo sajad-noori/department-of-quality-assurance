@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "../styles/Menu.module.css";
-import { FaWhatsapp, FaFacebookF, FaYoutube, FaXTwitter, FaEnvelope } from "react-icons/fa6";
+import {
+  FaWhatsapp,
+  FaFacebookF,
+  FaYoutube,
+  FaXTwitter,
+  FaEnvelope,
+} from "react-icons/fa6";
 import { FaUserCircle } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 import { useState as useReactState } from "react";
+import { FaBell } from "react-icons/fa";
+import { questionnairesAPI } from "../api/questionnaires";
+import { countUnansweredComments } from "../pages/NewsCommentsPage";
 
 const menuItems = [
   // {
@@ -53,10 +62,9 @@ const menuItems = [
       "اسناد تقنینی",
       "فورم ها",
       "چک لیست ها",
-      "پرسش نامه ها"
+      "پرسش نامه ها",
     ],
   },
-
 
   {
     label: "زون ها",
@@ -68,10 +76,9 @@ const menuItems = [
       "زون غرب",
       "زون جنوب",
       "زون شرق",
-      "زون جنوب غرب"
+      "زون جنوب غرب",
     ],
   },
-
 
   { label: "اخبار و اطلاعات", submenu: [] },
   { label: "تماس با ما", submenu: [] },
@@ -83,8 +90,9 @@ export default function MenuWithUtilityBar() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const translateInitialized = useRef(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -99,58 +107,70 @@ export default function MenuWithUtilityBar() {
       return;
     }
 
-    console.log('Setting up Google Translate...');
+    console.log("Setting up Google Translate...");
 
     // Clear the container element gently
-    const existingElement = document.getElementById('google_translate_element');
+    const existingElement = document.getElementById("google_translate_element");
     if (existingElement) {
-      existingElement.innerHTML = '';
+      existingElement.innerHTML = "";
     }
 
     // Define the initialization function
-    window.googleTranslateElementInit = function() {
-      console.log('Google Translate callback executed');
+    window.googleTranslateElementInit = function () {
+      console.log("Google Translate callback executed");
       try {
         if (window.google && window.google.translate) {
-          console.log('Creating TranslateElement with languages: ar,ar-SA,fa,ps');
-          new window.google.translate.TranslateElement({
-            pageLanguage: 'fa',
-            includedLanguages: 'ar,ar-SA,fa,ps',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-          }, 'google_translate_element');
-          console.log('TranslateElement created successfully');
+          console.log(
+            "Creating TranslateElement with languages: ar,ar-SA,fa,ps"
+          );
+          new window.google.translate.TranslateElement(
+            {
+              pageLanguage: "fa",
+              includedLanguages: "ar,ar-SA,fa,ps",
+              layout:
+                window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            },
+            "google_translate_element"
+          );
+          console.log("TranslateElement created successfully");
           translateInitialized.current = true;
-          
+
           // Debug: Check what languages are available after a short delay
           setTimeout(() => {
-            const selectElement = document.querySelector('.goog-te-combo');
+            const selectElement = document.querySelector(".goog-te-combo");
             if (selectElement) {
-              console.log('Available languages in dropdown:', selectElement.innerHTML);
+              console.log(
+                "Available languages in dropdown:",
+                selectElement.innerHTML
+              );
             }
           }, 1000);
         }
       } catch (error) {
-        console.error('Error creating TranslateElement:', error);
+        console.error("Error creating TranslateElement:", error);
       }
     };
 
     // Check if Google Translate is already loaded
     if (window.google && window.google.translate) {
-      console.log('Google Translate already available, calling init directly');
+      console.log("Google Translate already available, calling init directly");
       window.googleTranslateElementInit();
       return;
     }
 
     // Only add script if it doesn't exist
-    const existingScript = document.querySelector('script[src*="translate.google.com"]');
+    const existingScript = document.querySelector(
+      'script[src*="translate.google.com"]'
+    );
     if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      const script = document.createElement("script");
+      script.src =
+        "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       script.async = true;
       document.head.appendChild(script);
-      console.log('Google Translate script added');
+      console.log("Google Translate script added");
     } else {
-      console.log('Google Translate script already exists');
+      console.log("Google Translate script already exists");
     }
   }, []);
 
@@ -172,16 +192,56 @@ export default function MenuWithUtilityBar() {
         } else {
           setIsLoggedIn(false);
           setProfileImage(null);
-          setUserName('');
+          setUserName("");
         }
       } catch (err) {
         setIsLoggedIn(false);
         setProfileImage(null);
-        setUserName('');
+        setUserName("");
       }
     };
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let isMounted = true;
+    async function fetchNotifications() {
+      try {
+        // 1. Unchecked filled questionnaires
+        let totalUncheckedFilledCount = 0;
+        try {
+          const res = await questionnairesAPI.getTotalUncheckedFilledCount();
+          if (res.success) totalUncheckedFilledCount = res.data.count || 0;
+        } catch {}
+        // 2. Unanswered news comments
+        let unansweredNewsComments = 0;
+        try {
+          const res = await axios.get("/api/comments/all-news-comments", {
+            withCredentials: true,
+          });
+          unansweredNewsComments = countUnansweredComments(res.data);
+        } catch {}
+        // 3. Unanswered questions
+        let unansweredQuestionsCount = 0;
+        try {
+          const res = await axios.get("/api/questions/admin/unanswered-count", {
+            withCredentials: true,
+          });
+          unansweredQuestionsCount = res.data.count || 0;
+        } catch {}
+        const sum =
+          totalUncheckedFilledCount +
+          unansweredNewsComments +
+          unansweredQuestionsCount;
+        if (isMounted) setNotificationCount(sum);
+      } catch {}
+    }
+    fetchNotifications();
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn]);
 
   const toggleDropdown = (index) => {
     setDropdownOpen(dropdownOpen === index ? null : index);
@@ -262,9 +322,9 @@ export default function MenuWithUtilityBar() {
       case "ورکشاپ ها":
         navigate("/training/workshops");
         break;
-        case "سیمینارها":
-          navigate("/training/seminars");
-          break;
+      case "سیمینارها":
+        navigate("/training/seminars");
+        break;
       case "برنامه های آنلاین آموزشی":
         navigate("/training/online-programs");
         break;
@@ -300,18 +360,106 @@ export default function MenuWithUtilityBar() {
         <div className={styles.languageOptions}>
           <div id="google_translate_element"></div>
         </div>
+        {/* Modern bell/notification icon - moved to the right of theme toggle */}
         <button
-          className={`${styles.themeToggleBtn} ${animating ? styles.themeToggleBtnAnimating : ''}`}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 40,
+            height: 40,
+            fontSize: 0,
+            position: "relative",
+          }}
+          aria-label="Notifications"
+          title="اعلان‌ها"
+          onClick={() => navigate("/notifications")}
+        >
+          <FaBell size={28} color={theme === "dark" ? "#0dcaf0" : "#23283a"} />
+          {notificationCount > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: 2,
+                right: 2,
+                minWidth: 14,
+                height: 14,
+                background: "#dc3545",
+                color: "#fff",
+                borderRadius: "50%",
+                fontSize: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+                boxShadow: "0 0 0 2px #fff",
+                zIndex: 10,
+                padding: "0 3px",
+                lineHeight: 1,
+              }}
+            >
+              {notificationCount}
+            </span>
+          )}
+        </button>
+        <button
+          className={`${styles.themeToggleBtn} ${
+            animating ? styles.themeToggleBtnAnimating : ""
+          }`}
           onClick={handleThemeToggle}
-          aria-label={theme === "dark" ? "تغییر به حالت روشن" : "تغییر به حالت تاریک"}
+          aria-label={
+            theme === "dark" ? "تغییر به حالت روشن" : "تغییر به حالت تاریک"
+          }
           title={theme === "dark" ? "حالت روشن" : "حالت تاریک"}
           style={{ margin: "0 1rem", cursor: "pointer", position: "relative" }}
         >
           {/* Animated SVG icons for sun/moon with logical colors */}
           {theme === "dark" ? (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0dcaf0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transition: 'transform 0.4s', transform: animating ? 'rotate(-180deg) scale(1.2)' : 'none'}}><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0dcaf0"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transition: "transform 0.4s",
+                transform: animating ? "rotate(-180deg) scale(1.2)" : "none",
+              }}
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+            </svg>
           ) : (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transition: 'transform 0.4s', transform: animating ? 'rotate(180deg) scale(1.2)' : 'none'}}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#ffd700"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                transition: "transform 0.4s",
+                transform: animating ? "rotate(180deg) scale(1.2)" : "none",
+              }}
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
           )}
         </button>
         <div className={styles.rightOptions}>
@@ -342,32 +490,43 @@ export default function MenuWithUtilityBar() {
                     borderRadius: "50%",
                     objectFit: "cover",
                     border: "2px solid #fff",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   }}
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "block";
                   }}
                 />
               ) : null}
-              <FaUserCircle 
-                size={32} 
-                style={{ 
-                  display: profileImage ? 'none' : 'block',
-                }} 
+              <FaUserCircle
+                size={32}
+                style={{
+                  display: profileImage ? "none" : "block",
+                }}
               />
             </button>
           ) : (
-            <button className={styles.loginBtn} onClick={() => navigate("/login")}>
+            <button
+              className={styles.loginBtn}
+              onClick={() => navigate("/login")}
+            >
               ورود
             </button>
           )}
 
           <div className={styles.email}>
-            <a href="mailto:sajadnooribayany2@gmail.com" target="_blank" rel="noopener noreferrer">
+            <a
+              href="mailto:sajadnooribayany2@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <FaEnvelope />
             </a>
-            <a href="mailto:sajadnooribayany2@gmail.com" target="_blank" rel="noopener noreferrer">
+            <a
+              href="mailto:sajadnooribayany2@gmail.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               sajadnooribayany2@gmail.com
             </a>
           </div>
@@ -401,15 +560,27 @@ export default function MenuWithUtilityBar() {
               data-open={dropdownOpen === idx ? "true" : "false"}
             >
               {item.label === "درباره ما" ? (
-                <Link to="/about" className={styles.menuLink} onClick={() => setMenuOpen(false)}>
+                <Link
+                  to="/about"
+                  className={styles.menuLink}
+                  onClick={() => setMenuOpen(false)}
+                >
                   {item.label}
                 </Link>
               ) : item.label === "اخبار و اطلاعات" ? (
-                <a href="#news-section" className={styles.menuLink} onClick={handleNewsClick}>
+                <a
+                  href="#news-section"
+                  className={styles.menuLink}
+                  onClick={handleNewsClick}
+                >
                   {item.label}
                 </a>
               ) : item.label === "تماس با ما" ? (
-                <a href="#feedback-section" className={styles.menuLink} onClick={handleFeedBackClick}>
+                <a
+                  href="#feedback-section"
+                  className={styles.menuLink}
+                  onClick={handleFeedBackClick}
+                >
                   {item.label}
                 </a>
               ) : (
@@ -423,7 +594,9 @@ export default function MenuWithUtilityBar() {
                   }}
                 >
                   {item.label}
-                  {item.submenu.length > 0 && <span className={styles.caret}>▼</span>}
+                  {item.submenu.length > 0 && (
+                    <span className={styles.caret}>▼</span>
+                  )}
                 </a>
               )}
 

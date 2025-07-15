@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require("../config/db");
 
 /**
  * Get all comments for a news article with author info
@@ -106,14 +106,14 @@ const addReply = (commentId, userId, replyText) => {
   return new Promise((resolve, reject) => {
     db.query(sql, [commentId, userId, replyText], (err, results) => {
       if (err) return reject(err);
-      
+
       // Update reply count in comments table
       const updateCountSql = `
         UPDATE comments SET reply_count = reply_count + 1 WHERE id = ?
       `;
       db.query(updateCountSql, [commentId], (err2) => {
         if (err2) return reject(err2);
-        
+
         // Return the inserted reply with created_at fetched
         const insertedId = results.insertId;
         const selectSql = `
@@ -131,10 +131,31 @@ const addReply = (commentId, userId, replyText) => {
   });
 };
 
+/**
+ * Get all comments for all news with author and news info
+ * @returns {Promise<Array>}
+ */
+const getAllNewsComments = () => {
+  const sql = `
+    SELECT c.id, c.news_id, n.title AS news_title, c.user_id, c.comment, c.created_at, c.reply_count, u.name AS author
+    FROM comments c
+    LEFT JOIN users u ON c.user_id = u.id
+    LEFT JOIN news n ON c.news_id = n.id
+    ORDER BY c.created_at DESC
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+};
+
 module.exports = {
   getCommentsByNewsId,
   addComment,
   getCommentById,
   getRepliesByCommentId,
   addReply,
+  getAllNewsComments,
 };

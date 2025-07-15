@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import CircularProgress from '@mui/material/CircularProgress';
-import debounce from 'lodash/debounce';
+import CircularProgress from "@mui/material/CircularProgress";
+import debounce from "lodash/debounce";
 import { useTheme } from "../contexts/ThemeContext";
 import { questionnairesAPI } from "../api/questionnaires";
+import { countUnansweredComments } from "../pages/NewsCommentsPage";
 
 const EmployeeProfile = () => {
   const navigate = useNavigate();
@@ -15,27 +16,33 @@ const EmployeeProfile = () => {
   const [educationalCenters, setEducationalCenters] = useState([]);
   const [centersLoading, setCentersLoading] = useState(false);
   const [centersError, setCentersError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
   const [totalCenters, setTotalCenters] = useState(0);
-  const [stageCounts, setStageCounts] = useState({ stage1: 0, stage2: 0, stage3: 0, total: 0 });
+  const [stageCounts, setStageCounts] = useState({
+    stage1: 0,
+    stage2: 0,
+    stage3: 0,
+    total: 0,
+  });
   const [unansweredQuestionsCount, setUnansweredQuestionsCount] = useState(0);
   const [totalUncheckedFilledCount, setTotalUncheckedFilledCount] = useState(0);
   const [updatingStage, setUpdatingStage] = useState(null);
   const usersPerPage = 15;
+  const [unansweredNewsComments, setUnansweredNewsComments] = useState(0);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/me', {
+        const response = await axios.get("http://localhost:5000/api/auth/me", {
           withCredentials: true,
         });
         setUser(response.data.user);
       } catch (err) {
-        console.error('Error fetching user:', err);
-        setError('خطا در دریافت اطلاعات کاربر');
+        console.error("Error fetching user:", err);
+        setError("خطا در دریافت اطلاعات کاربر");
       } finally {
         setLoading(false);
       }
@@ -53,19 +60,21 @@ const EmployeeProfile = () => {
           withCredentials: true,
         }
       );
-      
+
       setEducationalCenters(response.data.centers);
       setTotalPages(response.data.totalPages);
       setTotalCenters(response.data.total);
       setCentersError(null);
     } catch (err) {
-      console.error('Error fetching educational centers:', err);
+      console.error("Error fetching educational centers:", err);
       if (retryCount < 3) {
         setTimeout(() => {
           fetchEducationalCenters(retryCount + 1);
         }, Math.pow(2, retryCount) * 1000);
       } else {
-        setCentersError('خطا در دریافت اطلاعات مراکز آموزشی. لطفا دوباره تلاش کنید.');
+        setCentersError(
+          "خطا در دریافت اطلاعات مراکز آموزشی. لطفا دوباره تلاش کنید."
+        );
       }
     } finally {
       setCentersLoading(false);
@@ -76,28 +85,28 @@ const EmployeeProfile = () => {
   const fetchStageCounts = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:5000/api/educational-centers/stats/stages',
+        "http://localhost:5000/api/educational-centers/stats/stages",
         {
           withCredentials: true,
         }
       );
       setStageCounts(response.data);
     } catch (err) {
-      console.error('Error fetching stage counts:', err);
+      console.error("Error fetching stage counts:", err);
     }
   };
 
   const fetchUnansweredQuestionsCount = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:5000/api/questions/admin/unanswered-count',
+        "http://localhost:5000/api/questions/admin/unanswered-count",
         {
           withCredentials: true,
         }
       );
       setUnansweredQuestionsCount(response.data.count || 0);
     } catch (err) {
-      console.error('Error fetching unanswered questions count:', err);
+      console.error("Error fetching unanswered questions count:", err);
       setUnansweredQuestionsCount(0);
     }
   };
@@ -111,7 +120,7 @@ const EmployeeProfile = () => {
         setTotalUncheckedFilledCount(0);
       }
     } catch (err) {
-      console.error('Error fetching total unchecked filled count:', err);
+      console.error("Error fetching total unchecked filled count:", err);
       setTotalUncheckedFilledCount(0);
     }
   };
@@ -129,6 +138,13 @@ const EmployeeProfile = () => {
     fetchStageCounts();
     fetchUnansweredQuestionsCount();
     fetchTotalUncheckedFilledCount();
+    // Fetch unanswered news comments count
+    axios
+      .get("/api/comments/all-news-comments", { withCredentials: true })
+      .then((res) => {
+        setUnansweredNewsComments(countUnansweredComments(res.data));
+      })
+      .catch(() => setUnansweredNewsComments(0));
     return () => {
       debouncedFetchEducationalCenters.cancel();
     };
@@ -146,16 +162,16 @@ const EmployeeProfile = () => {
   const handleStageChange = async (centerId, stage, checked) => {
     try {
       setUpdatingStage(centerId);
-      
+
       // Find the current center data
-      const center = educationalCenters.find(c => c.id === centerId);
+      const center = educationalCenters.find((c) => c.id === centerId);
       if (!center) return;
 
       // Prepare stage data
       const stageData = {
         stage1: center.stage1 === 1,
         stage2: center.stage2 === 1,
-        stage3: center.stage3 === 1
+        stage3: center.stage3 === 1,
       };
 
       // Update the specific stage
@@ -170,19 +186,17 @@ const EmployeeProfile = () => {
       );
 
       // Update local state
-      setEducationalCenters(prev => 
-        prev.map(c => 
-          c.id === centerId 
-            ? { ...c, [stage]: checked ? 1 : 0 }
-            : c
+      setEducationalCenters((prev) =>
+        prev.map((c) =>
+          c.id === centerId ? { ...c, [stage]: checked ? 1 : 0 } : c
         )
       );
 
       // Refresh stage counts
       fetchStageCounts();
     } catch (err) {
-      console.error('Error updating stage:', err);
-      alert('خطا در بروزرسانی مرحله');
+      console.error("Error updating stage:", err);
+      alert("خطا در بروزرسانی مرحله");
     } finally {
       setUpdatingStage(null);
     }
@@ -194,10 +208,10 @@ const EmployeeProfile = () => {
 
   if (loading) {
     return (
-      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
         <div className="text-center p-4">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">در حال بارگذاری...</span>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">در حال بارگذاری...</span>
           </div>
         </div>
       </div>
@@ -206,9 +220,9 @@ const EmployeeProfile = () => {
 
   if (error) {
     return (
-      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
         <div className="alert alert-danger m-4" role="alert">
-        {error}
+          {error}
         </div>
       </div>
     );
@@ -216,16 +230,21 @@ const EmployeeProfile = () => {
 
   if (!user) {
     return (
-      <div className={theme === 'light' ? 'light-container' : 'dark-container'}>
+      <div className={theme === "light" ? "light-container" : "dark-container"}>
         <div className="alert alert-warning m-4" role="alert">
-        کاربر یافت نشد
+          کاربر یافت نشد
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`${theme === 'light' ? 'light-container' : 'dark-container'} px-4 py-8`} style={{ width: '100%', maxWidth: '100%', minHeight: '100vh' }}>
+    <div
+      className={`${
+        theme === "light" ? "light-container" : "dark-container"
+      } px-4 py-8`}
+      style={{ width: "100%", maxWidth: "100%", minHeight: "100vh" }}
+    >
       <style>{`
         .dark-container {
           background: #121212;
@@ -386,8 +405,10 @@ const EmployeeProfile = () => {
           }
         }
       `}</style>
-      <h1 className="text-2xl font-bold mb-6 text-center">مدیریت مراکز آموزشی</h1>
-      
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        مدیریت مراکز آموزشی
+      </h1>
+
       {/* Statistics Cards */}
       <div className="row mb-6 d-flex justify-content-center">
         <div className="col-md-2 mb-2">
@@ -414,26 +435,30 @@ const EmployeeProfile = () => {
             </div>
           </div>
         </div>
+
         <div className="col-md-2 mb-2">
-          <div className="card text-center position-relative" 
-               style={{ cursor: 'pointer' }}
-               onClick={() => navigate('/checking-questionnaires')}
-               onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-               onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          <div
+            className="card text-center position-relative"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/checking-questionnaires")}
+            onMouseEnter={(e) =>
+              (e.target.style.transform = "translateY(-2px)")
+            }
+            onMouseLeave={(e) => (e.target.style.transform = "translateY(0)")}
           >
             <div className="card-body">
-              <h5 className="card-title">پرسش نامه ها</h5>
-              <p className="card-text">تحلیل پرسش نامه ها</p>
+              <h5 className="card-title">پرسش نامه </h5>
+              <p className="card-text">تحلیل پرسش نامه ها!</p>
             </div>
             {totalUncheckedFilledCount > 0 && (
-              <div 
+              <div
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 style={{
-                  fontSize: '0.75rem',
-                  padding: '0.5rem 0.75rem',
-                  transform: 'translate(-50%, -50%)',
+                  fontSize: "0.75rem",
+                  padding: "0.5rem 0.75rem",
+                  transform: "translate(-50%, -50%)",
                   zIndex: 1000,
-                  animation: 'pulse 2s infinite'
+                  animation: "pulse 2s infinite",
                 }}
               >
                 {totalUncheckedFilledCount}
@@ -443,25 +468,58 @@ const EmployeeProfile = () => {
         </div>
 
         <div className="col-md-2 mb-2">
-          <div className="card text-center position-relative" 
-               style={{ cursor: 'pointer' }}
-               onClick={() => navigate('/answer-to-questions')}
-               onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-               onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+          <div
+            className="card text-center position-relative"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/news-comments")}
+            onMouseEnter={(e) =>
+              (e.target.style.transform = "translateY(-2px)")
+            }
+            onMouseLeave={(e) => (e.target.style.transform = "translateY(0)")}
+          >
+            <div className="card-body">
+              <h5 className="card-title">اخبار </h5>
+              <p className="card-text">به کمنت ها جواب دهید!</p>
+            </div>
+            {unansweredNewsComments > 0 && (
+              <div
+                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style={{
+                  fontSize: "0.75rem",
+                  padding: "0.5rem 0.75rem",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1000,
+                  animation: "pulse 2s infinite",
+                }}
+              >
+                {unansweredNewsComments}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="col-md-2 mb-2">
+          <div
+            className="card text-center position-relative"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/answer-to-questions")}
+            onMouseEnter={(e) =>
+              (e.target.style.transform = "translateY(-2px)")
+            }
+            onMouseLeave={(e) => (e.target.style.transform = "translateY(0)")}
           >
             <div className="card-body">
               <h5 className="card-title">سوالات </h5>
-              <p className="card-text">مدیریت سوالات</p>
+              <p className="card-text">به سوالات پاسخ دهید!</p>
             </div>
             {unansweredQuestionsCount > 0 && (
-              <div 
+              <div
                 className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                 style={{
-                  fontSize: '0.75rem',
-                  padding: '0.5rem 0.75rem',
-                  transform: 'translate(-50%, -50%)',
+                  fontSize: "0.75rem",
+                  padding: "0.5rem 0.75rem",
+                  transform: "translate(-50%, -50%)",
                   zIndex: 1000,
-                  animation: 'pulse 2s infinite'
+                  animation: "pulse 2s infinite",
                 }}
               >
                 {unansweredQuestionsCount}
@@ -472,25 +530,35 @@ const EmployeeProfile = () => {
       </div>
 
       {/* Search Bar */}
-      <div style={{ width: '100%', maxWidth: '100%' }} className="mb-6">
+      <div style={{ width: "100%", maxWidth: "100%" }} className="mb-6">
         <div className="position-relative">
           <input
             type="text"
             placeholder="جستجو در مراکز آموزشی..."
             value={searchQuery}
             onChange={handleSearch}
-            style={{ 
-              width: '100%', 
-              background: '#1e1e1e', 
-              border: '1px solid #333', 
-              color: '#ffffff',
-              padding: '8px 12px'
+            style={{
+              width: "100%",
+              background: "#1e1e1e",
+              border: "1px solid #333",
+              color: "#ffffff",
+              padding: "8px 12px",
             }}
             className="rounded-lg text-right"
           />
           {isSearching && (
-            <div className="position-absolute" style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-              <div className="spinner-border spinner-border-sm text-primary" role="status">
+            <div
+              className="position-absolute"
+              style={{
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+              }}
+            >
+              <div
+                className="spinner-border spinner-border-sm text-primary"
+                role="status"
+              >
                 <span className="visually-hidden">در حال جستجو...</span>
               </div>
             </div>
@@ -500,76 +568,169 @@ const EmployeeProfile = () => {
 
       {/* Error Message */}
       {centersError && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+        <div
+          className="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
           {centersError}
-          <button type="button" className="btn-close" onClick={() => setCentersError(null)} style={{ filter: 'invert(1)' }}></button>
+          <button
+            type="button"
+            className="btn-close"
+            onClick={() => setCentersError(null)}
+            style={{ filter: "invert(1)" }}
+          ></button>
         </div>
       )}
 
       {/* Educational Centers Table */}
-      <div style={{ width: '100%', maxWidth: '100%' }} className="overflow-x-auto">
-        <table style={{ width: '100%', background: '#121212' }} className="table">
-          <thead style={{ background: '#1e1e1e' }}>
+      <div
+        style={{ width: "100%", maxWidth: "100%" }}
+        className="overflow-x-auto"
+      >
+        <table
+          style={{ width: "100%", background: "#121212" }}
+          className="table"
+        >
+          <thead style={{ background: "#1e1e1e" }}>
             <tr>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>نام مرکز</th>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>نام شخص رابط</th>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>شماره تماس</th>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>ایمیل</th>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>مرحله</th>
-              <th style={{ color: '#ffffff', borderColor: '#333', background: '#1e1e1e' }}>مشاهده</th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                نام مرکز
+              </th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                نام شخص رابط
+              </th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                شماره تماس
+              </th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                ایمیل
+              </th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                مرحله
+              </th>
+              <th
+                style={{
+                  color: "#ffffff",
+                  borderColor: "#333",
+                  background: "#1e1e1e",
+                }}
+              >
+                مشاهده
+              </th>
             </tr>
           </thead>
-          <tbody style={{ background: '#121212' }}>
+          <tbody style={{ background: "#121212" }}>
             {educationalCenters.map((center, index) => (
-              <tr key={center.id} style={{ 
-                borderColor: '#333', 
-                background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-              }}>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>
+              <tr
+                key={center.id}
+                style={{
+                  borderColor: "#333",
+                  background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                }}
+              >
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
                   <div className="d-flex align-items-center">
                     <div>
-                      <div className="fw-bold" style={{ color: '#ffffff' }}>{center.centerName || 'نامشخص'}</div>
+                      <div className="fw-bold" style={{ color: "#ffffff" }}>
+                        {center.centerName || "نامشخص"}
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>{center.contactName || 'نامشخص'}</td>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>{center.phoneNumber || 'نامشخص'}</td>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>{center.email}</td>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
+                  {center.contactName || "نامشخص"}
+                </td>
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
+                  {center.phoneNumber || "نامشخص"}
+                </td>
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
+                  {center.email}
+                </td>
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
                   <div className="d-flex flex-column gap-1">
                     <div className="form-check">
                       <input
                         className="form-check-input"
                         type="checkbox"
                         checked={center.stage1 === 1}
-                        onChange={(e) => handleStageChange(center.id, 'stage1', e.target.checked)}
+                        onChange={(e) =>
+                          handleStageChange(
+                            center.id,
+                            "stage1",
+                            e.target.checked
+                          )
+                        }
                         disabled={updatingStage === center.id}
-                        style={{ 
-                          backgroundColor: center.stage1 === 1 ? '#007bff' : '#1e1e1e',
-                          borderColor: '#333'
+                        style={{
+                          backgroundColor:
+                            center.stage1 === 1 ? "#007bff" : "#1e1e1e",
+                          borderColor: "#333",
                         }}
                       />
-                      <label className="form-check-label" style={{ color: '#ffffff', fontSize: '12px' }}>
+                      <label
+                        className="form-check-label"
+                        style={{ color: "#ffffff", fontSize: "12px" }}
+                      >
                         مرحله اول
                       </label>
                     </div>
@@ -578,14 +739,24 @@ const EmployeeProfile = () => {
                         className="form-check-input"
                         type="checkbox"
                         checked={center.stage2 === 1}
-                        onChange={(e) => handleStageChange(center.id, 'stage2', e.target.checked)}
+                        onChange={(e) =>
+                          handleStageChange(
+                            center.id,
+                            "stage2",
+                            e.target.checked
+                          )
+                        }
                         disabled={updatingStage === center.id}
-                        style={{ 
-                          backgroundColor: center.stage2 === 1 ? '#007bff' : '#1e1e1e',
-                          borderColor: '#333'
+                        style={{
+                          backgroundColor:
+                            center.stage2 === 1 ? "#007bff" : "#1e1e1e",
+                          borderColor: "#333",
                         }}
                       />
-                      <label className="form-check-label" style={{ color: '#ffffff', fontSize: '12px' }}>
+                      <label
+                        className="form-check-label"
+                        style={{ color: "#ffffff", fontSize: "12px" }}
+                      >
                         مرحله دوم
                       </label>
                     </div>
@@ -594,30 +765,42 @@ const EmployeeProfile = () => {
                         className="form-check-input"
                         type="checkbox"
                         checked={center.stage3 === 1}
-                        onChange={(e) => handleStageChange(center.id, 'stage3', e.target.checked)}
+                        onChange={(e) =>
+                          handleStageChange(
+                            center.id,
+                            "stage3",
+                            e.target.checked
+                          )
+                        }
                         disabled={updatingStage === center.id}
-                        style={{ 
-                          backgroundColor: center.stage3 === 1 ? '#007bff' : '#1e1e1e',
-                          borderColor: '#333'
+                        style={{
+                          backgroundColor:
+                            center.stage3 === 1 ? "#007bff" : "#1e1e1e",
+                          borderColor: "#333",
                         }}
                       />
-                      <label className="form-check-label" style={{ color: '#ffffff', fontSize: '12px' }}>
+                      <label
+                        className="form-check-label"
+                        style={{ color: "#ffffff", fontSize: "12px" }}
+                      >
                         مرحله سوم
                       </label>
                     </div>
                   </div>
                 </td>
-                <td style={{ 
-                  color: '#ffffff', 
-                  borderColor: '#333', 
-                  background: index % 2 === 0 ? '#121212' : '#1a1a1a' 
-                }}>
-                  <button 
-                    className="btn btn-outline-primary btn-sm" 
-                    style={{ borderColor: '#007bff'}}
+                <td
+                  style={{
+                    color: "#ffffff",
+                    borderColor: "#333",
+                    background: index % 2 === 0 ? "#121212" : "#1a1a1a",
+                  }}
+                >
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    style={{ borderColor: "#007bff" }}
                     onClick={() => handleViewCenter(center.user_id)}
                   >
-                   بررسی
+                    بررسی
                   </button>
                 </td>
               </tr>
@@ -629,8 +812,10 @@ const EmployeeProfile = () => {
       {/* Empty State */}
       {educationalCenters.length === 0 && !centersLoading && !centersError && (
         <div className="text-center py-5">
-          <div style={{ color: '#888888' }}>
-            {searchQuery ? 'هیچ مرکز آموزشی با این جستجو یافت نشد' : 'هیچ مرکز آموزشی ثبت نشده است'}
+          <div style={{ color: "#888888" }}>
+            {searchQuery
+              ? "هیچ مرکز آموزشی با این جستجو یافت نشد"
+              : "هیچ مرکز آموزشی ثبت نشده است"}
           </div>
         </div>
       )}
@@ -639,30 +824,36 @@ const EmployeeProfile = () => {
       {totalPages > 1 && (
         <nav aria-label="Page navigation" className="mt-4">
           <ul className="pagination justify-content-center">
-            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+            <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
               <button
                 className="page-link"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                style={{ 
-                  background: '#1e1e1e', 
-                  borderColor: '#333', 
-                  color: '#ffffff' 
+                style={{
+                  background: "#1e1e1e",
+                  borderColor: "#333",
+                  color: "#ffffff",
                 }}
               >
                 قبلی
               </button>
             </li>
-            
+
             {[...Array(totalPages)].map((_, index) => (
-              <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+              <li
+                key={index + 1}
+                className={`page-item ${
+                  currentPage === index + 1 ? "active" : ""
+                }`}
+              >
                 <button
                   className="page-link"
                   onClick={() => handlePageChange(index + 1)}
-                  style={{ 
-                    background: currentPage === index + 1 ? '#007bff' : '#1e1e1e', 
-                    borderColor: '#333', 
-                    color: currentPage === index + 1 ? '#ffffff' : '#ffffff' 
+                  style={{
+                    background:
+                      currentPage === index + 1 ? "#007bff" : "#1e1e1e",
+                    borderColor: "#333",
+                    color: currentPage === index + 1 ? "#ffffff" : "#ffffff",
                   }}
                 >
                   {index + 1}
@@ -670,15 +861,19 @@ const EmployeeProfile = () => {
               </li>
             ))}
 
-            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+            <li
+              className={`page-item ${
+                currentPage === totalPages ? "disabled" : ""
+              }`}
+            >
               <button
                 className="page-link"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                style={{ 
-                  background: '#1e1e1e', 
-                  borderColor: '#333', 
-                  color: '#ffffff' 
+                style={{
+                  background: "#1e1e1e",
+                  borderColor: "#333",
+                  color: "#ffffff",
                 }}
               >
                 بعدی
@@ -691,4 +886,4 @@ const EmployeeProfile = () => {
   );
 };
 
-export default EmployeeProfile; 
+export default EmployeeProfile;

@@ -15,4 +15,6 @@ CREATE TABLE IF NOT EXISTS comment_replies (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Add reply_count column to comments table
-ALTER TABLE comments ADD COLUMN reply_count INT DEFAULT 0; 
+ALTER TABLE comments ADD COLUMN reply_count INT DEFAULT 0;
+ALTER TABLE comment_replies ADD COLUMN seen BOOLEAN NOT NULL DEFAULT 0;
+ALTER TABLE questions ADD COLUMN answer_seen BOOLEAN NOT NULL DEFAULT 0; 
