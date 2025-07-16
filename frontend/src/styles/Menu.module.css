@@ -49,7 +49,11 @@
 }
 
 .loginBtn {
-  background: linear-gradient(90deg, var(--primary-cyan), var(--secondary-cyan));
+  background: linear-gradient(
+    90deg,
+    var(--primary-cyan),
+    var(--secondary-cyan)
+  );
   border: none;
   padding: 0.4rem 1.2rem;
   color: #030305;
@@ -57,7 +61,7 @@
   cursor: pointer;
   font-weight: bold;
   font-size: 1rem;
-  box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+  box-shadow: 0 2px 8px rgba(13, 202, 240, 0.1);
   transition: background 0.3s, color 0.3s, box-shadow 0.3s;
   display: flex;
   align-items: center;
@@ -65,9 +69,13 @@
 }
 
 .loginBtn:hover {
-  background: linear-gradient(90deg, var(--secondary-cyan), var(--primary-cyan));
+  background: linear-gradient(
+    90deg,
+    var(--secondary-cyan),
+    var(--primary-cyan)
+  );
   color: #030305;
-  box-shadow: 0 4px 16px rgba(13,202,240,0.18);
+  box-shadow: 0 4px 16px rgba(13, 202, 240, 0.18);
 }
 
 .email {
@@ -120,7 +128,11 @@
 .barOpen {
   width: 25px;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary-cyan), var(--secondary-cyan));
+  background: linear-gradient(
+    90deg,
+    var(--primary-cyan),
+    var(--secondary-cyan)
+  );
   margin: 4px 0;
   border-radius: 2px;
   transition: transform 0.4s, opacity 0.4s, background 0.3s;
@@ -153,14 +165,20 @@
   flex-direction: column;
   width: 100%;
   background: var(--dark-bg);
-  box-shadow: 0 8px 32px rgba(13,202,240,0.10);
+  box-shadow: 0 8px 32px rgba(13, 202, 240, 0.1);
   border-radius: 0 0 1.2rem 1.2rem;
   animation: menuFadeIn 0.4s;
 }
 
 @keyframes menuFadeIn {
-  from { opacity: 0; transform: translateY(-16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .menuItem {
@@ -181,8 +199,13 @@
   transition: background 0.3s, color 0.3s, box-shadow 0.3s;
 }
 
-.menuLink:hover, .menuItem[data-open="true"] > .menuLink {
-  background: linear-gradient(90deg, var(--primary-cyan) 60%, var(--secondary-cyan) 100%);
+.menuLink:hover,
+.menuItem[data-open="true"] > .menuLink {
+  background: linear-gradient(
+    90deg,
+    var(--primary-cyan) 60%,
+    var(--secondary-cyan) 100%
+  );
   color: #030305;
   box-shadow: 0 0 12px var(--primary-cyan);
 }
@@ -203,7 +226,7 @@
   position: absolute;
   top: 100%;
   background: linear-gradient(90deg, #23272e 60%, var(--primary-cyan) 100%);
-  box-shadow: 0 8px 32px rgba(13,202,240,0.18);
+  box-shadow: 0 8px 32px rgba(13, 202, 240, 0.18);
   z-index: 999;
   min-width: 220px;
   border-radius: 0.8rem;
@@ -238,7 +261,11 @@ a {
 }
 
 .submenuItem a:hover {
-  background: linear-gradient(90deg, var(--primary-cyan) 60%, var(--secondary-cyan) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--primary-cyan) 60%,
+    var(--secondary-cyan) 100%
+  );
   color: #030305;
   box-shadow: 0 0 8px var(--primary-cyan);
 }
@@ -255,7 +282,7 @@ a {
     flex-direction: column;
     background: var(--dark-bg);
     border-radius: 0 0 1.2rem 1.2rem;
-    box-shadow: 0 8px 32px rgba(13,202,240,0.10);
+    box-shadow: 0 8px 32px rgba(13, 202, 240, 0.1);
   }
 
   .menuItem {
@@ -272,7 +299,7 @@ a {
     padding-left: 1rem;
     border-radius: 0.8rem;
   }
-  
+
   [data-theme="light"] .submenu {
     background: linear-gradient(90deg, #f8f9fa 60%, var(--primary-cyan) 100%);
     border: 1px solid #e0e0e0;
@@ -285,7 +312,7 @@ a {
   .menuItem[data-open="true"] > .submenu {
     display: block;
   }
-  
+
   /* Mobile logo styling */
   .menu li:first-child,
   .menu li:last-child {
@@ -294,17 +321,17 @@ a {
     padding: 1rem 0;
     width: 100%;
   }
-  
+
   .menu li:first-child {
-    border-bottom: 1px solid rgba(13,202,240,0.2);
+    border-bottom: 1px solid rgba(13, 202, 240, 0.2);
     margin-bottom: 0.5rem;
   }
-  
+
   .menu li:last-child {
-    border-top: 1px solid rgba(13,202,240,0.2);
+    border-top: 1px solid rgba(13, 202, 240, 0.2);
     margin-top: 0.5rem;
   }
-  
+
   .logo {
     height: 60px;
     width: 60px;
@@ -332,13 +359,13 @@ a {
 
 .themeToggleBtn:hover,
 .themeToggleBtn:focus {
-  background: rgba(255,215,0,0.10);
+  background: rgba(255, 215, 0, 0.1);
   color: #0dcaf0;
-  box-shadow: 0 2px 8px rgba(255,215,0,0.18);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.18);
 }
 
 .themeToggleBtn:active {
-  background: rgba(255,215,0,0.18);
+  background: rgba(255, 215, 0, 0.18);
 }
 
 .themeToggleBtnAnimating svg {
@@ -352,12 +379,12 @@ a {
 
 [data-theme="dark"] .themeToggleBtn:hover,
 [data-theme="dark"] .themeToggleBtn:focus {
-  background: rgba(13,202,240,0.10);
+  background: rgba(13, 202, 240, 0.1);
   color: #ffd700;
 }
 
 [data-theme="dark"] .themeToggleBtn:active {
-  background: rgba(13,202,240,0.18);
+  background: rgba(13, 202, 240, 0.18);
 }
 
 /* Light mode styles for Menu component */
@@ -370,12 +397,12 @@ a {
 [data-theme="light"] .navbar {
   background: linear-gradient(90deg, #ffffff 30%, #0dcaf0 100%);
   color: #333333;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .menuOpen {
   background: #ffffff !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid #e0e0e0;
 }
 
@@ -385,12 +412,12 @@ a {
 
 [data-theme="light"] .menuLink:hover {
   color: #000000;
-  background-color: rgba(13,202,240,0.1);
+  background-color: rgba(13, 202, 240, 0.1);
 }
 
 [data-theme="light"] .submenu {
   background: linear-gradient(90deg, #ffffff 5%, var(--primary-cyan) 100%);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 1px solid #e0e0e0;
 }
 
@@ -399,7 +426,7 @@ a {
 }
 
 [data-theme="light"] .submenuLink:hover {
-  background: rgba(13,202,240,0.1);
+  background: rgba(13, 202, 240, 0.1);
 }
 
 [data-theme="light"] .socialIcons a {
@@ -425,7 +452,7 @@ a {
 
 [data-theme="light"] .loginBtn:hover {
   color: #0dcaf0;
-  background-color: rgba(13,202,240,0.1);
+  background-color: rgba(13, 202, 240, 0.1);
 }
 
 [data-theme="light"] .toggle .bar {
@@ -443,10 +470,10 @@ a {
 /* Light theme mobile logo styling */
 @media (max-width: 768px) {
   [data-theme="light"] .menu li:first-child {
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
-  
+
   [data-theme="light"] .menu li:last-child {
-    border-top: 1px solid rgba(0,0,0,0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
   }
 }

@@ -1,17 +1,30 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
-import { FaChevronDown, FaChevronUp, FaQuestion, FaTimes, FaSearch, FaPaperPlane, FaSpinner, FaKeyboard, FaEye, FaEyeSlash, FaEdit, FaTrash } from 'react-icons/fa';
-import { useTheme } from '../contexts/ThemeContext';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { containsBadWords } from '../utils/badWordsFilter';
+import React, { useState, useContext, useEffect, useRef } from "react";
+import {
+  FaChevronDown,
+  FaChevronUp,
+  FaQuestion,
+  FaTimes,
+  FaSearch,
+  FaPaperPlane,
+  FaSpinner,
+  FaKeyboard,
+  FaEye,
+  FaEyeSlash,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
+import { useTheme } from "../contexts/ThemeContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { containsBadWords } from "../utils/badWordsFilter";
 
 const AskAndAnswers = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [userQuestion, setUserQuestion] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userQuestion, setUserQuestion] = useState("");
   const [userQuestions, setUserQuestions] = useState([]);
   const [faqQuestions, setFaqQuestions] = useState([]);
-  const [activeTab, setActiveTab] = useState('faq');
+  const [activeTab, setActiveTab] = useState("faq");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -22,7 +35,7 @@ const AskAndAnswers = () => {
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [autoCollapse, setAutoCollapse] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [editText, setEditText] = useState('');
+  const [editText, setEditText] = useState("");
   const [submittingEdit, setSubmittingEdit] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState(null);
   const { theme } = useTheme();
@@ -30,13 +43,17 @@ const AskAndAnswers = () => {
   const searchInputRef = useRef(null);
   const questionTextareaRef = useRef(null);
   const widgetRef = useRef(null);
+  const location = useLocation();
+  const questionRefs = useRef({});
+  const [highlightedQuestionId, setHighlightedQuestionId] = useState(null);
 
   // Auto-collapse widget after 5 minutes of inactivity
   useEffect(() => {
     if (isExpanded) {
       const timer = setTimeout(() => {
         const timeSinceActivity = Date.now() - lastActivity;
-        if (timeSinceActivity > 5 * 60 * 1000) { // 5 minutes
+        if (timeSinceActivity > 5 * 60 * 1000) {
+          // 5 minutes
           setIsExpanded(false);
           setAutoCollapse(true);
           setTimeout(() => setAutoCollapse(false), 1000);
@@ -58,42 +75,45 @@ const AskAndAnswers = () => {
       if (!isExpanded) return;
 
       // Escape to close widget
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setIsExpanded(false);
         return;
       }
 
       // Ctrl/Cmd + K to focus search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         searchInputRef.current?.focus();
         return;
       }
 
       // Ctrl/Cmd + Enter to submit question
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && questionFocused) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && questionFocused) {
         e.preventDefault();
         handleSubmitQuestion(e);
         return;
       }
 
       // Tab navigation
-      if (e.key === 'Tab') {
+      if (e.key === "Tab") {
         updateActivity();
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [isExpanded, questionFocused]);
 
   // Check authentication status
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/questions/auth/check', {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/questions/auth/check",
+          {
+            withCredentials: true,
+          }
+        );
         setIsAuthenticated(response.data.authenticated);
       } catch (err) {
         setIsAuthenticated(false);
@@ -110,12 +130,15 @@ const AskAndAnswers = () => {
     const fetchFAQQuestions = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/questions/faq', {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/questions/faq",
+          {
+            withCredentials: true,
+          }
+        );
         setFaqQuestions(response.data.data || []);
       } catch (err) {
-        console.error('Error fetching FAQ questions:', err);
+        console.error("Error fetching FAQ questions:", err);
       } finally {
         setLoading(false);
       }
@@ -134,12 +157,15 @@ const AskAndAnswers = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/questions/user/questions', {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/questions/user/questions",
+          {
+            withCredentials: true,
+          }
+        );
         setUserQuestions(response.data.data || []);
       } catch (err) {
-        console.error('Error fetching user questions:', err);
+        console.error("Error fetching user questions:", err);
         setUserQuestions([]);
       } finally {
         setLoading(false);
@@ -149,74 +175,104 @@ const AskAndAnswers = () => {
     fetchUserQuestions();
   }, [isAuthenticated]);
 
+  // Scroll to and highlight specific question if requested
+  useEffect(() => {
+    if (location.state && location.state.scrollToQuestionId) {
+      setIsExpanded(true);
+      setActiveTab("my-questions");
+      setHighlightedQuestionId(location.state.scrollToQuestionId);
+      setTimeout(() => {
+        const ref = questionRefs.current[location.state.scrollToQuestionId];
+        if (ref) {
+          ref.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 400);
+      // Remove highlight after 3 seconds
+      setTimeout(() => setHighlightedQuestionId(null), 3400);
+    }
+  }, [userQuestions, location.state]);
+
   const handleLoginRedirect = () => {
-    navigate('/login');
+    navigate("/login");
     setIsExpanded(false);
   };
 
   // Filter FAQ data for search
-  const filteredFaqData = faqQuestions.filter(item =>
-    item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.answer && item.answer.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredFaqData = faqQuestions.filter(
+    (item) =>
+      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.answer &&
+        item.answer.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Filter user questions for search
-  const filteredUserQuestions = userQuestions.filter(item =>
-    item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.answer && item.answer.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredUserQuestions = userQuestions.filter(
+    (item) =>
+      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.answer &&
+        item.answer.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleSubmitQuestion = async (e) => {
     e.preventDefault();
     updateActivity();
-    
+
     if (!isAuthenticated) {
-      alert('برای ارسال سوال، لطفاً ابتدا وارد حساب کاربری خود شوید.');
+      alert("برای ارسال سوال، لطفاً ابتدا وارد حساب کاربری خود شوید.");
       handleLoginRedirect();
       return;
     }
-    
+
     if (userQuestion.trim()) {
       if (containsBadWords(userQuestion)) {
-        alert('سوال شما حاوی کلمات نامناسب است. لطفاً سوال خود را بدون توهین ارسال کنید.');
+        alert(
+          "سوال شما حاوی کلمات نامناسب است. لطفاً سوال خود را بدون توهین ارسال کنید."
+        );
         return;
       }
       try {
         setSubmitting(true);
-        const response = await axios.post('http://localhost:5000/api/questions/submit', {
-          question: userQuestion.trim(),
-          category: 'general'
-        }, {
-          withCredentials: true,
-        });
+        const response = await axios.post(
+          "http://localhost:5000/api/questions/submit",
+          {
+            question: userQuestion.trim(),
+            category: "general",
+          },
+          {
+            withCredentials: true,
+          }
+        );
 
         if (response.data.success) {
           // Show success animation
           const textarea = questionTextareaRef.current;
           if (textarea) {
-            textarea.style.transform = 'scale(1.02)';
-            textarea.style.transition = 'transform 0.2s ease';
+            textarea.style.transform = "scale(1.02)";
+            textarea.style.transition = "transform 0.2s ease";
             setTimeout(() => {
-              textarea.style.transform = 'scale(1)';
+              textarea.style.transform = "scale(1)";
             }, 200);
           }
-          
+
           alert(response.data.message);
-          setUserQuestion('');
-          
+          setUserQuestion("");
+
           // Refresh user questions
-          const userQuestionsResponse = await axios.get('http://localhost:5000/api/questions/user/questions', {
-            withCredentials: true,
-          });
+          const userQuestionsResponse = await axios.get(
+            "http://localhost:5000/api/questions/user/questions",
+            {
+              withCredentials: true,
+            }
+          );
           setUserQuestions(userQuestionsResponse.data.data || []);
-          setActiveTab('my-questions');
+          setActiveTab("my-questions");
         }
       } catch (err) {
-        console.error('Error submitting question:', err);
+        console.error("Error submitting question:", err);
         if (err.response?.data?.message) {
           alert(err.response.data.message);
         } else {
-          alert('خطا در ارسال سوال. لطفاً دوباره تلاش کنید.');
+          alert("خطا در ارسال سوال. لطفاً دوباره تلاش کنید.");
         }
       } finally {
         setSubmitting(false);
@@ -226,35 +282,42 @@ const AskAndAnswers = () => {
 
   const handleEditQuestion = async (questionId) => {
     if (!editText.trim()) {
-      alert('لطفاً متن سوال را وارد کنید');
+      alert("لطفاً متن سوال را وارد کنید");
       return;
     }
 
     try {
       setSubmittingEdit(true);
-      const response = await axios.put(`http://localhost:5000/api/questions/user/${questionId}/edit`, {
-        question: editText.trim()
-      }, {
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/questions/user/${questionId}/edit`,
+        {
+          question: editText.trim(),
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
-        alert('سوال با موفقیت ویرایش شد');
+        alert("سوال با موفقیت ویرایش شد");
         setEditingQuestion(null);
-        setEditText('');
-        
+        setEditText("");
+
         // Refresh user questions
-        const userQuestionsResponse = await axios.get('http://localhost:5000/api/questions/user/questions', {
-          withCredentials: true,
-        });
+        const userQuestionsResponse = await axios.get(
+          "http://localhost:5000/api/questions/user/questions",
+          {
+            withCredentials: true,
+          }
+        );
         setUserQuestions(userQuestionsResponse.data.data || []);
       }
     } catch (err) {
-      console.error('Error editing question:', err);
+      console.error("Error editing question:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در ویرایش سوال');
+        alert("خطا در ویرایش سوال");
       }
     } finally {
       setSubmittingEdit(false);
@@ -262,31 +325,37 @@ const AskAndAnswers = () => {
   };
 
   const handleDeleteQuestion = async (questionId) => {
-    if (!window.confirm('آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟')) {
+    if (!window.confirm("آیا مطمئن هستید که می‌خواهید این سوال را حذف کنید؟")) {
       return;
     }
 
     try {
       setDeletingQuestion(questionId);
-      const response = await axios.delete(`http://localhost:5000/api/questions/user/${questionId}`, {
-        withCredentials: true,
-      });
+      const response = await axios.delete(
+        `http://localhost:5000/api/questions/user/${questionId}`,
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.success) {
-        alert('سوال با موفقیت حذف شد');
-        
+        alert("سوال با موفقیت حذف شد");
+
         // Refresh user questions
-        const userQuestionsResponse = await axios.get('http://localhost:5000/api/questions/user/questions', {
-          withCredentials: true,
-        });
+        const userQuestionsResponse = await axios.get(
+          "http://localhost:5000/api/questions/user/questions",
+          {
+            withCredentials: true,
+          }
+        );
         setUserQuestions(userQuestionsResponse.data.data || []);
       }
     } catch (err) {
-      console.error('Error deleting question:', err);
+      console.error("Error deleting question:", err);
       if (err.response?.data?.message) {
         alert(err.response.data.message);
       } else {
-        alert('خطا در حذف سوال');
+        alert("خطا در حذف سوال");
       }
     } finally {
       setDeletingQuestion(null);
@@ -295,7 +364,7 @@ const AskAndAnswers = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString('fa-IR');
+    return date.toLocaleString("fa-IR");
   };
 
   const handleExpand = () => {
@@ -309,22 +378,24 @@ const AskAndAnswers = () => {
 
   const handleClose = () => {
     setIsExpanded(false);
-    setSearchQuery('');
-    setUserQuestion('');
+    setSearchQuery("");
+    setUserQuestion("");
   };
 
   return (
     <>
       {/* Floating FAQ Widget */}
-      <div 
+      <div
         ref={widgetRef}
-        className={`faq-widget ${isExpanded ? 'expanded' : ''} ${autoCollapse ? 'auto-collapse' : ''}`} 
+        className={`faq-widget ${isExpanded ? "expanded" : ""} ${
+          autoCollapse ? "auto-collapse" : ""
+        }`}
         data-theme={theme}
         onClick={updateActivity}
       >
         {!isExpanded ? (
           // Collapsed state - small floating button
-          <button 
+          <button
             className="faq-widget-toggle"
             onClick={handleExpand}
             title="سوالات متداول (Ctrl+K)"
@@ -338,14 +409,16 @@ const AskAndAnswers = () => {
             <div className="faq-widget-header">
               <h3>سوالات متداول</h3>
               <div className="header-actions">
-                <button 
+                <button
                   className="keyboard-shortcuts-btn"
-                  onClick={() => setShowKeyboardShortcuts(!showKeyboardShortcuts)}
+                  onClick={() =>
+                    setShowKeyboardShortcuts(!showKeyboardShortcuts)
+                  }
                   title="کلیدهای میانبر"
                 >
                   <FaKeyboard />
                 </button>
-                <button 
+                <button
                   className="faq-widget-close"
                   onClick={handleClose}
                   title="بستن (Esc)"
@@ -360,17 +433,29 @@ const AskAndAnswers = () => {
               <div className="keyboard-shortcuts">
                 <h4>کلیدهای میانبر</h4>
                 <div className="shortcuts-list">
-                  <div><kbd>Esc</kbd> بستن ویجت</div>
-                  <div><kbd>Ctrl+K</kbd> تمرکز روی جستجو</div>
-                  <div><kbd>Ctrl+Enter</kbd> ارسال سوال</div>
-                  <div><kbd>Tab</kbd> حرکت بین بخش‌ها</div>
+                  <div>
+                    <kbd>Esc</kbd> بستن ویجت
+                  </div>
+                  <div>
+                    <kbd>Ctrl+K</kbd> تمرکز روی جستجو
+                  </div>
+                  <div>
+                    <kbd>Ctrl+Enter</kbd> ارسال سوال
+                  </div>
+                  <div>
+                    <kbd>Tab</kbd> حرکت بین بخش‌ها
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Search Bar */}
             <div className="faq-search">
-              <div className={`search-input-wrapper ${searchFocused ? 'focused' : ''}`}>
+              <div
+                className={`search-input-wrapper ${
+                  searchFocused ? "focused" : ""
+                }`}
+              >
                 <FaSearch className="search-icon" />
                 <input
                   ref={searchInputRef}
@@ -391,7 +476,7 @@ const AskAndAnswers = () => {
                 {searchQuery && (
                   <button
                     className="clear-search-btn"
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => setSearchQuery("")}
                     title="پاک کردن جستجو"
                   >
                     <FaTimes />
@@ -399,13 +484,13 @@ const AskAndAnswers = () => {
                 )}
               </div>
             </div>
-        
+
             {/* Tabs */}
             <div className="faq-tabs">
               <button
-                className={`faq-tab ${activeTab === 'faq' ? 'active' : ''}`}
+                className={`faq-tab ${activeTab === "faq" ? "active" : ""}`}
                 onClick={() => {
-                  setActiveTab('faq');
+                  setActiveTab("faq");
                   updateActivity();
                 }}
               >
@@ -415,9 +500,11 @@ const AskAndAnswers = () => {
                 )}
               </button>
               <button
-                className={`faq-tab ${activeTab === 'my-questions' ? 'active' : ''}`}
+                className={`faq-tab ${
+                  activeTab === "my-questions" ? "active" : ""
+                }`}
                 onClick={() => {
-                  setActiveTab('my-questions');
+                  setActiveTab("my-questions");
                   updateActivity();
                 }}
               >
@@ -437,17 +524,19 @@ const AskAndAnswers = () => {
             )}
 
             {/* FAQ List */}
-            {!loading && activeTab === 'faq' && (
+            {!loading && activeTab === "faq" && (
               <div className="faq-list">
                 {filteredFaqData.length > 0 ? (
                   filteredFaqData.map((item, index) => (
-                    <div 
-                      key={item.id} 
+                    <div
+                      key={item.id}
                       className="faq-item"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <div className="faq-question">
-                        <span className="faq-question-text">{item.question}</span>
+                        <span className="faq-question-text">
+                          {item.question}
+                        </span>
                       </div>
                       <div className="faq-answer">
                         <p className="faq-answer-text">{item.answer}</p>
@@ -460,9 +549,9 @@ const AskAndAnswers = () => {
                       <div>
                         <FaSearch className="no-results-icon" />
                         <p>نتیجه‌ای برای &quot;{searchQuery}&quot; یافت نشد</p>
-                        <button 
+                        <button
                           className="clear-search-link"
-                          onClick={() => setSearchQuery('')}
+                          onClick={() => setSearchQuery("")}
                         >
                           پاک کردن جستجو
                         </button>
@@ -479,14 +568,28 @@ const AskAndAnswers = () => {
             )}
 
             {/* User Questions List */}
-            {!loading && activeTab === 'my-questions' && (
+            {!loading && activeTab === "my-questions" && (
               <div className="faq-list">
                 {filteredUserQuestions.length > 0 ? (
                   filteredUserQuestions.map((item, index) => (
-                    <div 
-                      key={item.id} 
-                      className="faq-item user-question"
-                      style={{ animationDelay: `${index * 0.1}s` }}
+                    <div
+                      key={item.id}
+                      ref={(el) => (questionRefs.current[item.id] = el)}
+                      className={`faq-item user-question${
+                        highlightedQuestionId === item.id
+                          ? " highlighted-question"
+                          : ""
+                      }`}
+                      style={{
+                        animationDelay: `${index * 0.1}s`,
+                        ...(highlightedQuestionId === item.id
+                          ? {
+                              border: "2.5px solid #ffe066",
+                              boxShadow: "0 0 0 4px #ffe066",
+                              background: "#333300",
+                            }
+                          : {}),
+                      }}
                     >
                       <div className="faq-question">
                         <div className="faq-question-header">
@@ -516,7 +619,7 @@ const AskAndAnswers = () => {
                                     className="cancel-edit-btn"
                                     onClick={() => {
                                       setEditingQuestion(null);
-                                      setEditText('');
+                                      setEditText("");
                                     }}
                                     disabled={submittingEdit}
                                   >
@@ -525,13 +628,22 @@ const AskAndAnswers = () => {
                                 </div>
                               </div>
                             ) : (
-                              <span className="faq-question-text">{item.question}</span>
+                              <span className="faq-question-text">
+                                {item.question}
+                              </span>
                             )}
                           </div>
                           <div className="faq-status">
                             <div className="status-actions">
-                              <span className={`status-badge ${item.is_replied ? 'replied' : 'pending'}`}>
-                                {item.status_text || (item.is_replied ? 'پاسخ داده شده' : 'در انتظار پاسخ')}
+                              <span
+                                className={`status-badge ${
+                                  item.is_replied ? "replied" : "pending"
+                                }`}
+                              >
+                                {item.status_text ||
+                                  (item.is_replied
+                                    ? "پاسخ داده شده"
+                                    : "در انتظار پاسخ")}
                               </span>
                               {!item.is_replied && (
                                 <div className="question-actions">
@@ -547,7 +659,9 @@ const AskAndAnswers = () => {
                                   </button>
                                   <button
                                     className="delete-question-btn"
-                                    onClick={() => handleDeleteQuestion(item.id)}
+                                    onClick={() =>
+                                      handleDeleteQuestion(item.id)
+                                    }
                                     disabled={deletingQuestion === item.id}
                                     title="حذف سوال"
                                   >
@@ -560,13 +674,16 @@ const AskAndAnswers = () => {
                                 </div>
                               )}
                             </div>
-                            <span className="faq-timestamp">{formatDate(item.submitted_at)}</span>
+                            <span className="faq-timestamp">
+                              {formatDate(item.submitted_at)}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="faq-answer">
                         <p className="faq-answer-text">
-                          {item.answer || 'سوال شما دریافت شد و در حال بررسی است. به زودی پاسخ خواهید گرفت.'}
+                          {item.answer ||
+                            "سوال شما دریافت شد و در حال بررسی است. به زودی پاسخ خواهید گرفت."}
                         </p>
                       </div>
                     </div>
@@ -577,9 +694,9 @@ const AskAndAnswers = () => {
                       <div>
                         <FaSearch className="no-results-icon" />
                         <p>نتیجه‌ای برای &quot;{searchQuery}&quot; یافت نشد</p>
-                        <button 
+                        <button
                           className="clear-search-link"
-                          onClick={() => setSearchQuery('')}
+                          onClick={() => setSearchQuery("")}
                         >
                           پاک کردن جستجو
                         </button>
@@ -604,8 +721,15 @@ const AskAndAnswers = () => {
                   <span>در حال بررسی وضعیت ورود...</span>
                 </div>
               ) : isAuthenticated ? (
-                <form onSubmit={handleSubmitQuestion} className="ask-question-form">
-                  <div className={`question-input-wrapper ${questionFocused ? 'focused' : ''}`}>
+                <form
+                  onSubmit={handleSubmitQuestion}
+                  className="ask-question-form"
+                >
+                  <div
+                    className={`question-input-wrapper ${
+                      questionFocused ? "focused" : ""
+                    }`}
+                  >
                     <textarea
                       ref={questionTextareaRef}
                       value={userQuestion}
@@ -627,8 +751,8 @@ const AskAndAnswers = () => {
                       <span className="char-count">
                         {userQuestion.length}/500
                       </span>
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         className="submit-question-btn"
                         disabled={submitting || !userQuestion.trim()}
                       >
@@ -650,10 +774,7 @@ const AskAndAnswers = () => {
               ) : (
                 <div className="login-required">
                   <p>برای ارسال سوال، لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
-                  <button 
-                    onClick={handleLoginRedirect}
-                    className="login-btn"
-                  >
+                  <button onClick={handleLoginRedirect} className="login-btn">
                     ورود به حساب کاربری
                   </button>
                 </div>

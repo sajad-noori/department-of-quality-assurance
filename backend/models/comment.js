@@ -151,6 +151,43 @@ const getAllNewsComments = () => {
   });
 };
 
+/**
+ * Get all comments by a user that have at least one reply (for notifications)
+ * @param {number} userId
+ * @returns {Promise<Array>}
+ */
+const getUserCommentsWithReplies = (userId) => {
+  const sql = `
+    SELECT c.id, c.news_id, n.title AS news_title, c.user_id, c.comment, c.created_at, c.reply_count, c.reply_seen,
+      (SELECT MAX(cr.created_at) FROM comment_replies cr WHERE cr.parent_comment_id = c.id) AS last_reply_at
+    FROM comments c
+    LEFT JOIN news n ON c.news_id = n.id
+    WHERE c.user_id = ? AND c.reply_count > 0
+    ORDER BY last_reply_at DESC
+  `;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results);
+    });
+  });
+};
+
+/**
+ * Mark a comment's replies as seen
+ * @param {number} commentId
+ * @returns {Promise<void>}
+ */
+const markRepliesAsSeen = (commentId) => {
+  const sql = `UPDATE comments SET reply_seen = 1 WHERE id = ?`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [commentId], (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+};
+
 module.exports = {
   getCommentsByNewsId,
   addComment,
@@ -158,4 +195,6 @@ module.exports = {
   getRepliesByCommentId,
   addReply,
   getAllNewsComments,
+  getUserCommentsWithReplies,
+  markRepliesAsSeen, // <-- add export
 };

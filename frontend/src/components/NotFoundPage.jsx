@@ -1,12 +1,18 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   return (
     <>
-      <div className="notfound-wrapper" role="main" aria-label="404 Not Found Page">
+      <div
+        className="notfound-wrapper"
+        role="main"
+        aria-label="404 Not Found Page"
+      >
         {/* Animated star layers */}
         <div className="nebula"></div>
         <div className="stars"></div>
@@ -41,28 +47,22 @@ const NotFound = () => {
                   <stop offset="0%" stopColor="#333" />
                   <stop offset="100%" stopColor="#000" />
                 </radialGradient>
-                <linearGradient
-                  id="suitGradient"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
+                <linearGradient id="suitGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#1d4ed8" />
                   <stop offset="100%" stopColor="#2563eb" />
                 </linearGradient>
-                <linearGradient
-                  id="armGradient"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="1"
-                >
+                <linearGradient id="armGradient" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="#1e40af" />
                   <stop offset="100%" stopColor="#3b82f6" />
                 </linearGradient>
-                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%" >
-                  <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#4fc3f7" floodOpacity="0.6"/>
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feDropShadow
+                    dx="0"
+                    dy="0"
+                    stdDeviation="5"
+                    floodColor="#4fc3f7"
+                    floodOpacity="0.6"
+                  />
                 </filter>
               </defs>
               {/* Helmet */}
@@ -154,7 +154,13 @@ const NotFound = () => {
                 filter="url(#glow)"
               />
               {/* Details */}
-              <circle cx="256" cy="420" r="20" fill="#00e5ff" filter="url(#glow)" />
+              <circle
+                cx="256"
+                cy="420"
+                r="20"
+                fill="#00e5ff"
+                filter="url(#glow)"
+              />
               <circle cx="256" cy="420" r="12" fill="#00b0ff" />
             </svg>
           </div>
@@ -162,7 +168,7 @@ const NotFound = () => {
           <h1 className="notfound-title">404</h1>
           <h2 className="notfound-subtitle">Lost in Space</h2>
           <p className="notfound-text">
-          .Sorry the page that you are looking for does not exits
+            .Sorry the page that you are looking for does not exits
           </p>
           <button
             className="notfound-button"
@@ -192,6 +198,13 @@ const NotFound = () => {
           box-shadow: 0 0 120px rgba(15, 90, 140, 0.8);
         }
 
+        /* Light mode override */
+        [data-theme="light"] .notfound-wrapper {
+          color: #1a2233;
+          background: #f6f8fb;
+          box-shadow: 0 0 60px rgba(13, 202, 240, 0.10);
+        }
+
         /* Nebula glow behind stars */
         .nebula {
           position: absolute;
@@ -206,6 +219,11 @@ const NotFound = () => {
           z-index: 0;
           pointer-events: none;
           animation: nebulaPulse 15s ease-in-out infinite alternate;
+        }
+        [data-theme="light"] .nebula {
+          background:
+            radial-gradient(circle at 25% 25%, #a9e5ff55 40%, transparent 70%),
+            radial-gradient(circle at 75% 75%, #0dcaf044 50%, transparent 80%);
         }
 
         @keyframes nebulaPulse {
@@ -233,6 +251,9 @@ const NotFound = () => {
           filter: drop-shadow(0 0 1.4px #bbfaff);
           z-index: 1;
           pointer-events: none;
+        }
+        [data-theme="light"] .stars {
+          filter: drop-shadow(0 0 1.4px #0dcaf0);
         }
 
         /* Twinkling stars */
@@ -290,6 +311,10 @@ const NotFound = () => {
           transform: rotate(-25deg);
           animation: shootingStar 3.5s ease-in-out infinite;
         }
+        [data-theme="light"] .shooting-star {
+          background: linear-gradient(90deg, #0dcaf0, transparent);
+          filter: drop-shadow(0 0 4px #0dcaf0);
+        }
 
         /* Different delays for multiple shooting stars */
         .shooting-star.delay1 {
@@ -330,6 +355,12 @@ const NotFound = () => {
           text-align: center;
           user-select: none;
         }
+        [data-theme="light"] .notfound-card {
+          background: #fff;
+          color: #1a2233;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border: 1.5px solid #e0e0e0;
+        }
 
         /* Astronaut container */
         .notfound-illustration {
@@ -339,6 +370,9 @@ const NotFound = () => {
         }
         .notfound-illustration:hover {
           filter: drop-shadow(0 0 14px #44ccff);
+        }
+        [data-theme="light"] .notfound-illustration {
+          filter: drop-shadow(0 0 8px #0dcaf0aa);
         }
 
         /* Main Title */
@@ -352,6 +386,10 @@ const NotFound = () => {
           color: #82e9ff;
           user-select: text;
         }
+        [data-theme="light"] .notfound-title {
+          color: #0dcaf0;
+          text-shadow: 0 0 8px #a9e5ffcc;
+        }
 
         /* Subtitle */
         .notfound-subtitle {
@@ -362,6 +400,10 @@ const NotFound = () => {
           text-shadow: 0 0 6px #4fc3f7aa;
           user-select: text;
         }
+        [data-theme="light"] .notfound-subtitle {
+          color: #2563eb;
+          text-shadow: 0 0 4px #a9e5ffcc;
+        }
 
         /* Description Text */
         .notfound-text {
@@ -371,6 +413,10 @@ const NotFound = () => {
           line-height: 1.5;
           text-shadow: 0 0 4px #33aaffcc;
           user-select: text;
+        }
+        [data-theme="light"] .notfound-text {
+          color: #2563eb;
+          text-shadow: 0 0 2px #a9e5ffcc;
         }
 
         /* Return button */
@@ -414,6 +460,23 @@ const NotFound = () => {
         .notfound-button:active {
           transform: scale(0.98);
           box-shadow: 0 4px 12px rgba(37, 99, 235, 0.7);
+        }
+        [data-theme="light"] .notfound-button {
+          background: linear-gradient(135deg, #0dcaf0, #a9e5ff);
+          color: #2563eb;
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
+        }
+        [data-theme="light"] .notfound-button::before {
+          background: linear-gradient(90deg, #0dcaf0, #a9e5ff, #0dcaf0);
+        }
+        [data-theme="light"] .notfound-button:hover,
+        [data-theme="light"] .notfound-button:focus {
+          background: linear-gradient(135deg, #a9e5ff, #0dcaf0);
+          box-shadow: 0 4px 16px rgba(13,202,240,0.18);
+          outline-color: #0dcaf0;
+        }
+        [data-theme="light"] .notfound-button:active {
+          box-shadow: 0 2px 8px rgba(13,202,240,0.10);
         }
 
         @keyframes glowingBorder {

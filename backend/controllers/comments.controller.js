@@ -114,3 +114,39 @@ exports.getAllNewsComments = async (req, res) => {
     res.status(500).json({ message: "خطا در دریافت همه نظرات اخبار" });
   }
 };
+
+// Get all comments by the current user that have replies (for notifications)
+exports.getMyRepliedComments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const comments = await Comment.getUserCommentsWithReplies(userId);
+    res.json({ success: true, data: { comments } });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ success: false, message: "خطا در دریافت اعلان نظرات" });
+  }
+};
+
+// Mark a comment's replies as seen (for notifications)
+exports.markRepliesAsSeen = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const commentId = req.body.commentId;
+    // Check ownership
+    const comment = await Comment.getCommentById(commentId);
+    if (!comment || comment.user_id !== userId) {
+      return res
+        .status(403)
+        .json({ success: false, message: "دسترسی غیرمجاز" });
+    }
+    await Comment.markRepliesAsSeen(commentId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ success: false, message: "خطا در ثبت اعلان خوانده شده" });
+  }
+};

@@ -15,6 +15,7 @@ import { useState as useReactState } from "react";
 import { FaBell } from "react-icons/fa";
 import { questionnairesAPI } from "../api/questionnaires";
 import { countUnansweredComments } from "../pages/NewsCommentsPage";
+import { useAuth } from "../contexts/AuthContext";
 
 const menuItems = [
   // {
@@ -100,6 +101,7 @@ export default function MenuWithUtilityBar() {
 
   const { theme, toggleTheme } = useTheme();
   const [animating, setAnimating] = useReactState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     // Only initialize once
@@ -237,11 +239,69 @@ export default function MenuWithUtilityBar() {
         if (isMounted) setNotificationCount(sum);
       } catch {}
     }
-    fetchNotifications();
+    async function fetchUserNotifications() {
+      try {
+        // Fetch replied questions (unseen answers)
+        const qRes = await axios.get("/api/questions/user/unseen-answers", {
+          withCredentials: true,
+        });
+        let questionReplies = [];
+        if (qRes.data.success && Array.isArray(qRes.data)) {
+          questionReplies = qRes.data.data;
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data)
+        ) {
+          questionReplies = qRes.data.data;
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data.questions)
+        ) {
+          questionReplies = qRes.data.data.questions;
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data)
+        ) {
+          questionReplies = qRes.data.data;
+        } else if (qRes.data.success && qRes.data.data) {
+          questionReplies = qRes.data.data;
+        }
+        // Fetch replied comments
+        const cRes = await axios.get("/api/comments/my/replied", {
+          withCredentials: true,
+        });
+        let commentReplies = [];
+        if (
+          cRes.data.success &&
+          cRes.data.data &&
+          Array.isArray(cRes.data.data.comments)
+        ) {
+          commentReplies = cRes.data.data.comments;
+        } else if (cRes.data.success && Array.isArray(cRes.data.data)) {
+          commentReplies = cRes.data.data;
+        }
+        // Count unseen
+        const unseenQuestions = questionReplies.filter(
+          (q) => !q.answer_seen
+        ).length;
+        const unseenComments = commentReplies.filter(
+          (c) => !c.reply_seen
+        ).length;
+        if (isMounted) setNotificationCount(unseenQuestions + unseenComments);
+      } catch {}
+    }
+    if (user && (user.role === "user" || user.role === "institute")) {
+      fetchUserNotifications();
+    } else {
+      fetchNotifications();
+    }
     return () => {
       isMounted = false;
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, user]);
 
   const toggleDropdown = (index) => {
     setDropdownOpen(dropdownOpen === index ? null : index);

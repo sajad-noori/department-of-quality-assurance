@@ -30,4 +30,18 @@ router.get(
   commentsController.getAllNewsComments
 );
 
+// Get all comments by the current user that have replies (for notifications)
+router.get(
+  "/my/replied",
+  authenticate,
+  commentsController.getMyRepliedComments
+);
+
+// Mark a comment's replies as seen (for notifications)
+router.post(
+  "/my/mark-replies-seen",
+  authenticate,
+  commentsController.markRepliesAsSeen
+);
+
 module.exports = router;

@@ -4,10 +4,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { questionnairesAPI } from "../api/questionnaires";
 import { countUnansweredComments } from "./NewsCommentsPage";
+import { useAuth } from "../contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 
 export default function NotificationsPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState({
     totalUncheckedFilledCount: 0,
@@ -17,6 +21,9 @@ export default function NotificationsPage() {
   const [unansweredComments, setUnansweredComments] = useState([]);
   const [uncheckedFilleds, setUncheckedFilleds] = useState([]); // [{ questionnaire, filleds: [] }]
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
+  // New state for user/institute notifications
+  const [questionReplies, setQuestionReplies] = useState([]);
+  const [commentReplies, setCommentReplies] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,11 +102,66 @@ export default function NotificationsPage() {
         }
       }
     }
-    fetchNotifications();
+
+    async function fetchUserNotifications() {
+      setLoading(true);
+      try {
+        // Fetch replied questions (unseen answers)
+        const qRes = await axios.get("/api/questions/user/unseen-answers", {
+          withCredentials: true,
+        });
+        if (qRes.data.success && Array.isArray(qRes.data)) {
+          setQuestionReplies(qRes.data.data);
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data)
+        ) {
+          setQuestionReplies(qRes.data.data);
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data.questions)
+        ) {
+          setQuestionReplies(qRes.data.data.questions);
+        } else if (
+          qRes.data.success &&
+          qRes.data.data &&
+          Array.isArray(qRes.data.data)
+        ) {
+          setQuestionReplies(qRes.data.data);
+        } else if (qRes.data.success && qRes.data.data) {
+          setQuestionReplies(qRes.data.data);
+        }
+        // Fetch replied comments
+        const cRes = await axios.get("/api/comments/my/replied", {
+          withCredentials: true,
+        });
+        if (
+          cRes.data.success &&
+          cRes.data.data &&
+          Array.isArray(cRes.data.data.comments)
+        ) {
+          setCommentReplies(cRes.data.data.comments);
+        } else if (cRes.data.success && Array.isArray(cRes.data.data)) {
+          setCommentReplies(cRes.data.data);
+        }
+      } catch (err) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (user && (user.role === "user" || user.role === "institute")) {
+      fetchUserNotifications();
+    } else {
+      fetchNotifications();
+    }
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]);
 
   // Helper to check if a date is within the last 2 months
   function isWithinLast2Months(dateString) {
@@ -192,6 +254,74 @@ export default function NotificationsPage() {
     })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // For user/institute, build notifications
+  let userNotifications = [];
+  if (user && (user.role === "user" || user.role === "institute")) {
+    userNotifications = [
+      ...questionReplies.map((q) => ({
+        type: "پاسخ به سوال شما",
+        date: q.replied_at,
+        content: q.question,
+        id: q.id,
+        isRead: q.answer_seen === 1 || q.answer_seen === true,
+        action: () => {
+          markQuestionAsSeen(q.id, () =>
+            navigate("/", { state: { scrollToQuestionId: q.id } })
+          );
+        },
+        actionLabel: "مشاهده پاسخ",
+      })),
+      ...commentReplies.map((c) => ({
+        type: "پاسخ به نظر شما",
+        date: c.last_reply_at,
+        content: c.news_title ? `خبر: ${c.news_title}` : c.comment,
+        comment: c.comment,
+        id: c.id,
+        isRead: c.reply_seen === 1 || c.reply_seen === true,
+        action: () => {
+          markCommentAsSeen(c.id, () =>
+            navigate(`/news/${c.news_id}`, {
+              state: { scrollToCommentId: c.id },
+            })
+          );
+        },
+        actionLabel: "مشاهده پاسخ",
+      })),
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  }
+
+  // Instead of mergedNotifications, use userNotifications for user/institute
+  const notificationsToShow =
+    user && (user.role === "user" || user.role === "institute")
+      ? userNotifications
+      : mergedNotifications;
+
+  // Add mark-as-seen logic
+  const markQuestionAsSeen = async (questionId, cb) => {
+    try {
+      await axios.post(
+        "/api/questions/user/mark-answer-seen",
+        { questionId },
+        { withCredentials: true }
+      );
+      if (typeof cb === "function") cb();
+    } catch (err) {
+      if (typeof cb === "function") cb();
+    }
+  };
+  const markCommentAsSeen = async (commentId, cb) => {
+    try {
+      await axios.post(
+        "/api/comments/my/mark-replies-seen",
+        { commentId },
+        { withCredentials: true }
+      );
+      if (typeof cb === "function") cb();
+    } catch (err) {
+      if (typeof cb === "function") cb();
+    }
+  };
+
   return (
     <div
       className={`notifications-container${theme === "dark" ? " dark" : ""}`}
@@ -265,6 +395,16 @@ export default function NotificationsPage() {
           margin-bottom: 8px;
           margin-left: 8px;
         }
+        .read-notification {
+          background: #f0f7ff !important;
+          border: 2px solid #90caf9 !important;
+          color: #274472 !important;
+        }
+        .notifications-container.dark .read-notification {
+          background: #22303a !important;
+          border: 2px solid #80cbc4 !important;
+          color: #f0f7ff !important;
+        }
       `}</style>
       <div
         style={{
@@ -288,7 +428,7 @@ export default function NotificationsPage() {
           <div style={{ fontSize: "1.1rem" }}>در حال بارگذاری...</div>
         ) : (
           <>
-            {mergedNotifications.length === 0 ? (
+            {notificationsToShow.length === 0 ? (
               <div
                 style={{
                   fontSize: "1.1rem",
@@ -299,22 +439,47 @@ export default function NotificationsPage() {
               </div>
             ) : (
               <ul style={{ listStyle: "none", padding: 0, width: "100%" }}>
-                {mergedNotifications.map((item, idx) => {
+                {notificationsToShow.map((item, idx) => {
                   const isUnanswered =
                     item.type === "نظر بدون پاسخ" ||
                     item.type === "سوال بدون پاسخ" ||
-                    item.type === "پرسش‌نامه بررسی نشده";
+                    item.type === "پرسش‌نامه بررسی نشده" ||
+                    item.type === "پاسخ به سوال شما" ||
+                    item.type === "پاسخ به نظر شما";
+                  const isRead = item.isRead;
+                  const isNotificationsPage =
+                    location.pathname === "/notifications";
                   return (
                     <li
                       key={
                         item.filledId ||
                         item.commentId ||
                         item.questionId ||
+                        item.id ||
                         idx
                       }
                       className={`notifications-card${
                         isUnanswered ? " unanswered" : ""
+                      }${
+                        isRead && isNotificationsPage
+                          ? " read-notification"
+                          : ""
                       }`}
+                      style={
+                        isRead && isNotificationsPage
+                          ? theme === "dark"
+                            ? {
+                                background: "#4d3f00",
+                                border: "2px solid #ffe066",
+                                color: "#fffbe6",
+                              }
+                            : {
+                                background: "#fffbe6",
+                                border: "2px solid #ffe066",
+                                color: "#23283a",
+                              }
+                          : {}
+                      }
                     >
                       <div className="notifications-title">{item.type}</div>
                       {item.content && <div>{item.content}</div>}
