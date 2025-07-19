@@ -3,9 +3,9 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { authenticate } = require('../middleware/auth.middleware');
-const { authLimiter } = require('../middleware/rateLimiter');
-const { logDownload } = require('../middleware/logging.middleware');
+const { authenticate } = require("../middleware/auth.middleware");
+const { authLimiter } = require("../middleware/rateLimiter");
+const { logDownload } = require("../middleware/logging.middleware");
 
 // Controller functions
 const {
@@ -50,13 +50,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ 
-  storage, 
+const upload = multer({
+  storage,
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 1 // Only allow one file at a time
-  }
+    files: 1, // Only allow one file at a time
+  },
 });
 
 // Error handling middleware for multer file validation
@@ -65,8 +65,10 @@ function multerErrorHandler(err, req, res, next) {
     if (err.message === "فقط فایل‌های PDF، Word و Excel مجاز هستند.") {
       return res.status(400).json({ error: err.message });
     }
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." });
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res
+        .status(400)
+        .json({ error: "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." });
     }
     // You can add other multer error checks here if needed
     return res.status(500).json({ error: "خطایی در آپلود فایل رخ داد." });
@@ -100,12 +102,12 @@ router.delete("/:id", [authenticate, authLimiter], deleteDocument);
 router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
   const { filename } = req.params;
   const filePath = path.join(__dirname, "..", "uploads", "files", filename);
-  
+
   // Check if file exists
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ message: "فایل یافت نشد" });
   }
-  
+
   // Get file info for logging
   const db = require("../config/db");
   db.execute(
@@ -115,14 +117,14 @@ router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
       if (err) {
         console.error("Error fetching document info:", err);
       }
-      
+
       const documentName = results.length > 0 ? results[0].name : filename;
-      const category = results.length > 0 ? results[0].category : 'unknown';
-      
+      const category = results.length > 0 ? results[0].category : "unknown";
+
       // Set the filename for the logging middleware
       req.params.filename = filename;
       req.documentInfo = { name: documentName, category: category };
-      
+
       // Send the file
       res.download(filePath, filename, (err) => {
         if (err) {
@@ -134,4 +136,4 @@ router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
   );
 });
 
-module.exports = router; 
+module.exports = router;

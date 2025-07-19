@@ -1,53 +1,71 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Typed from 'typed.js';
-import { FaCheckCircle, FaUsers, FaClipboardCheck, FaGraduationCap } from 'react-icons/fa';
-import PresentationImg from '../assets/illustrations/presentation-6-30.png';
-import CustomerServiceImg from '../assets/illustrations/customer-service-1-33.png';
-import OfficeWorkImg from '../assets/illustrations/office-work-81.png';
-import TeamPresentationImg from '../assets/illustrations/team-presentation-6-18.png';
+import React, { useEffect, useRef, useState } from "react";
+import Typed from "typed.js";
+import {
+  FaCheckCircle,
+  FaUsers,
+  FaClipboardCheck,
+  FaGraduationCap,
+} from "react-icons/fa";
+import PresentationImg from "../assets/illustrations/presentation-6-30.png";
+import CustomerServiceImg from "../assets/illustrations/customer-service-1-33.png";
+import OfficeWorkImg from "../assets/illustrations/office-work-81.png";
+import TeamPresentationImg from "../assets/illustrations/team-presentation-6-18.png";
 
 const slides = [
   {
-    component: <img src={PresentationImg} alt="ارائه - Presentation Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
-    title: 'ریاست تضمین کیفیت',
+    component: (
+      <img
+        src={PresentationImg}
+        alt="ارائه - Presentation Illustration"
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
+    ),
+    title: "ریاست تضمین کیفیت و اعتباردهی",
     slogans: [
-      'تضمین کیفیت؛ مسیر آموزش بهتر',
-      'ارتقاء استانداردهای آموزشی',
-      'نظارت مستمر و علمی',
+      "تضمین کیفیت؛ مسیر آموزش بهتر",
+      "ارتقاء استندرد های آموزشی",
+      "نظارت مستمر و علمی",
     ],
     description:
-      'مأموریت ما ارتقاء کیفیت آموزش‌های فنی و حرفه‌ای از طریق ارزیابی، نظارت و همکاری مستمر با مؤسسات آموزشی است.',
+      "مأموریت ما بهبود کیفیت آموزش‌های تخنیکی و مسلکی از طریق ارزیابی، نظارت و همکاری مستمر با مؤسسات آموزشی است.",
   },
 
   {
-    component: <img src={OfficeWorkImg} alt="دفتر کار - Office Work Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
-    title: 'آموزش، توسعه و پیشرفت',
+    component: (
+      <img
+        src={OfficeWorkImg}
+        alt="دفتر کار - Office Work Illustration"
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
+    ),
+    title: "آموزش، توسعه و پیشرفت",
     slogans: [
-      'توسعه مهارت‌های کارآفرینی',
-      'تقویت نیروی کار ماهر',
-      'حمایت از نوآوری آموزشی',
+      "توسعه مهارت‌های کارآفرینی",
+      "تقویت نیروی کار ماهر",
+      "حمایت از نوآوری آموزشی",
     ],
     description:
-      'با تمرکز بر مهارت‌ها و نوآوری، آینده‌ای روشن برای نیروی کار کشور می‌سازیم.',
+      "با تمرکز بر مهارت‌ها و نوآوری، آینده‌ای روشن برای نیروی کار کشور می‌سازیم.",
   },
   {
-    component: <img src={TeamPresentationImg} alt="ارائه تیمی - Team Presentation Illustration" style={{width: '100%', height: '100%', objectFit: 'contain'}} />,
-    title: 'علوم و تکنالوژی',
-    slogans: [
-      'پیشرفت علمی و تکنالوژی',
-      'نوآوری در آموزش',
-      'تحقیق و توسعه',
-    ],
-    description:
-      'ما به توسعه علوم و فناوری و ترویج نوآوری در آموزش متعهدیم.',
+    component: (
+      <img
+        src={TeamPresentationImg}
+        alt="ارائه تیمی - Team Presentation Illustration"
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
+    ),
+    title: "علوم و تکنالوژی",
+    slogans: ["پیشرفت علمی و تکنالوژی", "نوآوری در آموزش", "تحقیق و توسعه"],
+    description: "ما به توسعه علوم و فناوری و ترویج نوآوری در آموزش متعهدیم.",
   },
 ];
 
 const stats = [
-  { icon: <FaUsers />, label: 'مؤسسات تحت نظارت', value: '۲۰۰+' },
-  { icon: <FaClipboardCheck />, label: 'ارزیابی‌های انجام‌شده', value: '۵۰۰+' },
-  { icon: <FaGraduationCap />, label: 'فارغ‌التحصیلان موفق', value: '۱۵۰۰+' },
-  { icon: <FaCheckCircle />, label: 'رضایت آموزشی', value: '۹۵٪' },
+  { icon: <FaUsers />, label: "مؤسسات تحت نظارت", value: "۲۰۰+" },
+  { icon: <FaClipboardCheck />, label: "ارزیابی‌های انجام‌شده", value: "۵۰۰+" },
+  { icon: <FaGraduationCap />, label: "فارغ‌التحصیلان موفق", value: "۱۵۰۰+" },
+  { icon: <FaCheckCircle />, label: "رضایت آموزشی", value: "۹۵٪" },
 ];
 
 const slideDuration = 7000;
@@ -69,7 +87,7 @@ export default function Banner() {
       backDelay: 2500,
       loop: true,
       showCursor: true,
-      cursorChar: '|',
+      cursorChar: "|",
       smartBackspace: true,
     });
     return () => typedRef.current.destroy();
@@ -101,10 +119,11 @@ export default function Banner() {
 
   const handleMouseMove = (e) => {
     if (imageRef.current) {
-      const { left, top, width, height } = imageRef.current.getBoundingClientRect();
+      const { left, top, width, height } =
+        imageRef.current.getBoundingClientRect();
       const x = (e.clientX - left) / width;
       const y = (e.clientY - top) / height;
-      
+
       imageRef.current.style.transform = `
         translate(-50%, -50%) 
         scale(1.05) 
@@ -116,22 +135,24 @@ export default function Banner() {
 
   const handleMouseLeave = () => {
     if (imageRef.current) {
-      imageRef.current.style.transform = 'translate(-50%, -50%) scale(1.05)';
+      imageRef.current.style.transform = "translate(-50%, -50%) scale(1.05)";
     }
   };
 
   return (
     <>
-      <section 
-        className="banner" 
-        dir="rtl" 
+      <section
+        className="banner"
+        dir="rtl"
         aria-label="بنر ریاست تضمین کیفیت"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="banner__content">
           <div className="banner__text">
-            <small className="banner__subtitle">اداره تعلیمات تخنیکی و مسلکی</small>
+            <small className="banner__subtitle">
+              اداره تعلیمات تخنیکی و مسلکی
+            </small>
             <h1 className="banner__title">{slides[current].title}</h1>
             <h3
               className="banner__typed"
@@ -142,9 +163,9 @@ export default function Banner() {
             <p className="banner__description">{slides[current].description}</p>
             <ul className="banner__list">
               {[
-                'ارزیابی‌های دوره‌ای و تخصصی',
-                'حمایت از آموزش استاندارد',
-                'ارتقاء مهارت‌های نیروی کار کشور',
+                "حمایت از آموزش معیاری",
+                "ارتقاء مهارت‌های نیروی کار ",
+                "ارزیابی‌های دوره‌ای و تخصصی",
               ].map((item, i) => (
                 <li key={i} className="banner__list-item">
                   <FaCheckCircle aria-hidden="true" className="banner__icon" />
@@ -154,15 +175,15 @@ export default function Banner() {
             </ul>
             <div className="banner__buttons">
               <a href="/profile" className="btn btn--primary">
-                 پروسه تضمین کیفیت
+                پروسه تضمین کیفیت
               </a>
               <a href="#feedback-section" className="btn btn--outline">
                 تماس با ما
               </a>
             </div>
           </div>
-          <div 
-            className="banner__image-wrapper" 
+          <div
+            className="banner__image-wrapper"
             aria-hidden="true"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -173,7 +194,7 @@ export default function Banner() {
                 <div
                   ref={index === current ? imageRef : null}
                   className={`banner__image ${
-                    index === current ? 'banner__image--active' : ''
+                    index === current ? "banner__image--active" : ""
                   }`}
                 >
                   {slide.component}
@@ -186,7 +207,7 @@ export default function Banner() {
                   key={index}
                   onClick={() => goToSlide(index)}
                   className={`banner__progress-dot ${
-                    index === current ? 'banner__progress-dot--active' : ''
+                    index === current ? "banner__progress-dot--active" : ""
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -200,16 +221,34 @@ export default function Banner() {
               <span className="banner__stat-icon" aria-hidden="true">
                 {icon}
               </span>
-              <span className="banner__stat-label">{label}:</span>{' '}
+              <span className="banner__stat-label">{label}:</span>{" "}
               <strong className="banner__stat-value">{value}</strong>
             </div>
           ))}
         </div>
         <div className="banner__wave" aria-hidden="true">
-          <svg viewBox="0 0 1440 320" width="100%" height="110" preserveAspectRatio="none" style={{ display: 'block' }}>
-            <path fill="#0dcaf0" fillOpacity="1" d="M0,224L48,202.7C96,181,192,139,288,133.3C384,128,480,160,576,186.7C672,213,768,235,864,218.7C960,203,1056,149,1152,133.3C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
-            <path fill="#00b5d7" fillOpacity="0.7" d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,154.7C672,160,768,192,864,197.3C960,203,1056,181,1152,176C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"/>
-            <path fill="#a9e5ff" fillOpacity="0.5" d="M0,256L60,245.3C120,235,240,213,360,197.3C480,181,600,171,720,186.7C840,203,960,245,1080,250.7C1200,256,1320,224,1380,208L1440,192L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/>
+          <svg
+            viewBox="0 0 1440 320"
+            width="100%"
+            height="110"
+            preserveAspectRatio="none"
+            style={{ display: "block" }}
+          >
+            <path
+              fill="#0dcaf0"
+              fillOpacity="1"
+              d="M0,224L48,202.7C96,181,192,139,288,133.3C384,128,480,160,576,186.7C672,213,768,235,864,218.7C960,203,1056,149,1152,133.3C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            />
+            <path
+              fill="#00b5d7"
+              fillOpacity="0.7"
+              d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,154.7C672,160,768,192,864,197.3C960,203,1056,181,1152,176C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            />
+            <path
+              fill="#a9e5ff"
+              fillOpacity="0.5"
+              d="M0,256L60,245.3C120,235,240,213,360,197.3C480,181,600,171,720,186.7C840,203,960,245,1080,250.7C1200,256,1320,224,1380,208L1440,192L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"
+            />
           </svg>
         </div>
       </section>

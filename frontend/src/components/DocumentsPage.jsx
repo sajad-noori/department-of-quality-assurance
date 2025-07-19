@@ -19,42 +19,39 @@ const DocumentsPage = () => {
     guideline: "رهنمودها",
     form: "فرم‌ها",
     "legal-doc": "اسناد تقنینی",
+    "check-list": "چک لیست ها",
+    standards: "استندرد ها",
   };
 
   // Map URL parameters to database category values
   const categoryMapping = {
     guideline: "guideline",
-    form: "form", 
-    "legal-doc": "legal"
+    form: "form",
+    "legal-doc": "legal",
   };
 
   // Category colors for badges (dark theme)
   const categoryColors = {
     guideline: "info",
-    form: "success", 
-    legal: "warning"
+    form: "success",
+    legal: "warning",
   };
 
   // File type icons
   const getFileIcon = (fileName) => {
-    const extension = fileName.split('.').pop().toLowerCase();
+    const extension = fileName.split(".").pop().toLowerCase();
     switch (extension) {
-      case 'pdf':
-        return '📄';
-      case 'doc':
-      case 'docx':
-        return '📝';
-      case 'xls':
-      case 'xlsx':
-        return '📊';
+      case "pdf":
+        return "📄";
+      case "doc":
+      case "docx":
+        return "📝";
+      case "xls":
+      case "xlsx":
+        return "📊";
       default:
-        return '📎';
+        return "📎";
     }
-  };
-
-  // Format file size (mock function - you can implement real file size)
-  const formatFileSize = () => {
-    return "~2MB"; // This would be calculated from actual file size
   };
 
   // Check screen size for responsive behavior
@@ -64,8 +61,8 @@ const DocumentsPage = () => {
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   useEffect(() => {
@@ -73,10 +70,14 @@ const DocumentsPage = () => {
       setLoading(true);
       setError("");
       try {
-        console.log('Current type:', type);
-        console.log('Category mapping:', categoryMapping[type]);
-        console.log('Category translation:', categoryTranslations[type]);
-        const res = await axios.get(`/api/docs-center-and-uploads/documents?type=${categoryMapping[type] || type}`);
+        console.log("Current type:", type);
+        console.log("Category mapping:", categoryMapping[type]);
+        console.log("Category translation:", categoryTranslations[type]);
+        const res = await axios.get(
+          `/api/docs-center-and-uploads/documents?type=${
+            categoryMapping[type] || type
+          }`
+        );
         setDocuments(res.data);
         setFilteredDocs(res.data);
       } catch (err) {
@@ -91,17 +92,19 @@ const DocumentsPage = () => {
   }, [type]);
 
   useEffect(() => {
-    let results = documents.filter((doc) =>
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (doc.category && doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    let results = documents.filter(
+      (doc) =>
+        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (doc.category &&
+          doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     // Sort results
     results.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-      
+
       if (sortBy === "uploadDate") {
         aValue = new Date(aValue);
         bValue = new Date(bValue);
@@ -156,17 +159,20 @@ const DocumentsPage = () => {
     try {
       // Track download with logging
       console.log(`Downloading: ${doc.name}`);
-      
+
       // Use the new download endpoint that includes logging
-      const response = await axios.get(`http://localhost:5000/api/docs-center-and-uploads/download/${doc.fileName}`, {
-        withCredentials: true,
-        responseType: 'blob'
-      });
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/docs-center-and-uploads/download/${doc.fileName}`,
+        {
+          withCredentials: true,
+          responseType: "blob",
+        }
+      );
+
       // Create blob and download
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = doc.name || doc.fileName;
       document.body.appendChild(link);
@@ -174,50 +180,73 @@ const DocumentsPage = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      alert('خطا در دانلود فایل');
+      console.error("Error downloading file:", error);
+      alert("خطا در دانلود فایل");
     }
   };
 
   return (
-    <div className={theme === "light" ? "light-container" : "dark-container"} dir="rtl">
+    <div
+      className={theme === "light" ? "light-container" : "dark-container"}
+      dir="rtl"
+    >
       <div className="container-fluid px-3 px-md-4 px-lg-5">
         {/* Header Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-lg-10 col-xl-8">
             <div className="text-center mb-4">
-              <h2 className={`mb-2 responsive-title ${theme === "light" ? "light-text" : "dark-text"}`}>
+              <h2
+                className={`mb-2 responsive-title ${
+                  theme === "light" ? "light-text" : "dark-text"
+                }`}
+              >
                 <i className="fas fa-folder-open me-2 text-info"></i>
                 {categoryTranslations[type] || type}
               </h2>
-              <p className={`mb-0 responsive-subtitle ${theme === "light" ? "light-text" : "text-light"}`}>
+              <p
+                className={`mb-0 responsive-subtitle ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
                 {filteredDocs.length} سند یافت شد
               </p>
             </div>
-            
+
             {/* Sort Controls - Centered */}
             <div className="d-flex justify-content-center mb-3">
               <div className="btn-group" role="group">
                 <button
                   type="button"
-                  className={`btn btn-outline-light btn-sm ${sortBy === "uploadDate" ? "active" : ""}`}
+                  className={`btn btn-outline-light btn-sm ${
+                    sortBy === "uploadDate" ? "active" : ""
+                  }`}
                   onClick={() => handleSort("uploadDate")}
                 >
                   <i className="fas fa-calendar me-1"></i>
                   <span className="d-none d-sm-inline">تاریخ</span>
                   {sortBy === "uploadDate" && (
-                    <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"} ms-1`}></i>
+                    <i
+                      className={`fas fa-sort-${
+                        sortOrder === "asc" ? "up" : "down"
+                      } ms-1`}
+                    ></i>
                   )}
                 </button>
                 <button
                   type="button"
-                  className={`btn btn-outline-light btn-sm ${sortBy === "name" ? "active" : ""}`}
+                  className={`btn btn-outline-light btn-sm ${
+                    sortBy === "name" ? "active" : ""
+                  }`}
                   onClick={() => handleSort("name")}
                 >
                   <i className="fas fa-sort-alpha-down me-1"></i>
                   <span className="d-none d-sm-inline">نام</span>
                   {sortBy === "name" && (
-                    <i className={`fas fa-sort-${sortOrder === "asc" ? "up" : "down"} ms-1`}></i>
+                    <i
+                      className={`fas fa-sort-${
+                        sortOrder === "asc" ? "up" : "down"
+                      } ms-1`}
+                    ></i>
                   )}
                 </button>
               </div>
@@ -228,16 +257,36 @@ const DocumentsPage = () => {
         {/* Search Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12">
-            <div className={`card ${theme === "light" ? "light-card" : "dark-card"}`}>
+            <div
+              className={`card ${
+                theme === "light" ? "light-card" : "dark-card"
+              }`}
+            >
               <div className="card-body">
                 <div className="input-group">
-                  <span className={`input-group-text ${theme === "light" ? "light-input-group" : "dark-input-group"}`}>
-                    <i className={`fas fa-search ${theme === "light" ? "text-dark" : "text-light"}`}></i>
+                  <span
+                    className={`input-group-text ${
+                      theme === "light"
+                        ? "light-input-group"
+                        : "dark-input-group"
+                    }`}
+                  >
+                    <i
+                      className={`fas fa-search ${
+                        theme === "light" ? "text-dark" : "text-light"
+                      }`}
+                    ></i>
                   </span>
                   <input
                     type="text"
-                    className={`form-control ${theme === "light" ? "light-input" : "dark-input"}`}
-                    placeholder={isMobile ? "جستجو..." : "جستجو براساس نام، توضیحات یا دسته‌بندی..."}
+                    className={`form-control ${
+                      theme === "light" ? "light-input" : "dark-input"
+                    }`}
+                    placeholder={
+                      isMobile
+                        ? "جستجو..."
+                        : "جستجو براساس نام، توضیحات یا دسته‌بندی..."
+                    }
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -268,7 +317,12 @@ const DocumentsPage = () => {
         {error && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8">
-              <div className={`alert alert-danger d-flex align-items-center text-center ${theme === "light" ? "light-alert" : "dark-alert"}`} role="alert">
+              <div
+                className={`alert alert-danger d-flex align-items-center text-center ${
+                  theme === "light" ? "light-alert" : "dark-alert"
+                }`}
+                role="alert"
+              >
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 <div className="responsive-text">{error}</div>
               </div>
@@ -280,10 +334,26 @@ const DocumentsPage = () => {
         {!loading && !error && filteredDocs.length === 0 && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8 text-center py-5">
-              <i className={`fas fa-search fa-2x fa-md-3x mb-3 ${theme === "light" ? "text-secondary" : "text-muted"}`}></i>
-              <h4 className={`responsive-title ${theme === "light" ? "light-text" : "text-light"}`}>هیچ سندی یافت نشد</h4>
-              <p className={`responsive-text ${theme === "light" ? "text-secondary" : "text-muted"}`}>
-                {searchTerm ? "لطفاً کلمات کلیدی دیگری را امتحان کنید." : "در حال حاضر هیچ سندی در این دسته موجود نیست."}
+              <i
+                className={`fas fa-search fa-2x fa-md-3x mb-3 ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              ></i>
+              <h4
+                className={`responsive-title ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
+                هیچ سندی یافت نشد
+              </h4>
+              <p
+                className={`responsive-text ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              >
+                {searchTerm
+                  ? "لطفاً کلمات کلیدی دیگری را امتحان کنید."
+                  : "در حال حاضر هیچ سندی در این دسته موجود نیست."}
               </p>
             </div>
           </div>
@@ -294,43 +364,105 @@ const DocumentsPage = () => {
           <div className="row g-3">
             {filteredDocs.map((doc) => (
               <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div className={`card h-100 hover-shadow ${theme === "light" ? "light-card" : "dark-card"}`}>
+                <div
+                  className={`card h-100 hover-shadow ${
+                    theme === "light" ? "light-card" : "dark-card"
+                  }`}
+                >
                   <div className="card-body d-flex flex-column text-center">
                     <div className="d-flex align-items-start mb-3">
-                      <div className="me-3 fs-2 flex-shrink-0">{getFileIcon(doc.fileName)}</div>
+                      <div className="me-3 fs-2 flex-shrink-0">
+                        {getFileIcon(doc.fileName)}
+                      </div>
                       <div className="flex-grow-1 min-width-0">
-                        <h6 className={`card-title mb-1 text-truncate document-title ${theme === "light" ? "light-text" : "dark-text"}`} title={doc.name}>
+                        <h6
+                          className={`card-title mb-1 text-truncate document-title ${
+                            theme === "light" ? "light-text" : "dark-text"
+                          }`}
+                          title={doc.name}
+                        >
                           {doc.name}
                         </h6>
-                        <span className={`badge bg-${categoryColors[doc.category] || 'secondary'} badge-sm`}>
+                        <span
+                          className={`badge bg-${
+                            categoryColors[doc.category] || "secondary"
+                          } badge-sm`}
+                        >
                           {(() => {
-                            console.log('Rendering badge for type:', type, 'translation:', categoryTranslations[type]);
+                            console.log(
+                              "Rendering badge for type:",
+                              type,
+                              "translation:",
+                              categoryTranslations[type]
+                            );
                             return categoryTranslations[type];
                           })()}
                         </span>
                       </div>
                     </div>
-                    
+
                     {doc.description && (
-                      <p className={`card-text small mb-3 flex-grow-1 ${theme === "light" ? "text-secondary" : "text-muted"}`} style={{ 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}>
+                      <p
+                        className={`card-text small mb-3 flex-grow-1 ${
+                          theme === "light" ? "text-secondary" : "text-muted"
+                        }`}
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
                         {doc.description}
                       </p>
                     )}
-                    
+
+                    {doc.video_link && (
+                      <div className="mb-3">
+                        <a
+                          href={doc.video_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`text-decoration-none d-flex align-items-center justify-content-center ${
+                            theme === "light" ? "text-info" : "text-info"
+                          }`}
+                          style={{
+                            fontSize: "0.875rem",
+                            gap: "0.25rem",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.textDecoration = "underline";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.textDecoration = "none";
+                          }}
+                        >
+                          <span>🎥</span>
+                          <span>ویدیو آموزشی</span>
+                        </a>
+                      </div>
+                    )}
+
                     <div className="d-flex justify-content-center align-items-center mb-3">
-                      <small className={theme === "light" ? "text-secondary" : "text-muted"}>
+                      <small
+                        className={
+                          theme === "light" ? "text-secondary" : "text-muted"
+                        }
+                      >
                         <i className="fas fa-calendar me-1"></i>
-                        <span className="d-none d-md-inline">{new Date(doc.uploadDate).toLocaleDateString("fa-IR")}</span>
-                        <span className="d-inline d-md-none">{new Date(doc.uploadDate).toLocaleDateString("fa-IR", { month: 'short', day: 'numeric' })}</span>
+                        <span className="d-none d-md-inline">
+                          {new Date(doc.uploadDate).toLocaleDateString("fa-IR")}
+                        </span>
+                        <span className="d-inline d-md-none">
+                          {new Date(doc.uploadDate).toLocaleDateString(
+                            "fa-IR",
+                            { month: "short", day: "numeric" }
+                          )}
+                        </span>
                       </small>
                     </div>
                   </div>
-                  
+
                   <div className="card-footer bg-transparent border-top-0 mt-auto">
                     <button
                       onClick={() => handleDownload(doc)}
