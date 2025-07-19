@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
-import { motion } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
+import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const ProfileSidebar = () => {
   const [user, setUser] = useState(null);
@@ -15,26 +26,38 @@ const ProfileSidebar = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     // Sync activeStage with the current route
-    if (location.pathname === '/profile') setActiveStage(1);
-    else if (location.pathname === '/step2') setActiveStage(2);
-    else if (location.pathname === '/step3') setActiveStage(3);
+    if (location.pathname === "/profile") setActiveStage(1);
+    else if (location.pathname === "/step2") setActiveStage(2);
+    else if (location.pathname === "/step3") setActiveStage(3);
   }, [location.pathname]);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get("http://localhost:5000/api/auth/me", {
           withCredentials: true,
         });
         setUser(res.data.user);
         if (res.data.user.profileImage) {
           setProfileImage(res.data.user.profileImage);
         }
+        if (res.data.user) setEditName(res.data.user.name);
       } catch (err) {
-        console.error('Error fetching user:', err);
+        console.error("Error fetching user:", err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -49,19 +72,23 @@ const ProfileSidebar = () => {
     if (file) {
       setUploading(true);
       const formData = new FormData();
-      formData.append('profileImage', file);
+      formData.append("profileImage", file);
 
       try {
-        const response = await axios.post('http://localhost:5000/api/upload-profile-image', formData, {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+        const response = await axios.post(
+          "http://localhost:5000/api/upload-profile-image",
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         setProfileImage(response.data.imageUrl);
       } catch (error) {
-        console.error('Error uploading image:', error);
-        alert('Error uploading image. Please try again.');
+        console.error("Error uploading image:", error);
+        alert("Error uploading image. Please try again.");
       } finally {
         setUploading(false);
       }
@@ -71,22 +98,85 @@ const ProfileSidebar = () => {
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      await axios.post('http://localhost:5000/api/auth/logout', {}, {
-        withCredentials: true
-      });
-      window.location.href = '/login';
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      window.location.href = "/login";
     } catch (error) {
-      console.error('Error logging out:', error);
-      alert('Error logging out. Please try again.');
+      console.error("Error logging out:", error);
+      alert("Error logging out. Please try again.");
       setLoggingOut(false);
+    }
+  };
+
+  const handleEditOpen = () => {
+    setEditOpen(true);
+    setEditError("");
+    setEditSuccess("");
+    setEditName(user.name);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setEditError("");
+    setEditSuccess("");
+  };
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    setEditSuccess("");
+    if (newPassword && newPassword !== confirmPassword) {
+      setEditError("رمزهای عبور مطابقت ندارند.");
+      setEditLoading(false);
+      return;
+    }
+    try {
+      // Update name
+      if (editName !== user.name) {
+        await axios.put(
+          "http://localhost:5000/api/users/me",
+          { name: editName },
+          { withCredentials: true }
+        );
+      }
+      // Update password
+      if (currentPassword && newPassword) {
+        await axios.put(
+          "http://localhost:5000/api/users/me/password",
+          {
+            currentPassword,
+            newPassword,
+          },
+          { withCredentials: true }
+        );
+      }
+      setEditSuccess("پروفایل با موفقیت به‌روزرسانی شد.");
+      setUser((prev) => ({ ...prev, name: editName }));
+      setTimeout(() => setEditOpen(false), 1200);
+    } catch (err) {
+      setEditError(
+        err.response?.data?.message || "خطا در به‌روزرسانی پروفایل."
+      );
+    } finally {
+      setEditLoading(false);
     }
   };
 
   if (loading) {
     return (
       <div className="profile-sidebar">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '100%' }}>
-          <CircularProgress sx={{ color: '#3b82f6' }} />
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "100%" }}
+        >
+          <CircularProgress sx={{ color: "#3b82f6" }} />
         </div>
       </div>
     );
@@ -103,14 +193,14 @@ const ProfileSidebar = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="profile-sidebar"
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
     >
       <div className="profile-content">
-        <motion.div 
+        <motion.div
           className="profile-image-container"
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
@@ -127,7 +217,7 @@ const ProfileSidebar = () => {
               transition={{ duration: 0.3 }}
             />
           ) : (
-            <motion.div 
+            <motion.div
               className="profile-initial"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -137,17 +227,17 @@ const ProfileSidebar = () => {
             </motion.div>
           )}
           {uploading ? (
-            <motion.div 
+            <motion.div
               className="upload-loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <CircularProgress size={24} sx={{ color: '#ffffff' }} />
+              <CircularProgress size={24} sx={{ color: "#ffffff" }} />
             </motion.div>
           ) : (
             <Tooltip title="Change profile picture" placement="top">
-              <motion.label 
-                className={`upload-button ${hover ? 'hover' : ''}`}
+              <motion.label
+                className={`upload-button ${hover ? "hover" : ""}`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -155,14 +245,14 @@ const ProfileSidebar = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                 />
                 <i className="fas fa-camera"></i>
               </motion.label>
             </Tooltip>
           )}
         </motion.div>
-        <motion.h2 
+        <motion.h2
           className="user-name"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -170,7 +260,7 @@ const ProfileSidebar = () => {
         >
           {user.name}
         </motion.h2>
-        <motion.p 
+        <motion.p
           className="user-email"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -178,35 +268,184 @@ const ProfileSidebar = () => {
         >
           {user.email}
         </motion.p>
-        
-        <motion.div 
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{ mt: 1, mb: 2, color: "#0dcaf0", borderColor: "#0dcaf0" }}
+          onClick={handleEditOpen}
+        >
+          ویرایش پروفایل
+        </Button>
+        <Dialog open={editOpen} onClose={handleEditClose}>
+          <DialogTitle sx={{ textAlign: "right", fontWeight: 700 }}>
+            ویرایش پروفایل
+          </DialogTitle>
+          <DialogContent>
+            {editError && (
+              <Alert
+                severity="error"
+                sx={{ mb: 2, direction: "rtl", textAlign: "right" }}
+              >
+                {editError}
+              </Alert>
+            )}
+            {editSuccess && (
+              <Alert
+                severity="success"
+                sx={{ mb: 2, direction: "rtl", textAlign: "right" }}
+              >
+                {editSuccess}
+              </Alert>
+            )}
+            <form
+              onSubmit={handleEditSubmit}
+              id="edit-profile-form"
+              style={{ direction: "rtl", textAlign: "right" }}
+              dir="rtl"
+            >
+              <TextField
+                label="نام"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                fullWidth
+                margin="normal"
+                required
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+              />
+              <TextField
+                label="رمز عبور فعلی"
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="current-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowCurrentPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showCurrentPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="رمز عبور جدید"
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="new-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowNewPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="تأیید رمز عبور جدید"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="new-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowConfirmPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </form>
+          </DialogContent>
+          <DialogActions
+            sx={{
+              justifyContent: "flex-start",
+              flexDirection: "row-reverse",
+              px: 3,
+            }}
+          >
+            <Button onClick={handleEditClose} disabled={editLoading}>
+              انصراف
+            </Button>
+            <Button
+              type="submit"
+              form="edit-profile-form"
+              variant="contained"
+              sx={{ background: "#0dcaf0" }}
+              disabled={editLoading}
+            >
+              {editLoading ? (
+                <CircularProgress size={20} sx={{ color: "#fff" }} />
+              ) : (
+                "ذخیره"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <motion.div
           className="progress-stages"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.4 }}
         >
           {[1, 2, 3].map((stage) => (
-            <motion.div 
+            <motion.div
               key={stage}
-              className={`stage ${activeStage === stage ? 'active' : ''}`}
+              className={`stage ${activeStage === stage ? "active" : ""}`}
               onClick={() => {
                 setActiveStage(stage);
-                if (stage === 1) navigate('/profile');
-                if (stage === 2) navigate('/step2');
-                if (stage === 3) navigate('/step3');
+                if (stage === 1) navigate("/profile");
+                if (stage === 2) navigate("/step2");
+                if (stage === 3) navigate("/step3");
               }}
               whileHover={{ x: -5 }}
               whileTap={{ scale: 0.98 }}
             >
-              <motion.div 
-                className="stage-number"
-                whileHover={{ scale: 1.1 }}
-              >
+              <motion.div className="stage-number" whileHover={{ scale: 1.1 }}>
                 {stage}
               </motion.div>
               <div className="stage-text">
-                <a href="#" onClick={e => e.preventDefault()}>
-                  {stage === 1 ? 'مرحله اول' : stage === 2 ? 'مرحله دوم' : 'مرحله سوم'}
+                <a href="#" onClick={(e) => e.preventDefault()}>
+                  {stage === 1
+                    ? "مرحله اول"
+                    : stage === 2
+                    ? "مرحله دوم"
+                    : "مرحله سوم"}
                 </a>
               </div>
             </motion.div>
@@ -227,7 +466,7 @@ const ProfileSidebar = () => {
             whileTap={{ scale: 0.98 }}
           >
             {loggingOut ? (
-              <CircularProgress size={20} sx={{ color: '#ffffff' }} />
+              <CircularProgress size={20} sx={{ color: "#ffffff" }} />
             ) : (
               <>
                 <i className="fas fa-sign-out-alt"></i>
@@ -511,8 +750,89 @@ const ProfileSidebar = () => {
           background: linear-gradient(145deg, #dc2626, #b91c1c);
         }
       `}</style>
+      {/* Modal theme styles */}
+      <style>{`
+        /* Dark mode modal */
+        .MuiDialog-paper {
+          background: #181c24 !important;
+          color: #e0e6f0 !important;
+        }
+        .MuiDialogContent-root {
+          background: #181c24 !important;
+          color: #e0e6f0 !important;
+        }
+        .MuiDialogTitle-root, .MuiDialogActions-root, .MuiAlert-message {
+          color: #e0e6f0 !important;
+        }
+        /* Light mode modal */
+        [data-theme="light"] .MuiDialog-paper {
+          background: #fff !important;
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialogContent-root {
+          background: #fff !important;
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialogTitle-root, [data-theme="light"] .MuiDialogActions-root, [data-theme="light"] .MuiAlert-message {
+          color: #222 !important;
+        }
+      `}</style>
+      {/* Input styles for modal theme */}
+      <style>{`
+        /* Dark mode input fields */
+        .MuiDialog-root .MuiOutlinedInput-root {
+          background: #232837 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-input {
+          color: #e0e6f0 !important;
+        }
+        .MuiDialog-root .MuiInputLabel-root {
+          color: #bfc8e6 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #3b82f6 !important;
+        }
+        /* Light mode input fields */
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-root {
+          background: #fff !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-input {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiInputLabel-root {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #0dcaf0 !important;
+        }
+      `}</style>
+      {/* Success Alert styles for dark and light mode */}
+      <style>{`
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #204d2a !important;
+          color: #d1ffd6 !important;
+        }
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #4d2020 !important;
+          color: #ffd1d1 !important;
+        }
+        .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #e6f4ea !important;
+          color: #1a3d1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #fbeaea !important;
+          color: #3d1a1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+      `}</style>
     </motion.div>
   );
 };
 
-export default ProfileSidebar; 
+export default ProfileSidebar;

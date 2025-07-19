@@ -34,18 +34,18 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DescriptionIcon from '@mui/icons-material/Description';
-import ImageIcon from '@mui/icons-material/Image';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { styled } from '@mui/material/styles';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import PropTypes from 'prop-types';
-import { useTheme } from '../../contexts/ThemeContext';
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import CloseIcon from "@mui/icons-material/Close";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { styled } from "@mui/material/styles";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import PropTypes from "prop-types";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const darkTheme = createTheme({
   direction: "rtl",
@@ -71,9 +71,9 @@ const darkTheme = createTheme({
       main: "#f44336",
     },
     text: {
-      primary: 'rgba(255, 255, 255, 0.9)',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-    }
+      primary: "rgba(255, 255, 255, 0.9)",
+      secondary: "rgba(255, 255, 255, 0.7)",
+    },
   },
   typography: {
     fontFamily: "sans-serif",
@@ -82,15 +82,15 @@ const darkTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         containedPrimary: {
-          color: '#030305',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: '#00b5d7',
+          color: "#030305",
+          fontWeight: "bold",
+          "&:hover": {
+            backgroundColor: "#00b5d7",
           },
         },
       },
     },
-  }
+  },
 });
 
 const lightTheme = createTheme({
@@ -117,9 +117,9 @@ const lightTheme = createTheme({
       main: "#ff6b6b",
     },
     text: {
-      primary: '#222',
-      secondary: '#666',
-    }
+      primary: "#222",
+      secondary: "#666",
+    },
   },
   typography: {
     fontFamily: "sans-serif",
@@ -128,11 +128,11 @@ const lightTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         containedPrimary: {
-          color: '#fff',
-          fontWeight: 'bold',
-          background: 'linear-gradient(135deg, #0dcaf0, #00b5d7)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #00b5d7, #0dcaf0)',
+          color: "#fff",
+          fontWeight: "bold",
+          background: "linear-gradient(135deg, #0dcaf0, #00b5d7)",
+          "&:hover": {
+            background: "linear-gradient(135deg, #00b5d7, #0dcaf0)",
           },
         },
       },
@@ -140,11 +140,11 @@ const lightTheme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundColor: '#fff',
+          backgroundColor: "#fff",
         },
       },
     },
-  }
+  },
 });
 
 const uploadLabels = [
@@ -162,7 +162,7 @@ const uploadLabels = [
   "doc12_path",
   "doc13_path",
   "doc14_path",
-  "doc15_path"
+  "doc15_path",
 ];
 
 const documentLabels = [
@@ -187,13 +187,13 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Configure axios defaults
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = 'http://localhost:5000';
+axios.defaults.baseURL = "http://localhost:5000";
 
 // Add response interceptor to handle auth errors
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Axios error:', error.response?.data || error.message);
+    console.error("Axios error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
@@ -201,60 +201,60 @@ axios.interceptors.response.use(
 // Helper to get file icon by type
 const getFileIcon = (fileType) => {
   if (!fileType) return <InsertDriveFileIcon color="disabled" />;
-  if (fileType.startsWith('image/')) return <ImageIcon color="primary" />;
-  if (fileType === 'application/pdf') return <PictureAsPdfIcon color="error" />;
-  if (fileType.includes('word')) return <DescriptionIcon color="primary" />;
-  if (fileType.includes('excel')) return <TableChartIcon color="success" />;
+  if (fileType.startsWith("image/")) return <ImageIcon color="primary" />;
+  if (fileType === "application/pdf") return <PictureAsPdfIcon color="error" />;
+  if (fileType.includes("word")) return <DescriptionIcon color="primary" />;
+  if (fileType.includes("excel")) return <TableChartIcon color="success" />;
   return <InsertDriveFileIcon color="action" />;
 };
 
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
   height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
+  overflow: "hidden",
+  position: "absolute",
   bottom: 0,
   left: 0,
-  whiteSpace: 'nowrap',
+  whiteSpace: "nowrap",
   width: 2,
 });
 
-const FilePreview = styled('div')({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '8px',
-  margin: '4px 0',
-  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  borderRadius: '4px',
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  }
+const FilePreview = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  padding: "8px",
+  margin: "4px 0",
+  backgroundColor: "rgba(255, 255, 255, 0.05)",
+  borderRadius: "4px",
+  "&:hover": {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  },
 });
 
 const getAllowedFileTypes = (index) => {
   if (index < 3) {
     return [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ];
   } else {
     // Accept both common zip mimetypes and empty string (for browsers that don't set it)
-    return ['application/zip', 'application/x-zip-compressed', ''];
+    return ["application/zip", "application/x-zip-compressed", ""];
   }
 };
 
 const getAcceptString = (index) => {
   if (index < 3) {
-    return '.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx';
+    return ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx";
   } else {
-    return '.zip';
+    return ".zip";
   }
 };
 
@@ -274,9 +274,9 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ color: 'red', padding: 24, textAlign: 'center' }}>
+        <div style={{ color: "red", padding: 24, textAlign: "center" }}>
           <h2>خطای غیرمنتظره رخ داد</h2>
-          <p>{this.state.error?.message || 'مشکلی پیش آمده است.'}</p>
+          <p>{this.state.error?.message || "مشکلی پیش آمده است."}</p>
         </div>
       );
     }
@@ -285,7 +285,7 @@ class ErrorBoundary extends React.Component {
 }
 
 ErrorBoundary.propTypes = {
-  children: PropTypes.node
+  children: PropTypes.node,
 };
 
 export default function FileUploadWizard({ onStepChange }) {
@@ -298,15 +298,15 @@ export default function FileUploadWizard({ onStepChange }) {
   const [user, setUser] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'success'
+    message: "",
+    severity: "success",
   });
   const [inlineFeedback, setInlineFeedback] = useState({});
   const [previewFile, setPreviewFile] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
     documentType: null,
-    index: null
+    index: null,
   });
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
@@ -319,22 +319,22 @@ export default function FileUploadWizard({ onStepChange }) {
   const filledCount = Object.values(documents).filter(Boolean).length;
 
   useEffect(() => {
-    console.log('=== Documents Component Mounted ===');
-    console.log('Initial state:', {
+    console.log("=== Documents Component Mounted ===");
+    console.log("Initial state:", {
       documents: documents,
       loading: loading,
       uploading: uploading,
-      error: error
+      error: error,
     });
-    
+
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get("http://localhost:5000/api/auth/me", {
           withCredentials: true,
         });
         setUser(res.data.user);
       } catch (err) {
-        console.error('Error fetching user:', err);
+        console.error("Error fetching user:", err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -345,18 +345,18 @@ export default function FileUploadWizard({ onStepChange }) {
   }, []);
 
   useEffect(() => {
-    if (user && user.role === 'institute') {
+    if (user && user.role === "institute") {
       fetchDocuments();
     }
   }, [user]);
 
   const fetchDocuments = async () => {
     try {
-      console.log('=== Fetching Documents ===');
-      console.log('Current state:', {
+      console.log("=== Fetching Documents ===");
+      console.log("Current state:", {
         documents: documents,
         loading: loading,
-        error: error
+        error: error,
       });
 
       setLoading(true);
@@ -364,23 +364,23 @@ export default function FileUploadWizard({ onStepChange }) {
 
       // Initialize docsMap with empty values for all document types
       const docsMap = {};
-      uploadLabels.forEach(label => {
+      uploadLabels.forEach((label) => {
         docsMap[label] = null;
       });
-      console.log('Initialized empty document map:', docsMap);
+      console.log("Initialized empty document map:", docsMap);
 
       // Fetch documents for each type
-      console.log('Fetching documents for each type');
+      console.log("Fetching documents for each type");
       for (const type of uploadLabels) {
         try {
           console.log(`Fetching documents for type: ${type}`);
-          const response = await axios.get('/api/profile-documents', {
-            params: { type }
+          const response = await axios.get("/api/profile-documents", {
+            params: { type },
           });
-          
+
           console.log(`Response for type ${type}:`, {
             success: response.data.success,
-            dataCount: response.data.data?.length || 0
+            dataCount: response.data.data?.length || 0,
           });
 
           if (response.data.success && Array.isArray(response.data.data)) {
@@ -388,7 +388,7 @@ export default function FileUploadWizard({ onStepChange }) {
             if (docs.length > 0) {
               console.log(`Found document for type ${type}:`, {
                 id: docs[0].id,
-                name: docs[0].file_name
+                name: docs[0].file_name,
               });
               docsMap[type] = docs[0];
             } else {
@@ -399,83 +399,87 @@ export default function FileUploadWizard({ onStepChange }) {
           console.error(`Error fetching documents for type ${type}:`, {
             message: err.message,
             response: err.response?.data,
-            status: err.response?.status
+            status: err.response?.status,
           });
           // Continue with other types even if one fails
           continue;
         }
       }
-      
-      console.log('Final document map:', docsMap);
+
+      console.log("Final document map:", docsMap);
       setDocuments(docsMap);
     } catch (err) {
-      console.error('=== Error Fetching Documents ===');
-      console.error('Error details:', {
+      console.error("=== Error Fetching Documents ===");
+      console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
         config: {
           url: err.config?.url,
           method: err.config?.method,
-          headers: err.config?.headers
-        }
+          headers: err.config?.headers,
+        },
       });
 
       if (err.response?.status === 401 || err.response?.status === 403) {
-        console.log('Authentication error, redirecting to login');
-        showSnackbar('لطفا وارد حساب کاربری خود شوید', 'error');
-        navigate('/login');
+        console.log("Authentication error, redirecting to login");
+        showSnackbar("لطفا وارد حساب کاربری خود شوید", "error");
+        navigate("/login");
       } else {
-        setError('خطا در دریافت اسناد');
-        showSnackbar(err.response?.data?.message || 'خطا در دریافت اسناد', 'error');
+        setError("خطا در دریافت اسناد");
+        showSnackbar(
+          err.response?.data?.message || "خطا در دریافت اسناد",
+          "error"
+        );
       }
     } finally {
       setLoading(false);
-      console.log('=== Fetch Documents Complete ===');
-      console.log('Final state:', {
+      console.log("=== Fetch Documents Complete ===");
+      console.log("Final state:", {
         documents: documents,
         loading: loading,
-        error: error
+        error: error,
       });
     }
   };
 
-  const showSnackbar = (message, severity = 'success') => {
-    console.log('=== Showing Snackbar ===', {
+  const showSnackbar = (message, severity = "success") => {
+    console.log("=== Showing Snackbar ===", {
       message,
-      severity
+      severity,
     });
     setSnackbar({
       open: true,
       message,
-      severity
+      severity,
     });
   };
 
   const handleCloseSnackbar = () => {
-    console.log('=== Closing Snackbar ===');
-    setSnackbar(prev => ({ ...prev, open: false }));
+    console.log("=== Closing Snackbar ===");
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   const validateFile = (file, index) => {
     const allowedTypes = getAllowedFileTypes(index);
     if (index >= 3) {
-      const isZip = (
+      const isZip =
         allowedTypes.includes(file.type) ||
-        (file.type === '' && file.name.toLowerCase().endsWith('.zip'))
-      );
+        (file.type === "" && file.name.toLowerCase().endsWith(".zip"));
       if (!isZip) {
-        setError('فقط فایل zip مجاز است.');
+        setError("فقط فایل zip مجاز است.");
         return false;
       }
     } else {
       if (!allowedTypes.includes(file.type)) {
-        setError('نوع فایل مجاز نیست. فقط فایل‌های تصویر، PDF، Word و Excel مجاز هستند.');
+        setError(
+          "نوع فایل مجاز نیست. فقط فایل‌های تصویر، PDF، Word و Excel مجاز هستند."
+        );
         return false;
       }
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError('حجم فایل نباید بیشتر از 10 مگابایت باشد');
+      setError("حجم فایل نباید بیشتر از 10 مگابایت باشد");
       return false;
     }
     return true;
@@ -488,13 +492,13 @@ export default function FileUploadWizard({ onStepChange }) {
       e.target.value = null;
       return;
     }
-    setTempFiles(prev => ({ ...prev, [index]: file }));
+    setTempFiles((prev) => ({ ...prev, [index]: file }));
     setError(null);
-    setSuccess('فایل با موفقیت انتخاب شد');
+    setSuccess("فایل با موفقیت انتخاب شد");
   };
 
   const removeTempFile = (index) => {
-    setTempFiles(prev => {
+    setTempFiles((prev) => {
       const newTempFiles = { ...prev };
       delete newTempFiles[index];
       return newTempFiles;
@@ -504,134 +508,138 @@ export default function FileUploadWizard({ onStepChange }) {
   const handleUpload = async (index) => {
     const file = tempFiles[index];
     if (!file) {
-      setError('لطفا یک فایل انتخاب کنید');
+      setError("لطفا یک فایل انتخاب کنید");
       return;
     }
 
-    setUploading(prev => ({ ...prev, [index]: true }));
-    setUploadProgress(prev => ({ ...prev, [index]: 0 }));
+    setUploading((prev) => ({ ...prev, [index]: true }));
+    setUploadProgress((prev) => ({ ...prev, [index]: 0 }));
     setError(null);
     setSuccess(null);
 
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('document_type', uploadLabels[index]);
-    formData.append('is_profile', true);
+    formData.append("file", file);
+    formData.append("document_type", uploadLabels[index]);
+    formData.append("is_profile", true);
 
     try {
       const response = await axios.post(
         `/api/profile-documents/upload?document_type=${uploadLabels[index]}`,
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: { "Content-Type": "multipart/form-data" },
           onUploadProgress: (progressEvent) => {
-            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(prev => ({ ...prev, [index]: percent }));
-          }
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress((prev) => ({ ...prev, [index]: percent }));
+          },
         }
       );
 
-      console.log('Upload response:', {
+      console.log("Upload response:", {
         success: response.data.success,
-        document: response.data.data
+        document: response.data.data,
       });
 
       if (response.data.success) {
-        console.log('Fetching updated document list');
-        const docResponse = await axios.get('/api/profile-documents', {
-          params: { 
+        console.log("Fetching updated document list");
+        const docResponse = await axios.get("/api/profile-documents", {
+          params: {
             type: uploadLabels[index],
-            is_profile: true 
-          }
+            is_profile: true,
+          },
         });
 
         if (docResponse.data.success && docResponse.data.data.length > 0) {
-          setDocuments(prev => ({
+          setDocuments((prev) => ({
             ...prev,
-            [uploadLabels[index]]: docResponse.data.data[0]
+            [uploadLabels[index]]: docResponse.data.data[0],
           }));
         }
-        setSuccess('فایل با موفقیت بارگذاری شد');
+        setSuccess("فایل با موفقیت بارگذاری شد");
         removeTempFile(index);
       }
-      setUploadProgress(prev => ({ ...prev, [index]: 100 }));
+      setUploadProgress((prev) => ({ ...prev, [index]: 100 }));
     } catch (err) {
-      console.error('=== Error Uploading File ===');
-      console.error('Error details:', {
+      console.error("=== Error Uploading File ===");
+      console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
       });
 
       if (err.response?.status === 401 || err.response?.status === 403) {
-        showSnackbar('لطفا وارد حساب کاربری خود شوید', 'error');
-        navigate('/login');
+        showSnackbar("لطفا وارد حساب کاربری خود شوید", "error");
+        navigate("/login");
       } else {
-        setError(err.response?.data?.message || 'خطا در بارگذاری فایل');
+        setError(err.response?.data?.message || "خطا در بارگذاری فایل");
       }
-      setUploadProgress(prev => ({ ...prev, [index]: 0 }));
+      setUploadProgress((prev) => ({ ...prev, [index]: 0 }));
     } finally {
-      setUploading(prev => ({ ...prev, [index]: false }));
+      setUploading((prev) => ({ ...prev, [index]: false }));
     }
   };
 
   const handleDelete = async (documentType, index) => {
-    console.log('=== Delete Document Request ===', {
+    console.log("=== Delete Document Request ===", {
       documentType,
-      index
+      index,
     });
 
     const doc = documents[documentType];
     if (!doc) {
-      console.warn('No document found for type:', documentType);
+      console.warn("No document found for type:", documentType);
       return;
     }
 
     try {
-      console.log('Sending delete request to server');
-      const response = await axios.delete(`/api/profile-documents/${doc.id}`);
+      console.log("Sending delete request to server");
+      const response = await axios.delete(`/api/profile-documents/${doc.id}`, {
+        params: { document_type: documentType },
+      });
 
-      console.log('Delete response:', {
+      console.log("Delete response:", {
         success: response.data.success,
-        message: response.data.message
+        message: response.data.message,
       });
 
       if (response.data.success) {
-        console.log('Updating documents state after deletion');
-        setDocuments(prev => {
+        console.log("Updating documents state after deletion");
+        setDocuments((prev) => {
           const newDocs = { ...prev };
           newDocs[documentType] = null;
           return newDocs;
         });
-        setInlineFeedback(prev => ({ 
-          ...prev, 
-          [index]: { 
-            type: 'success', 
-            message: 'سند با موفقیت حذف شد' 
-          } 
+        setInlineFeedback((prev) => ({
+          ...prev,
+          [index]: {
+            type: "success",
+            message: "سند با موفقیت حذف شد",
+          },
         }));
       }
     } catch (err) {
-      console.error('=== Error Deleting Document ===');
-      console.error('Error details:', {
+      console.error("=== Error Deleting Document ===");
+      console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
       });
 
-      setInlineFeedback(prev => ({ 
-        ...prev, 
-        [index]: { 
-          type: 'error', 
-          message: err.response?.data?.message || 'خطا در حذف سند' 
-        } 
+      setInlineFeedback((prev) => ({
+        ...prev,
+        [index]: {
+          type: "error",
+          message: err.response?.data?.message || "خطا در حذف سند",
+        },
       }));
     }
   };
 
   const handlePreview = async (document) => {
-    console.log('=== Preview Document ===', {
-      document
+    console.log("=== Preview Document ===", {
+      document,
     });
     setPreviewLoading(true);
     setPreviewError(null);
@@ -640,48 +648,48 @@ export default function FileUploadWizard({ onStepChange }) {
   };
 
   const handleClosePreview = () => {
-    console.log('=== Close Preview ===');
+    console.log("=== Close Preview ===");
     setPreviewFile(null);
   };
 
   const handleDeleteClick = (documentType, index) => {
-    console.log('=== Delete Click ===', {
+    console.log("=== Delete Click ===", {
       documentType,
-      index
+      index,
     });
     setDeleteDialog({
       open: true,
       documentType,
-      index
+      index,
     });
   };
 
   const handleDeleteConfirm = async () => {
-    console.log('=== Delete Confirm ===', {
+    console.log("=== Delete Confirm ===", {
       documentType: deleteDialog.documentType,
-      index: deleteDialog.index
+      index: deleteDialog.index,
     });
     await handleDelete(deleteDialog.documentType, deleteDialog.index);
     setDeleteDialog({
       open: false,
       documentType: null,
-      index: null
+      index: null,
     });
   };
 
   const handleDeleteCancel = () => {
-    console.log('=== Delete Cancel ===');
+    console.log("=== Delete Cancel ===");
     setDeleteDialog({
       open: false,
       documentType: null,
-      index: null
+      index: null,
     });
   };
 
   const getFileUrl = (filePath) => {
-    if (!filePath) return '';
+    if (!filePath) return "";
     // Convert backslashes to forward slashes and ensure proper URL format
-    return `http://localhost:5000/${filePath.replace(/\\/g, '/')}`;
+    return `http://localhost:5000/${filePath.replace(/\\/g, "/")}`;
   };
 
   // Auto-clear success/error messages after 3 seconds, with robust handling
@@ -718,7 +726,10 @@ export default function FileUploadWizard({ onStepChange }) {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "200px" }}
+      >
         <CircularProgress />
       </div>
     );
@@ -726,25 +737,33 @@ export default function FileUploadWizard({ onStepChange }) {
 
   if (!user) {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-warning text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
 
-  if (user.role !== 'institute') {
+  if (user.role !== "institute") {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-warning text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
         <p className="mb-3">
-          برای بارگذاری اسناد، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت شود.
+          برای بارگذاری اسناد، حساب کاربری شما باید به عنوان مرکز آموزشی ثبت
+          شود.
         </p>
         <hr />
         <p className="mb-0">
-          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری شما به عنوان مرکز آموزشی تنظیم شود.
+          لطفاً با شماره <strong>۰۷۷۸۵۵۸۹۶۸</strong> تماس بگیرید تا حساب کاربری
+          شما به عنوان مرکز آموزشی تنظیم شود.
         </p>
       </div>
     );
@@ -752,7 +771,7 @@ export default function FileUploadWizard({ onStepChange }) {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
+      <ThemeProvider theme={theme === "light" ? lightTheme : darkTheme}>
         <CssBaseline />
         <Box
           sx={{
@@ -762,7 +781,7 @@ export default function FileUploadWizard({ onStepChange }) {
             direction: "rtl",
             bgcolor: "background.default",
             color: "text.primary",
-            maxWidth: 900
+            maxWidth: 900,
           }}
           aria-label="مدیریت اسناد و مدارک"
         >
@@ -773,13 +792,14 @@ export default function FileUploadWizard({ onStepChange }) {
             mb={3}
             sx={{ fontSize: 14 }}
           >
-            یاداشت: از ارسال اسناد و مدارک بی ربط و خارج از موارد ذکر شده جلوگیری نمائید. در
-            صورت عدم رعایت این مسئله امکان دارد در خواست شما برای اعتباردهی از سوی بورد رد گردد.
+            یاداشت: از ارسال اسناد و مدارک بی ربط و خارج از موارد ذکر شده
+            جلوگیری نمائید. در صورت عدم رعایت این مسئله امکان دارد در خواست شما
+            برای اعتباردهی از سوی بورد رد گردد.
           </Typography>
 
           {uploadLabels.length === 0 && (
-            <Box sx={{ textAlign: 'center', mt: 4 }}>
-              <InsertDriveFileIcon sx={{ fontSize: 60, color: 'grey.600' }} />
+            <Box sx={{ textAlign: "center", mt: 4 }}>
+              <InsertDriveFileIcon sx={{ fontSize: 60, color: "grey.600" }} />
               <Typography variant="h6" color="text.secondary" mt={2}>
                 هیچ سندی برای بارگذاری وجود ندارد.
               </Typography>
@@ -787,13 +807,19 @@ export default function FileUploadWizard({ onStepChange }) {
           )}
 
           {uploadLabels.map((label, index) => (
-            <Accordion key={index} sx={{ bgcolor: "background.paper", mb: 1 }} aria-label={`بارگذاری: ${documentLabels[index]}`}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}>
+            <Accordion
+              key={index}
+              sx={{ bgcolor: "background.paper", mb: 1 }}
+              aria-label={`بارگذاری: ${documentLabels[index]}`}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon sx={{ color: "primary.main" }} />}
+              >
                 <Typography>{`بارگذاری: ${documentLabels[index]}`}</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Stack spacing={2}>
-                  <Box sx={{ textAlign: 'center' }}>
+                  <Box sx={{ textAlign: "center" }}>
                     <Button
                       variant="contained"
                       component="label"
@@ -810,22 +836,37 @@ export default function FileUploadWizard({ onStepChange }) {
                         aria-label={`انتخاب فایل برای ${documentLabels[index]}`}
                       />
                     </Button>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
                       {index < 3
                         ? "فرمت‌های مجاز: jpg, png, gif, pdf, doc, docx, xls, xlsx | حداکثر ۱۰ مگابایت"
                         : "فقط فایل zip | حداکثر ۱۰ مگابایت"}
                     </Typography>
-                    <Typography variant="caption" color="info.main" sx={{ mt: 1, display: 'block' }}>
+                    <Typography
+                      variant="caption"
+                      color="info.main"
+                      sx={{ mt: 1, display: "block" }}
+                    >
                       {`راهنما: ${documentLabels[index]}`}
                     </Typography>
                   </Box>
 
                   {tempFiles[index] && (
                     <FilePreview>
-                      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          flexGrow: 1,
+                        }}
+                      >
                         {getFileIcon(tempFiles[index].type)}
                         <Typography variant="body2" sx={{ ml: 1 }}>
-                          {tempFiles[index].name} ({(tempFiles[index].size / 1024 / 1024).toFixed(2)} MB)
+                          {tempFiles[index].name} (
+                          {(tempFiles[index].size / 1024 / 1024).toFixed(2)} MB)
                         </Typography>
                       </Box>
                       <IconButton
@@ -842,15 +883,24 @@ export default function FileUploadWizard({ onStepChange }) {
                         size="small"
                         onClick={() => handleUpload(index)}
                         disabled={uploading[index]}
-                        startIcon={uploading[index] ? <CircularProgress size={20} /> : <CloudUploadIcon />}
+                        startIcon={
+                          uploading[index] ? (
+                            <CircularProgress size={20} />
+                          ) : (
+                            <CloudUploadIcon />
+                          )
+                        }
                       >
-                        {uploading[index] ? 'در حال بارگذاری...' : 'بارگذاری'}
+                        {uploading[index] ? "در حال بارگذاری..." : "بارگذاری"}
                       </Button>
                     </FilePreview>
                   )}
 
                   {documents[label] && (
-                    <TableContainer component={Paper} sx={{ bgcolor: 'background.paper' }}>
+                    <TableContainer
+                      component={Paper}
+                      sx={{ bgcolor: "background.paper" }}
+                    >
                       <Table size="small">
                         <TableHead>
                           <TableRow>
@@ -870,7 +920,9 @@ export default function FileUploadWizard({ onStepChange }) {
                                 <IconButton
                                   size="small"
                                   color="primary"
-                                  onClick={() => handlePreview(documents[label])}
+                                  onClick={() =>
+                                    handlePreview(documents[label])
+                                  }
                                   aria-label={`مشاهده سند ${documentLabels[index]}`}
                                 >
                                   <VisibilityIcon />
@@ -878,7 +930,9 @@ export default function FileUploadWizard({ onStepChange }) {
                                 <IconButton
                                   size="small"
                                   color="error"
-                                  onClick={() => handleDeleteClick(label, index)}
+                                  onClick={() =>
+                                    handleDeleteClick(label, index)
+                                  }
                                   disabled={uploading[index]}
                                   aria-label={`حذف سند ${documentLabels[index]}`}
                                 >
@@ -904,8 +958,15 @@ export default function FileUploadWizard({ onStepChange }) {
                   )}
 
                   {uploading[index] && (
-                    <Box sx={{ width: '100%' }}>
-                      <LinearProgress variant={uploadProgress[index] ? 'determinate' : 'indeterminate'} value={uploadProgress[index] || 0} />
+                    <Box sx={{ width: "100%" }}>
+                      <LinearProgress
+                        variant={
+                          uploadProgress[index]
+                            ? "determinate"
+                            : "indeterminate"
+                        }
+                        value={uploadProgress[index] || 0}
+                      />
                       {uploadProgress[index] !== undefined && (
                         <Typography variant="caption" color="text.secondary">
                           {uploadProgress[index]}%
@@ -914,26 +975,26 @@ export default function FileUploadWizard({ onStepChange }) {
                     </Box>
                   )}
 
-                  {inlineFeedback[index]?.type === 'error' && (
-                    <Alert severity="error" sx={{ width: '100%' }}>
+                  {inlineFeedback[index]?.type === "error" && (
+                    <Alert severity="error" sx={{ width: "100%" }}>
                       <ErrorIcon className="me-2" />
                       {inlineFeedback[index].message}
                     </Alert>
                   )}
-                  {inlineFeedback[index]?.type === 'success' && (
-                    <Alert severity="success" sx={{ width: '100%' }}>
+                  {inlineFeedback[index]?.type === "success" && (
+                    <Alert severity="success" sx={{ width: "100%" }}>
                       <CheckCircleIcon className="me-2" />
                       {inlineFeedback[index].message}
                     </Alert>
                   )}
                   {error && (
-                    <Alert severity="error" sx={{ width: '100%' }}>
+                    <Alert severity="error" sx={{ width: "100%" }}>
                       <ErrorIcon className="me-2" />
                       {error}
                     </Alert>
                   )}
                   {success && (
-                    <Alert severity="success" sx={{ width: '100%' }}>
+                    <Alert severity="success" sx={{ width: "100%" }}>
                       <CheckCircleIcon className="me-2" />
                       {success}
                     </Alert>
@@ -952,10 +1013,12 @@ export default function FileUploadWizard({ onStepChange }) {
             aria-labelledby="file-preview-dialog-title"
           >
             <DialogTitle id="file-preview-dialog-title">
-              <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="h6">
-                  {previewFile?.file_name}
-                </Typography>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="h6">{previewFile?.file_name}</Typography>
                 <IconButton
                   edge="end"
                   color="inherit"
@@ -968,34 +1031,38 @@ export default function FileUploadWizard({ onStepChange }) {
             </DialogTitle>
             <DialogContent>
               {previewLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
                   <CircularProgress />
                 </Box>
               ) : previewError ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Box sx={{ textAlign: "center", py: 4 }}>
                   <Typography variant="body1" color="error" gutterBottom>
                     {previewError}
                   </Typography>
                 </Box>
-              ) : previewFile?.file_type?.startsWith('image/') ? (
+              ) : previewFile?.file_type?.startsWith("image/") ? (
                 <img
                   src={getFileUrl(previewFile.file_path)}
                   alt={previewFile.file_name}
-                  style={{ maxWidth: '100%', height: 'auto' }}
+                  style={{ maxWidth: "100%", height: "auto" }}
                   onError={(e) => {
-                    console.error('Error loading image:', e);
-                    setPreviewError('خطا در بارگذاری تصویر');
+                    console.error("Error loading image:", e);
+                    setPreviewError("خطا در بارگذاری تصویر");
                   }}
                 />
-              ) : previewFile?.file_type === 'application/pdf' ? (
+              ) : previewFile?.file_type === "application/pdf" ? (
                 <iframe
                   src={getFileUrl(previewFile.file_path)}
-                  style={{ width: '100%', height: '80vh', border: 'none' }}
+                  style={{ width: "100%", height: "80vh", border: "none" }}
                   title={previewFile.file_name}
                 />
               ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body1" color="text.secondary" gutterBottom>
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     پیش‌نمایش برای این نوع فایل در دسترس نیست
                   </Typography>
                   <Button
@@ -1021,9 +1088,7 @@ export default function FileUploadWizard({ onStepChange }) {
             aria-labelledby="delete-dialog-title"
             aria-describedby="delete-dialog-description"
           >
-            <DialogTitle id="delete-dialog-title">
-              حذف سند
-            </DialogTitle>
+            <DialogTitle id="delete-dialog-title">حذف سند</DialogTitle>
             <DialogContent>
               <DialogContentText id="delete-dialog-description">
                 آیا از حذف این سند اطمینان دارید؟ این عمل قابل بازگشت نیست.
@@ -1033,9 +1098,9 @@ export default function FileUploadWizard({ onStepChange }) {
               <Button onClick={handleDeleteCancel} color="primary">
                 انصراف
               </Button>
-              <Button 
-                onClick={handleDeleteConfirm} 
-                color="error" 
+              <Button
+                onClick={handleDeleteConfirm}
+                color="error"
                 autoFocus
                 variant="contained"
               >
@@ -1048,12 +1113,12 @@ export default function FileUploadWizard({ onStepChange }) {
             open={snackbar.open}
             autoHideDuration={6000}
             onClose={handleCloseSnackbar}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <Alert
               onClose={handleCloseSnackbar}
               severity={snackbar.severity}
-              sx={{ width: '100%' }}
+              sx={{ width: "100%" }}
             >
               {snackbar.message}
             </Alert>
@@ -1065,5 +1130,5 @@ export default function FileUploadWizard({ onStepChange }) {
 }
 
 FileUploadWizard.propTypes = {
-  onStepChange: PropTypes.func
+  onStepChange: PropTypes.func,
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -6,6 +6,19 @@ import debounce from "lodash/debounce";
 import { useTheme } from "../contexts/ThemeContext";
 import { questionnairesAPI } from "../api/questionnaires";
 import { countUnansweredComments } from "../pages/NewsCommentsPage";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 const EmployeeProfile = () => {
   const navigate = useNavigate();
@@ -32,6 +45,22 @@ const EmployeeProfile = () => {
   const [updatingStage, setUpdatingStage] = useState(null);
   const usersPerPage = 15;
   const [unansweredNewsComments, setUnansweredNewsComments] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const profileSectionRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -40,6 +69,9 @@ const EmployeeProfile = () => {
           withCredentials: true,
         });
         setUser(response.data.user);
+        if (response.data.user.profileImage) {
+          setProfileImage(response.data.user.profileImage);
+        }
       } catch (err) {
         console.error("Error fetching user:", err);
         setError("خطا در دریافت اطلاعات کاربر");
@@ -50,6 +82,10 @@ const EmployeeProfile = () => {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (user) setEditName(user.name);
+  }, [user]);
 
   const fetchEducationalCenters = async (retryCount = 0) => {
     try {
@@ -206,6 +242,118 @@ const EmployeeProfile = () => {
     navigate(`/institute/${userId}`);
   };
 
+  const handleEditOpen = () => {
+    setEditOpen(true);
+    setEditError("");
+    setEditSuccess("");
+    setEditName(user.name);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+  const handleEditClose = () => {
+    setEditOpen(false);
+    setEditError("");
+    setEditSuccess("");
+  };
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    setEditSuccess("");
+    if (newPassword && newPassword !== confirmPassword) {
+      setEditError("رمزهای عبور مطابقت ندارند.");
+      setEditLoading(false);
+      return;
+    }
+    try {
+      // Update name
+      if (editName !== user.name) {
+        await axios.put(
+          "http://localhost:5000/api/users/me",
+          { name: editName },
+          { withCredentials: true }
+        );
+      }
+      // Update password
+      if (currentPassword && newPassword) {
+        await axios.put(
+          "http://localhost:5000/api/users/me/password",
+          {
+            currentPassword,
+            newPassword,
+          },
+          { withCredentials: true }
+        );
+      }
+      setEditSuccess("پروفایل با موفقیت به‌روزرسانی شد.");
+      setUser((prev) => ({ ...prev, name: editName }));
+      setTimeout(() => setEditOpen(false), 1200);
+    } catch (err) {
+      setEditError(
+        err.response?.data?.message || "خطا در به‌روزرسانی پروفایل."
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      window.location.href = "/login";
+    } catch (error) {
+      setLoggingOut(false);
+      alert("Error logging out. Please try again.");
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/upload-profile-image",
+          formData,
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        setProfileImage(response.data.imageUrl);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        alert("Error uploading image. Please try again.");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const handleProfileToggle = () => {
+    if (!showProfile && profileSectionRef.current) {
+      const top =
+        profileSectionRef.current.getBoundingClientRect().top +
+        window.scrollY -
+        32;
+      window.scrollTo({ top, behavior: "smooth" });
+      setTimeout(() => setShowProfile(true), 350);
+    } else {
+      setShowProfile((prev) => !prev);
+    }
+  };
+
   if (loading) {
     return (
       <div className={theme === "light" ? "light-container" : "dark-container"}>
@@ -245,6 +393,373 @@ const EmployeeProfile = () => {
       } px-4 py-8`}
       style={{ width: "100%", maxWidth: "100%", minHeight: "100vh" }}
     >
+      {/* Profile ribbon toggle (floating) */}
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          right: 0,
+          transform: "translateY(-50%)",
+          zIndex: 2000,
+          boxShadow: "0 4px 16px rgba(13,202,240,0.10)",
+          borderRadius: "32px 0 0 32px",
+          background: "transparent",
+          padding: 0,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={handleProfileToggle}
+          sx={{
+            borderRadius: "32px 0 0 32px",
+            px: 3,
+            py: 1,
+            fontWeight: 700,
+            color: "#030305",
+            background: "#0dcaf0",
+            borderColor: "#0dcaf0",
+            boxShadow: "0 4px 15px rgba(13,202,240,0.18)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            transition: "background 0.2s, color 0.2s",
+            "&:hover": {
+              background: "#00b5d7",
+              borderColor: "#00b5d7",
+              color: "#030305",
+            },
+          }}
+        >
+          {showProfile ? "مخفی کردن پروفایل" : "نمایش پروفایل"}
+          {showProfile ? (
+            <ExpandLessIcon sx={{ ml: 1 }} />
+          ) : (
+            <ExpandMoreIcon sx={{ ml: 1 }} />
+          )}
+        </Button>
+      </div>
+      {/* Collapsible profile section */}
+      <div
+        ref={profileSectionRef}
+        style={{
+          maxHeight: showProfile ? 500 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.4s cubic-bezier(0.4,0,0.2,1)",
+          opacity: showProfile ? 1 : 0,
+          pointerEvents: showProfile ? "auto" : "none",
+          marginBottom: showProfile ? 24 : 0,
+        }}
+      >
+        {/* Profile image and upload */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              width: 120,
+              height: 120,
+              marginBottom: 16,
+              background: "linear-gradient(145deg, #0dcaf0, #00b5d7)",
+              borderRadius: "50%",
+              boxShadow: "0 4px 12px rgba(13, 202, 240, 0.3)",
+            }}
+          >
+            {profileImage ? (
+              <img
+                src={profileImage}
+                alt="Profile"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border:
+                    theme === "light" ? "3px solid #fff" : "3px solid #1a1a1a",
+                  background: theme === "light" ? "#fff" : "#1a1a1a",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: "50%",
+                  background: "linear-gradient(145deg, #0dcaf0, #00b5d7)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontSize: 40,
+                  fontWeight: 600,
+                  textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                  border:
+                    theme === "light" ? "3px solid #fff" : "3px solid #1a1a1a",
+                  boxShadow: "0 4px 12px rgba(13, 202, 240, 0.3)",
+                }}
+              >
+                {user?.name?.charAt(0)?.toUpperCase()}
+              </div>
+            )}
+            {uploading ? (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  background: "rgba(13,202,240,0.9)",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border:
+                    theme === "light" ? "2px solid #fff" : "2px solid #1a1a1a",
+                }}
+              >
+                <CircularProgress size={24} sx={{ color: "#ffffff" }} />
+              </div>
+            ) : (
+              <label
+                htmlFor="profile-image-upload"
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  background: "#0dcaf0",
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  border:
+                    theme === "light" ? "2px solid #fff" : "2px solid #1a1a1a",
+                  opacity: 1,
+                  transform: "scale(1)",
+                  transition: "all 0.3s",
+                }}
+              >
+                <input
+                  id="profile-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  style={{ display: "none" }}
+                />
+                <i
+                  className="fas fa-camera"
+                  style={{ color: "#fff", fontSize: 18 }}
+                ></i>
+              </label>
+            )}
+          </div>
+          <div
+            style={{
+              fontWeight: 600,
+              fontSize: 18,
+              color: theme === "light" ? "#0dcaf0" : "#a9e5ff",
+              marginBottom: 4,
+            }}
+          >
+            {user?.name}
+          </div>
+          <div
+            style={{
+              color: theme === "light" ? "#00b5d7" : "#7b8bbf",
+              fontSize: 14,
+            }}
+          >
+            {user?.email}
+          </div>
+        </div>
+        {/* Profile actions */}
+        <div
+          className="d-flex align-items-center mb-4"
+          style={{ gap: 8, justifyContent: "center", display: "flex" }}
+        >
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{
+              color: theme === "light" ? "#0dcaf0" : "#90caf9",
+              borderColor: theme === "light" ? "#0dcaf0" : "#90caf9",
+              fontWeight: 600,
+            }}
+            onClick={handleEditOpen}
+          >
+            ویرایش پروفایل
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              background: theme === "light" ? "#ef4444" : "#b71c1c",
+              color: "#fff",
+              fontWeight: 600,
+            }}
+            onClick={handleLogout}
+            disabled={loggingOut}
+          >
+            {loggingOut ? (
+              <CircularProgress size={18} sx={{ color: "#fff" }} />
+            ) : (
+              "خروج"
+            )}
+          </Button>
+        </div>
+        <Dialog open={editOpen} onClose={handleEditClose}>
+          <DialogTitle sx={{ textAlign: "right", fontWeight: 700 }}>
+            ویرایش پروفایل
+          </DialogTitle>
+          <DialogContent>
+            {editError && (
+              <Alert
+                severity="error"
+                sx={{ mb: 2, direction: "rtl", textAlign: "right" }}
+              >
+                {editError}
+              </Alert>
+            )}
+            {editSuccess && (
+              <Alert
+                severity="success"
+                sx={{ mb: 2, direction: "rtl", textAlign: "right" }}
+              >
+                {editSuccess}
+              </Alert>
+            )}
+            <form
+              onSubmit={handleEditSubmit}
+              id="edit-profile-form"
+              style={{ direction: "rtl", textAlign: "right" }}
+              dir="rtl"
+            >
+              <TextField
+                label="نام"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                fullWidth
+                margin="normal"
+                required
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+              />
+              <TextField
+                label="رمز عبور فعلی"
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="current-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowCurrentPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showCurrentPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="رمز عبور جدید"
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="new-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowNewPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="تأیید رمز عبور جدید"
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                fullWidth
+                margin="normal"
+                autoComplete="new-password"
+                inputProps={{ dir: "rtl", style: { textAlign: "right" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowConfirmPassword((show) => !show)}
+                        edge="start"
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </form>
+          </DialogContent>
+          <DialogActions
+            sx={{
+              justifyContent: "flex-start",
+              flexDirection: "row-reverse",
+              px: 3,
+            }}
+          >
+            <Button onClick={handleEditClose} disabled={editLoading}>
+              انصراف
+            </Button>
+            <Button
+              type="submit"
+              form="edit-profile-form"
+              variant="contained"
+              sx={{ background: "#0dcaf0" }}
+              disabled={editLoading}
+            >
+              {editLoading ? (
+                <CircularProgress size={20} sx={{ color: "#fff" }} />
+              ) : (
+                "ذخیره"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+      {/* Success/Error Alert styles for modal */}
       <style>{`
         .dark-container {
           background: #121212;
@@ -404,11 +919,135 @@ const EmployeeProfile = () => {
             box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
           }
         }
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #204d2a !important;
+          color: #d1ffd6 !important;
+        }
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #4d2020 !important;
+          color: #ffd1d1 !important;
+        }
+        .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #e6f4ea !important;
+          color: #1a3d1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #fbeaea !important;
+          color: #3d1a1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+        /* Dark mode input fields */
+        .MuiDialog-root .MuiOutlinedInput-root {
+          background: #232837 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-input {
+          color: #e0e6f0 !important;
+        }
+        .MuiDialog-root .MuiInputLabel-root {
+          color: #bfc8e6 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #3b82f6 !important;
+        }
+        /* Light mode input fields */
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-root {
+          background: #fff !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-input {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiInputLabel-root {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #0dcaf0 !important;
+        }
+      `}</style>
+      {/* Modal theme styles for dark/light mode and input/alert */}
+      <style>{`
+        /* Modal dark mode */
+        .MuiDialog-paper {
+          background: #181c24 !important;
+          color: #e0e6f0 !important;
+        }
+        .MuiDialogContent-root {
+          background: #181c24 !important;
+          color: #e0e6f0 !important;
+        }
+        .MuiDialogTitle-root, .MuiDialogActions-root, .MuiAlert-message {
+          color: #e0e6f0 !important;
+        }
+        /* Modal light mode */
+        [data-theme="light"] .MuiDialog-paper {
+          background: #fff !important;
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialogContent-root {
+          background: #fff !important;
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialogTitle-root, [data-theme="light"] .MuiDialogActions-root, [data-theme="light"] .MuiAlert-message {
+          color: #222 !important;
+        }
+        /* Success/Error Alert styles for modal */
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #204d2a !important;
+          color: #d1ffd6 !important;
+        }
+        .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #4d2020 !important;
+          color: #ffd1d1 !important;
+        }
+        .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardSuccess {
+          background-color: #e6f4ea !important;
+          color: #1a3d1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-root.MuiAlert-standardError {
+          background-color: #fbeaea !important;
+          color: #3d1a1a !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiAlert-message {
+          color: inherit !important;
+        }
+        /* Dark mode input fields */
+        .MuiDialog-root .MuiOutlinedInput-root {
+          background: #232837 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-input {
+          color: #e0e6f0 !important;
+        }
+        .MuiDialog-root .MuiInputLabel-root {
+          color: #bfc8e6 !important;
+        }
+        .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #3b82f6 !important;
+        }
+        /* Light mode input fields */
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-root {
+          background: #fff !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-input {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiInputLabel-root {
+          color: #222 !important;
+        }
+        [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-notchedOutline {
+          border-color: #0dcaf0 !important;
+        }
       `}</style>
       <h1 className="text-2xl font-bold mb-6 text-center">
         مدیریت مراکز آموزشی
       </h1>
-
+      <br />
       {/* Statistics Cards */}
       <div className="row mb-6 d-flex justify-content-center">
         <div className="col-md-2 mb-2">
