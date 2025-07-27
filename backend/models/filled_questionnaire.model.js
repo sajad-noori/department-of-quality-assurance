@@ -1,60 +1,53 @@
-const db = require('../config/db');
+const { promise } = require("../config/db");
 
 class FilledQuestionnaire {
-  static create({ questionnaire_id, user_id, file_name, file_url }) {
-    return new Promise((resolve, reject) => {
+  static async create({ questionnaire_id, user_id, file_name, file_url }) {
+    try {
       const query = `
         INSERT INTO filled_questionnaires (questionnaire_id, user_id, file_name, file_url, filled_at)
         VALUES (?, ?, ?, ?, NOW())
       `;
-      db.execute(query, [questionnaire_id, user_id, file_name, file_url], (err, result) => {
-        if (err) {
-          reject(new Error(`Error creating filled questionnaire: ${err.message}`));
-        } else {
-          resolve(result.insertId);
-        }
-      });
-    });
+      const [result] = await promise.execute(query, [
+        questionnaire_id,
+        user_id,
+        file_name,
+        file_url,
+      ]);
+      return result.insertId;
+    } catch (error) {
+      throw new Error(`Error creating filled questionnaire: ${error.message}`);
+    }
   }
 
-  static findByQuestionnaireId(questionnaire_id) {
-    return new Promise((resolve, reject) => {
+  static async findByQuestionnaireId(questionnaire_id) {
+    try {
       const query = `SELECT * FROM filled_questionnaires WHERE questionnaire_id = ? ORDER BY filled_at DESC`;
-      db.execute(query, [questionnaire_id], (err, rows) => {
-        if (err) {
-          reject(new Error(`Error fetching filled questionnaires: ${err.message}`));
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+      const [rows] = await promise.execute(query, [questionnaire_id]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error fetching filled questionnaires: ${error.message}`);
+    }
   }
 
-  static findByQuestionnaireIdAndUserId(questionnaire_id, user_id) {
-    return new Promise((resolve, reject) => {
+  static async findByQuestionnaireIdAndUserId(questionnaire_id, user_id) {
+    try {
       const query = `SELECT * FROM filled_questionnaires WHERE questionnaire_id = ? AND user_id = ? LIMIT 1`;
-      db.execute(query, [questionnaire_id, user_id], (err, rows) => {
-        if (err) {
-          reject(new Error(`Error fetching filled questionnaire: ${err.message}`));
-        } else {
-          resolve(rows && rows.length > 0 ? rows[0] : null);
-        }
-      });
-    });
+      const [rows] = await promise.execute(query, [questionnaire_id, user_id]);
+      return rows && rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      throw new Error(`Error fetching filled questionnaire: ${error.message}`);
+    }
   }
 
-  static setChecked(id) {
-    return new Promise((resolve, reject) => {
+  static async setChecked(id) {
+    try {
       const query = `UPDATE filled_questionnaires SET checked = TRUE WHERE id = ?`;
-      db.execute(query, [id], (err, result) => {
-        if (err) {
-          reject(new Error(`Error updating checked state: ${err.message}`));
-        } else {
-          resolve(result.affectedRows > 0);
-        }
-      });
-    });
+      const [result] = await promise.execute(query, [id]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error updating checked state: ${error.message}`);
+    }
   }
 }
 
-module.exports = FilledQuestionnaire; 
+module.exports = FilledQuestionnaire;

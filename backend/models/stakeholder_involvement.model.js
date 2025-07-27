@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const { promise } = require("../config/db");
 
 const StakeholderInvolvement = {
   async create(data) {
@@ -7,7 +7,7 @@ const StakeholderInvolvement = {
       VALUES (?, ?)
     `;
     const values = [data.user_id, data.description];
-    const [result] = await db.promise().execute(query, values);
+    const [result] = await promise.execute(query, values);
     return result.insertId;
   },
 
@@ -18,7 +18,7 @@ const StakeholderInvolvement = {
       ORDER BY created_at DESC
       LIMIT 1
     `;
-    const [rows] = await db.promise().execute(query, [userId]);
+    const [rows] = await promise.execute(query, [userId]);
     return rows[0];
   },
 
@@ -28,9 +28,9 @@ const StakeholderInvolvement = {
       SET description = ?
       WHERE user_id = ?
     `;
-    const [result] = await db.promise().execute(query, [description, userId]);
+    const [result] = await promise.execute(query, [description, userId]);
     return result.affectedRows > 0;
-  }
+  },
 };
 
-module.exports = StakeholderInvolvement; 
+module.exports = StakeholderInvolvement;

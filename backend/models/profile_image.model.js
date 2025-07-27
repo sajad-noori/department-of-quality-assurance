@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { promise } = require("../config/db");
 
 const ProfileImage = {
   /**
@@ -17,10 +17,10 @@ const ProfileImage = {
       imageData.original_name,
       imageData.file_path,
       imageData.file_type,
-      imageData.file_size
+      imageData.file_size,
     ];
-    
-    const [result] = await db.promise().execute(query, values);
+
+    const [result] = await promise.execute(query, values);
     return { id: result.insertId, ...imageData };
   },
 
@@ -36,7 +36,7 @@ const ProfileImage = {
       ORDER BY created_at DESC
       LIMIT 1
     `;
-    const [rows] = await db.promise().execute(query, [userId]);
+    const [rows] = await promise.execute(query, [userId]);
     return rows[0] || null;
   },
 
@@ -58,10 +58,10 @@ const ProfileImage = {
       imageData.file_path,
       imageData.file_type,
       imageData.file_size,
-      userId
+      userId,
     ];
-    
-    const [result] = await db.promise().execute(query, values);
+
+    const [result] = await promise.execute(query, values);
     return result.affectedRows > 0;
   },
 
@@ -71,8 +71,8 @@ const ProfileImage = {
    * @returns {Promise<boolean>} Success status
    */
   async deleteByUserId(userId) {
-    const query = 'DELETE FROM profile_images WHERE user_id = ?';
-    const [result] = await db.promise().execute(query, [userId]);
+    const query = "DELETE FROM profile_images WHERE user_id = ?";
+    const [result] = await promise.execute(query, [userId]);
     return result.affectedRows > 0;
   },
 
@@ -84,14 +84,14 @@ const ProfileImage = {
    */
   async upsert(userId, imageData) {
     const existingImage = await this.findByUserId(userId);
-    
+
     if (existingImage) {
       await this.update(userId, imageData);
       return { id: existingImage.id, ...imageData };
     } else {
       return await this.create({ ...imageData, user_id: userId });
     }
-  }
+  },
 };
 
-module.exports = ProfileImage; 
+module.exports = ProfileImage;

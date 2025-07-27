@@ -1,15 +1,16 @@
-const Student = require('../models/student.model');
-const db = require('../config/db');
+const Student = require("../models/student.model");
+const { promise } = require("../config/db");
 
 // Helper function to check if user is an institute
 const checkInstituteAccess = async (userId) => {
-  return new Promise((resolve, reject) => {
-    const query = 'SELECT role FROM users WHERE id = ?';
-    db.query(query, [userId], (err, results) => {
-      if (err) reject(err);
-      resolve(results[0]?.role === 'institute');
-    });
-  });
+  try {
+    const query = "SELECT role FROM users WHERE id = ?";
+    const [results] = await promise.execute(query, [userId]);
+    return results[0]?.role === "institute";
+  } catch (error) {
+    console.error("Error checking institute access:", error);
+    throw error;
+  }
 };
 
 const addStudent = async (req, res) => {
@@ -19,11 +20,17 @@ const addStudent = async (req, res) => {
     if (!isInstitute) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Only institutes can add student data.'
+        message: "Access denied. Only institutes can add student data.",
       });
     }
 
-    const { name, newEnrollments, totalStudents, graduationCycles, establishmentYear } = req.body;
+    const {
+      name,
+      newEnrollments,
+      totalStudents,
+      graduationCycles,
+      establishmentYear,
+    } = req.body;
     const userId = req.user.id;
 
     const student = await Student.create({
@@ -32,19 +39,19 @@ const addStudent = async (req, res) => {
       newEnrollments,
       totalStudents,
       graduationCycles,
-      establishmentYear
+      establishmentYear,
     });
 
     res.status(201).json({
       success: true,
-      data: student
+      data: student,
     });
   } catch (error) {
-    console.error('Error adding student:', error);
+    console.error("Error adding student:", error);
     res.status(500).json({
       success: false,
-      message: 'Error adding student data',
-      error: error.message
+      message: "Error adding student data",
+      error: error.message,
     });
   }
 };
@@ -56,7 +63,7 @@ const getStudents = async (req, res) => {
     if (!isInstitute) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Only institutes can view student data.'
+        message: "Access denied. Only institutes can view student data.",
       });
     }
 
@@ -65,14 +72,14 @@ const getStudents = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: students
+      data: students,
     });
   } catch (error) {
-    console.error('Error fetching students:', error);
+    console.error("Error fetching students:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching student data',
-      error: error.message
+      message: "Error fetching student data",
+      error: error.message,
     });
   }
 };
@@ -84,19 +91,25 @@ const updateStudent = async (req, res) => {
     if (!isInstitute) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Only institutes can update student data.'
+        message: "Access denied. Only institutes can update student data.",
       });
     }
 
     const { id } = req.params;
     const userId = req.user.id;
-    const { name, newEnrollments, totalStudents, graduationCycles, establishmentYear } = req.body;
+    const {
+      name,
+      newEnrollments,
+      totalStudents,
+      graduationCycles,
+      establishmentYear,
+    } = req.body;
 
     const student = await Student.findOne(id, userId);
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: 'Student record not found'
+        message: "Student record not found",
       });
     }
 
@@ -105,19 +118,19 @@ const updateStudent = async (req, res) => {
       newEnrollments,
       totalStudents,
       graduationCycles,
-      establishmentYear
+      establishmentYear,
     });
 
     res.status(200).json({
       success: true,
-      data: updatedStudent
+      data: updatedStudent,
     });
   } catch (error) {
-    console.error('Error updating student:', error);
+    console.error("Error updating student:", error);
     res.status(500).json({
       success: false,
-      message: 'Error updating student data',
-      error: error.message
+      message: "Error updating student data",
+      error: error.message,
     });
   }
 };
@@ -129,7 +142,7 @@ const deleteStudent = async (req, res) => {
     if (!isInstitute) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Only institutes can delete student data.'
+        message: "Access denied. Only institutes can delete student data.",
       });
     }
 
@@ -140,7 +153,7 @@ const deleteStudent = async (req, res) => {
     if (!student) {
       return res.status(404).json({
         success: false,
-        message: 'Student record not found'
+        message: "Student record not found",
       });
     }
 
@@ -148,20 +161,20 @@ const deleteStudent = async (req, res) => {
     if (!deleted) {
       return res.status(500).json({
         success: false,
-        message: 'Failed to delete student record'
+        message: "Failed to delete student record",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Student record deleted successfully'
+      message: "Student record deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting student:', error);
+    console.error("Error deleting student:", error);
     res.status(500).json({
       success: false,
-      message: 'Error deleting student data',
-      error: error.message
+      message: "Error deleting student data",
+      error: error.message,
     });
   }
 };
@@ -170,12 +183,12 @@ const deleteStudent = async (req, res) => {
 const getStudentsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Validate that userId is a number
     if (!userId || isNaN(parseInt(userId))) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'شناسه کاربر نامعتبر است' 
+        message: "شناسه کاربر نامعتبر است",
       });
     }
 
@@ -183,14 +196,14 @@ const getStudentsByUserId = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: students
+      data: students,
     });
   } catch (error) {
-    console.error('Error fetching students by user ID:', error);
+    console.error("Error fetching students by user ID:", error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching student data',
-      error: error.message
+      message: "Error fetching student data",
+      error: error.message,
     });
   }
 };
@@ -200,5 +213,5 @@ module.exports = {
   getStudents,
   updateStudent,
   deleteStudent,
-  getStudentsByUserId
-}; 
+  getStudentsByUserId,
+};

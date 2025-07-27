@@ -1,7 +1,7 @@
-const Announcement = require('../models/announcement.model');
-const { sendEmail, sendAnnouncementEmail } = require('../utils/emailService');
-const path = require('path');
-const fs = require('fs');
+const Announcement = require("../models/announcement.model");
+const { sendEmail, sendAnnouncementEmail } = require("../utils/emailService");
+const path = require("path");
+const fs = require("fs");
 
 class AnnouncementController {
   // Create a new announcement
@@ -14,7 +14,7 @@ class AnnouncementController {
       if (!title || !content || !target_audience) {
         return res.status(400).json({
           success: false,
-          message: 'Title, content, and target audience are required'
+          message: "Title, content, and target audience are required",
         });
       }
 
@@ -30,48 +30,53 @@ class AnnouncementController {
         content,
         target_audience,
         created_by,
-        attachment_path
+        attachment_path,
       });
 
       // Get recipients based on target audience
-      const recipientsList = await Announcement.getRecipientsByType(target_audience);
+      const recipientsList = await Announcement.getRecipientsByType(
+        target_audience
+      );
 
       // Send emails to recipients
       if (recipientsList.length > 0) {
-        const emailPromises = recipientsList.map(recipient => {
-          return sendAnnouncementEmail(recipient, { title, content }, attachment_path);
+        const emailPromises = recipientsList.map((recipient) => {
+          return sendAnnouncementEmail(
+            recipient,
+            { title, content },
+            attachment_path
+          );
         });
 
         try {
           await Promise.all(emailPromises);
-          
+
           // Mark announcement as sent
           await Announcement.markAsEmailSent(announcementId);
         } catch (emailError) {
-          console.error('Email sending error:', emailError);
+          console.error("Email sending error:", emailError);
           // Continue even if email sending fails
         }
       }
 
       res.status(201).json({
         success: true,
-        message: 'Announcement created and emails sent successfully',
+        message: "Announcement created and emails sent successfully",
         data: {
           id: announcementId,
           title,
           content,
           target_audience,
           recipients_count: recipientsList.length,
-          email_sent: true
-        }
+          email_sent: true,
+        },
       });
-
     } catch (error) {
-      console.error('Error creating announcement:', error);
+      console.error("Error creating announcement:", error);
       res.status(500).json({
         success: false,
-        message: 'Error creating announcement',
-        error: error.message
+        message: "Error creating announcement",
+        error: error.message,
       });
     }
   }
@@ -84,7 +89,7 @@ class AnnouncementController {
 
       const options = {
         limit: parseInt(limit),
-        offset: parseInt(offset)
+        offset: parseInt(offset),
       };
 
       if (target_audience) options.target_audience = target_audience;
@@ -98,16 +103,15 @@ class AnnouncementController {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: announcements.length
-        }
+          total: announcements.length,
+        },
       });
-
     } catch (error) {
-      console.error('Error fetching announcements:', error);
+      console.error("Error fetching announcements:", error);
       res.status(500).json({
         success: false,
-        message: 'Error fetching announcements',
-        error: error.message
+        message: "Error fetching announcements",
+        error: error.message,
       });
     }
   }
@@ -115,38 +119,19 @@ class AnnouncementController {
   // Get all announcements (simple version without pagination)
   static async getAllAnnouncements(req, res) {
     try {
-      const db = require('../config/db');
-      
-      const query = `
-        SELECT a.*, u.name as creator_name, u.email as creator_email
-        FROM announcements a
-        LEFT JOIN users u ON a.created_by = u.id
-        ORDER BY a.created_at DESC
-      `;
-      
-      db.execute(query, (err, rows) => {
-        if (err) {
-          console.error('Database error in getAllAnnouncements:', err);
-          return res.status(500).json({
-            success: false,
-            message: 'Error fetching announcements',
-            error: err.message
-          });
-        }
-        
-        res.status(200).json({
-          success: true,
-          data: rows || [],
-          count: (rows || []).length
-        });
+      const announcements = await Announcement.findAll();
+
+      res.status(200).json({
+        success: true,
+        data: announcements || [],
+        count: (announcements || []).length,
       });
-      
     } catch (error) {
-      console.error('Error fetching all announcements:', error);
+      console.error("Error fetching all announcements:", error);
       res.status(500).json({
         success: false,
-        message: 'Error fetching announcements',
-        error: error.message
+        message: "Error fetching announcements",
+        error: error.message,
       });
     }
   }
@@ -160,21 +145,20 @@ class AnnouncementController {
       if (!announcement) {
         return res.status(404).json({
           success: false,
-          message: 'Announcement not found'
+          message: "Announcement not found",
         });
       }
 
       res.status(200).json({
         success: true,
-        data: announcement
+        data: announcement,
       });
-
     } catch (error) {
-      console.error('Error fetching announcement:', error);
+      console.error("Error fetching announcement:", error);
       res.status(500).json({
         success: false,
-        message: 'Error fetching announcement',
-        error: error.message
+        message: "Error fetching announcement",
+        error: error.message,
       });
     }
   }
@@ -189,7 +173,7 @@ class AnnouncementController {
       if (!title || !content || !target_audience) {
         return res.status(400).json({
           success: false,
-          message: 'Title, content, and target audience are required'
+          message: "Title, content, and target audience are required",
         });
       }
 
@@ -203,7 +187,7 @@ class AnnouncementController {
         title,
         content,
         target_audience,
-        attachment_path
+        attachment_path,
       };
 
       const updated = await Announcement.update(id, updateData);
@@ -211,21 +195,20 @@ class AnnouncementController {
       if (!updated) {
         return res.status(404).json({
           success: false,
-          message: 'Announcement not found'
+          message: "Announcement not found",
         });
       }
 
       res.status(200).json({
         success: true,
-        message: 'Announcement updated successfully'
+        message: "Announcement updated successfully",
       });
-
     } catch (error) {
-      console.error('Error updating announcement:', error);
+      console.error("Error updating announcement:", error);
       res.status(500).json({
         success: false,
-        message: 'Error updating announcement',
-        error: error.message
+        message: "Error updating announcement",
+        error: error.message,
       });
     }
   }
@@ -234,59 +217,36 @@ class AnnouncementController {
   static async deleteAnnouncement(req, res) {
     try {
       const { id } = req.params;
-      const db = require('../config/db');
-      
+
       // First check if announcement exists
-      const checkQuery = `SELECT id FROM announcements WHERE id = ?`;
-      db.execute(checkQuery, [id], (checkErr, checkRows) => {
-        if (checkErr) {
-          console.error('Database error checking announcement:', checkErr);
-          return res.status(500).json({
-            success: false,
-            message: 'Error checking announcement',
-            error: checkErr.message
-          });
-        }
-        
-        if (!checkRows || checkRows.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: 'Announcement not found'
-          });
-        }
-        
-        // Delete the announcement
-        const deleteQuery = `DELETE FROM announcements WHERE id = ?`;
-        db.execute(deleteQuery, [id], (deleteErr, deleteResult) => {
-          if (deleteErr) {
-            console.error('Database error deleting announcement:', deleteErr);
-            return res.status(500).json({
-              success: false,
-              message: 'Error deleting announcement',
-              error: deleteErr.message
-            });
-          }
-          
-          if (deleteResult.affectedRows > 0) {
-            res.status(200).json({
-              success: true,
-              message: 'Announcement deleted successfully'
-            });
-          } else {
-            res.status(404).json({
-              success: false,
-              message: 'Announcement not found'
-            });
-          }
+      const announcement = await Announcement.findById(id);
+      if (!announcement) {
+        return res.status(404).json({
+          success: false,
+          message: "Announcement not found",
         });
-      });
-      
+      }
+
+      // Delete the announcement
+      const deleted = await Announcement.delete(id);
+
+      if (deleted) {
+        res.status(200).json({
+          success: true,
+          message: "Announcement deleted successfully",
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: "Announcement not found",
+        });
+      }
     } catch (error) {
-      console.error('Error deleting announcement:', error);
+      console.error("Error deleting announcement:", error);
       res.status(500).json({
         success: false,
-        message: 'Error deleting announcement',
-        error: error.message
+        message: "Error deleting announcement",
+        error: error.message,
       });
     }
   }
@@ -294,23 +254,23 @@ class AnnouncementController {
   // Get recipients by type
   static async getRecipients(req, res) {
     try {
-      const { target_audience = 'all' } = req.query;
-      
-      const recipients = await Announcement.getRecipientsByType(target_audience);
+      const { target_audience = "all" } = req.query;
 
+      const recipients = await Announcement.getRecipientsByType(
+        target_audience
+      );
 
       res.status(200).json({
         success: true,
         data: recipients || [],
-        count: (recipients || []).length
+        count: (recipients || []).length,
       });
-
     } catch (error) {
-      console.error('Error fetching recipients:', error);
+      console.error("Error fetching recipients:", error);
       res.status(200).json({
         success: true,
         data: [],
-        count: 0
+        count: 0,
       });
     }
   }
@@ -322,15 +282,14 @@ class AnnouncementController {
 
       res.status(200).json({
         success: true,
-        data: stats
+        data: stats,
       });
-
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
       res.status(500).json({
         success: false,
-        message: 'Error fetching statistics',
-        error: error.message
+        message: "Error fetching statistics",
+        error: error.message,
       });
     }
   }
@@ -340,17 +299,15 @@ class AnnouncementController {
     try {
       const roles = await Announcement.getAvailableRoles();
 
-
       res.status(200).json({
         success: true,
-        data: roles || []
+        data: roles || [],
       });
-
     } catch (error) {
-      console.error('Error fetching available roles:', error);
+      console.error("Error fetching available roles:", error);
       res.status(200).json({
         success: true,
-        data: []
+        data: [],
       });
     }
   }
@@ -362,15 +319,14 @@ class AnnouncementController {
 
       res.status(200).json({
         success: true,
-        data: roleCounts
+        data: roleCounts,
       });
-
     } catch (error) {
-      console.error('Error fetching recipients count by role:', error);
+      console.error("Error fetching recipients count by role:", error);
       res.status(500).json({
         success: false,
-        message: 'Error fetching recipients count by role',
-        error: error.message
+        message: "Error fetching recipients count by role",
+        error: error.message,
       });
     }
   }
@@ -384,23 +340,29 @@ class AnnouncementController {
       if (!announcement) {
         return res.status(404).json({
           success: false,
-          message: 'Announcement not found'
+          message: "Announcement not found",
         });
       }
 
       // Get recipients
-      const recipients = await Announcement.getRecipientsByType(announcement.target_audience);
+      const recipients = await Announcement.getRecipientsByType(
+        announcement.target_audience
+      );
 
       if (recipients.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'No recipients found for this announcement'
+          message: "No recipients found for this announcement",
         });
       }
 
       // Send emails
-      const emailPromises = recipients.map(recipient => {
-        return sendAnnouncementEmail(recipient, announcement, announcement.attachment_path);
+      const emailPromises = recipients.map((recipient) => {
+        return sendAnnouncementEmail(
+          recipient,
+          announcement,
+          announcement.attachment_path
+        );
       });
 
       await Promise.all(emailPromises);
@@ -410,22 +372,21 @@ class AnnouncementController {
 
       res.status(200).json({
         success: true,
-        message: 'Emails resent successfully',
+        message: "Emails resent successfully",
         data: {
           recipients_count: recipients.length,
-          email_sent: true
-        }
+          email_sent: true,
+        },
       });
-
     } catch (error) {
-      console.error('Error resending emails:', error);
+      console.error("Error resending emails:", error);
       res.status(500).json({
         success: false,
-        message: 'Error resending emails',
-        error: error.message
+        message: "Error resending emails",
+        error: error.message,
       });
     }
   }
 }
 
-module.exports = AnnouncementController; 
+module.exports = AnnouncementController;

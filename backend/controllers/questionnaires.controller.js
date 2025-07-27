@@ -1,6 +1,7 @@
-const Questionnaire = require('../models/questionnaire.model');
-const path = require('path');
-const FilledQuestionnaire = require('../models/filled_questionnaire.model');
+const Questionnaire = require("../models/questionnaire.model");
+const path = require("path");
+const FilledQuestionnaire = require("../models/filled_questionnaire.model");
+const { promise } = require("../config/db");
 
 class QuestionnairesController {
   // Create a new questionnaire
@@ -8,7 +9,9 @@ class QuestionnairesController {
     try {
       const { title, description } = req.body;
       if (!title) {
-        return res.status(400).json({ success: false, message: 'Title is required' });
+        return res
+          .status(400)
+          .json({ success: false, message: "Title is required" });
       }
 
       let file_name = null;
@@ -22,33 +25,41 @@ class QuestionnairesController {
         title,
         description,
         file_name,
-        file_url
+        file_url,
       });
 
       res.status(201).json({
         success: true,
-        message: 'Questionnaire created successfully',
-        data: { id: questionnaireId, title, description, file_name, file_url }
+        message: "Questionnaire created successfully",
+        data: { id: questionnaireId, title, description, file_name, file_url },
       });
     } catch (error) {
-      console.error('Error creating questionnaire:', error);
-      res.status(500).json({ success: false, message: 'Error creating questionnaire', error: error.message });
+      console.error("Error creating questionnaire:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error creating questionnaire",
+          error: error.message,
+        });
     }
   }
 
   // Get all questionnaires
   static async getAllQuestionnaires(req, res) {
     try {
-      const db = require('../config/db');
       const query = `SELECT id, title, description, file_name, file_url FROM questionnaires ORDER BY created_at DESC`;
-      db.execute(query, (err, rows) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error fetching questionnaires', error: err.message });
-        }
-        res.status(200).json({ success: true, data: rows });
-      });
+      const [rows] = await promise.execute(query);
+      res.status(200).json({ success: true, data: rows });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error fetching questionnaires', error: error.message });
+      console.error("Error fetching questionnaires:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error fetching questionnaires",
+          error: error.message,
+        });
     }
   }
 
@@ -56,31 +67,43 @@ class QuestionnairesController {
   static async deleteQuestionnaire(req, res) {
     try {
       const { id } = req.params;
-      const db = require('../config/db');
-      const fs = require('fs');
+      const fs = require("fs");
+
       // Get file path
-      db.execute('SELECT file_url FROM questionnaires WHERE id = ?', [id], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error finding questionnaire', error: err.message });
-        }
-        if (!rows || rows.length === 0) {
-          return res.status(404).json({ success: false, message: 'پرسشنامه پیدا نشد' });
-        }
-        const fileUrl = rows[0].file_url;
-        // Delete from DB
-        db.execute('DELETE FROM questionnaires WHERE id = ?', [id], (err2, result) => {
-          if (err2) {
-            return res.status(500).json({ success: false, message: 'Error deleting questionnaire', error: err2.message });
-          }
-          // Remove file if exists
-          if (fileUrl && fs.existsSync(path.join(__dirname, '..', 'uploads', fileUrl))) {
-            fs.unlinkSync(path.join(__dirname, '..', 'uploads', fileUrl));
-          }
-          res.status(200).json({ success: true });
-        });
-      });
+      const [rows] = await promise.execute(
+        "SELECT file_url FROM questionnaires WHERE id = ?",
+        [id]
+      );
+
+      if (!rows || rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "پرسشنامه پیدا نشد" });
+      }
+
+      const fileUrl = rows[0].file_url;
+
+      // Delete from DB
+      await promise.execute("DELETE FROM questionnaires WHERE id = ?", [id]);
+
+      // Remove file if exists
+      if (
+        fileUrl &&
+        fs.existsSync(path.join(__dirname, "..", "uploads", fileUrl))
+      ) {
+        fs.unlinkSync(path.join(__dirname, "..", "uploads", fileUrl));
+      }
+
+      res.status(200).json({ success: true });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error deleting questionnaire', error: error.message });
+      console.error("Error deleting questionnaire:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error deleting questionnaire",
+          error: error.message,
+        });
     }
   }
 
@@ -89,42 +112,59 @@ class QuestionnairesController {
     try {
       const { id } = req.params;
       const { title, description } = req.body;
-      const db = require('../config/db');
-      const fs = require('fs');
+      const fs = require("fs");
+
       // Get current file
-      db.execute('SELECT file_url FROM questionnaires WHERE id = ?', [id], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error finding questionnaire', error: err.message });
+      const [rows] = await promise.execute(
+        "SELECT file_url FROM questionnaires WHERE id = ?",
+        [id]
+      );
+
+      if (!rows || rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "پرسشنامه پیدا نشد" });
+      }
+
+      let file_name = rows[0].file_name;
+      let file_url = rows[0].file_url;
+
+      // If new file uploaded, update and remove old
+      if (req.file) {
+        if (
+          file_url &&
+          fs.existsSync(path.join(__dirname, "..", "uploads", file_url))
+        ) {
+          fs.unlinkSync(path.join(__dirname, "..", "uploads", file_url));
         }
-        if (!rows || rows.length === 0) {
-          return res.status(404).json({ success: false, message: 'پرسشنامه پیدا نشد' });
-        }
-        let file_name = rows[0].file_name;
-        let file_url = rows[0].file_url;
-        // If new file uploaded, update and remove old
-        if (req.file) {
-          if (file_url && fs.existsSync(path.join(__dirname, '..', 'uploads', file_url))) {
-            fs.unlinkSync(path.join(__dirname, '..', 'uploads', file_url));
-          }
-          file_name = req.file.filename;
-          file_url = `questionnaires/${file_name}`;
-        }
-        // Ensure no undefined values
-        file_name = file_name ?? null;
-        file_url = file_url ?? null;
-        db.execute(
-          'UPDATE questionnaires SET title = ?, description = ?, file_name = ?, file_url = ?, updated_at = NOW() WHERE id = ?',
-          [title, description, file_name, file_url, id],
-          (err2, result) => {
-            if (err2) {
-              return res.status(500).json({ success: false, message: 'Error updating questionnaire', error: err2.message });
-            }
-            res.status(200).json({ success: true, data: { id, title, description, file_name, file_url } });
-          }
-        );
-      });
+        file_name = req.file.filename;
+        file_url = `questionnaires/${file_name}`;
+      }
+
+      // Ensure no undefined values
+      file_name = file_name ?? null;
+      file_url = file_url ?? null;
+
+      await promise.execute(
+        "UPDATE questionnaires SET title = ?, description = ?, file_name = ?, file_url = ?, updated_at = NOW() WHERE id = ?",
+        [title, description, file_name, file_url, id]
+      );
+
+      res
+        .status(200)
+        .json({
+          success: true,
+          data: { id, title, description, file_name, file_url },
+        });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error updating questionnaire', error: error.message });
+      console.error("Error updating questionnaire:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error updating questionnaire",
+          error: error.message,
+        });
     }
   }
 
@@ -134,15 +174,27 @@ class QuestionnairesController {
       const { questionnaire_id } = req.body;
       const user_id = req.user.id;
       if (!questionnaire_id) {
-        return res.status(400).json({ success: false, message: 'questionnaire_id is required' });
+        return res
+          .status(400)
+          .json({ success: false, message: "questionnaire_id is required" });
       }
       if (!req.file) {
-        return res.status(400).json({ success: false, message: 'فایل الزامی است' });
+        return res
+          .status(400)
+          .json({ success: false, message: "فایل الزامی است" });
       }
       // Prevent duplicate upload
-      const existing = await FilledQuestionnaire.findByQuestionnaireIdAndUserId(questionnaire_id, user_id);
+      const existing = await FilledQuestionnaire.findByQuestionnaireIdAndUserId(
+        questionnaire_id,
+        user_id
+      );
       if (existing) {
-        return res.status(400).json({ success: false, message: 'شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.' });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.",
+          });
       }
       const file_name = req.file.filename;
       const file_url = `questionnaires/${file_name}`;
@@ -150,16 +202,22 @@ class QuestionnairesController {
         questionnaire_id,
         user_id,
         file_name,
-        file_url
+        file_url,
       });
       res.status(201).json({
         success: true,
-        message: 'پرسشنامه با موفقیت ارسال شد',
-        data: { id: filledId, questionnaire_id, user_id, file_name, file_url }
+        message: "پرسشنامه با موفقیت ارسال شد",
+        data: { id: filledId, questionnaire_id, user_id, file_name, file_url },
       });
     } catch (error) {
-      console.error('Error uploading filled questionnaire:', error);
-      res.status(500).json({ success: false, message: 'خطا در ارسال پرسشنامه', error: error.message });
+      console.error("Error uploading filled questionnaire:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "خطا در ارسال پرسشنامه",
+          error: error.message,
+        });
     }
   }
 
@@ -168,12 +226,20 @@ class QuestionnairesController {
     try {
       const { id } = req.params;
       if (!id) {
-        return res.status(400).json({ success: false, message: 'questionnaire_id is required' });
+        return res
+          .status(400)
+          .json({ success: false, message: "questionnaire_id is required" });
       }
       const filled = await FilledQuestionnaire.findByQuestionnaireId(id);
       res.status(200).json({ success: true, data: filled });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: error.message });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error fetching filled questionnaires",
+          error: error.message,
+        });
     }
   }
 
@@ -181,15 +247,20 @@ class QuestionnairesController {
   static async getFilledQuestionnairesForUser(req, res) {
     try {
       const user_id = req.user.id;
-      const db = require('../config/db');
-      db.execute('SELECT * FROM filled_questionnaires WHERE user_id = ?', [user_id], (err, rows) => {
-        if (err) {
-          return res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: err.message });
-        }
-        res.status(200).json({ success: true, data: rows });
-      });
+      const [rows] = await promise.execute(
+        "SELECT * FROM filled_questionnaires WHERE user_id = ?",
+        [user_id]
+      );
+      res.status(200).json({ success: true, data: rows });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error fetching filled questionnaires', error: error.message });
+      console.error("Error fetching filled questionnaires for user:", error);
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Error fetching filled questionnaires",
+          error: error.message,
+        });
     }
   }
 
@@ -198,16 +269,32 @@ class QuestionnairesController {
     try {
       const { id } = req.params;
       if (!id) {
-        return res.status(400).json({ success: false, message: 'filled questionnaire id is required' });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "filled questionnaire id is required",
+          });
       }
       const updated = await FilledQuestionnaire.setChecked(id);
       if (updated) {
-        res.status(200).json({ success: true, message: 'پرسشنامه به عنوان خوانده شده علامت‌گذاری شد' });
+        res
+          .status(200)
+          .json({
+            success: true,
+            message: "پرسشنامه به عنوان خوانده شده علامت‌گذاری شد",
+          });
       } else {
-        res.status(404).json({ success: false, message: 'پرسشنامه پیدا نشد' });
+        res.status(404).json({ success: false, message: "پرسشنامه پیدا نشد" });
       }
     } catch (error) {
-      res.status(500).json({ success: false, message: 'خطا در بروزرسانی وضعیت', error: error.message });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "خطا در بروزرسانی وضعیت",
+          error: error.message,
+        });
     }
   }
 
@@ -215,44 +302,35 @@ class QuestionnairesController {
   static async getUncheckedFilledCount(req, res) {
     try {
       const { id } = req.params;
-      
+
       // Input validation and sanitization
       if (!id || isNaN(parseInt(id)) || parseInt(id) <= 0) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Valid questionnaire_id is required' 
+        return res.status(400).json({
+          success: false,
+          message: "Valid questionnaire_id is required",
         });
       }
-      
+
       const questionnaireId = parseInt(id);
-      
-      const db = require('../config/db');
+
       const query = `
         SELECT COUNT(*) as count 
         FROM filled_questionnaires 
         WHERE questionnaire_id = ? AND checked = 0
       `;
-      
-      db.execute(query, [questionnaireId], (err, rows) => {
-        if (err) {
-          console.error('Database error in getUncheckedFilledCount:', err);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching unchecked count' 
-          });
-        }
-        
-        const count = rows[0] ? parseInt(rows[0].count) : 0;
-        res.status(200).json({ 
-          success: true, 
-          data: { count: count } 
-        });
+
+      const [rows] = await promise.execute(query, [questionnaireId]);
+
+      const count = rows[0] ? parseInt(rows[0].count) : 0;
+      res.status(200).json({
+        success: true,
+        data: { count: count },
       });
     } catch (error) {
-      console.error('Error in getUncheckedFilledCount:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Error fetching unchecked count' 
+      console.error("Error in getUncheckedFilledCount:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching unchecked count",
       });
     }
   }
@@ -260,36 +338,27 @@ class QuestionnairesController {
   // Get total count of unchecked filled questionnaires
   static async getTotalUncheckedFilledCount(req, res) {
     try {
-      const db = require('../config/db');
       const query = `
         SELECT COUNT(*) as count 
         FROM filled_questionnaires 
         WHERE checked = 0
       `;
-      
-      db.execute(query, (err, rows) => {
-        if (err) {
-          console.error('Database error in getTotalUncheckedFilledCount:', err);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Error fetching total unchecked count' 
-          });
-        }
-        
-        const count = rows[0] ? parseInt(rows[0].count) : 0;
-        res.status(200).json({ 
-          success: true, 
-          data: { count: count } 
-        });
+
+      const [rows] = await promise.execute(query);
+
+      const count = rows[0] ? parseInt(rows[0].count) : 0;
+      res.status(200).json({
+        success: true,
+        data: { count: count },
       });
     } catch (error) {
-      console.error('Error in getTotalUncheckedFilledCount:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Error fetching total unchecked count' 
+      console.error("Error in getTotalUncheckedFilledCount:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching total unchecked count",
       });
     }
   }
 }
 
-module.exports = QuestionnairesController; 
+module.exports = QuestionnairesController;

@@ -1,4 +1,5 @@
-const userLogModel = require('../models/userLog.model');
+const userLogModel = require("../models/userLog.model");
+const { promise } = require("../config/db");
 
 /**
  * Get all logs with user information (admin only)
@@ -7,23 +8,16 @@ const userLogModel = require('../models/userLog.model');
  */
 const getAllLogs = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 50, 
-      userId, 
-      action, 
-      date,
-      search 
-    } = req.query;
+    const { page = 1, limit = 50, userId, action, date, search } = req.query;
 
     // Validate pagination parameters
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
-    
+
     if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
       return res.status(400).json({
         success: false,
-        message: 'پارامترهای صفحه‌بندی نامعتبر هستند'
+        message: "پارامترهای صفحه‌بندی نامعتبر هستند",
       });
     }
 
@@ -40,11 +34,12 @@ const getAllLogs = async (req, res) => {
     let filteredLogs = result.logs;
     if (search) {
       const searchLower = search.toLowerCase();
-      filteredLogs = result.logs.filter(log => 
-        log.user_name?.toLowerCase().includes(searchLower) ||
-        log.user_email?.toLowerCase().includes(searchLower) ||
-        log.details?.toLowerCase().includes(searchLower) ||
-        log.action?.toLowerCase().includes(searchLower)
+      filteredLogs = result.logs.filter(
+        (log) =>
+          log.user_name?.toLowerCase().includes(searchLower) ||
+          log.user_email?.toLowerCase().includes(searchLower) ||
+          log.details?.toLowerCase().includes(searchLower) ||
+          log.action?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -52,14 +47,14 @@ const getAllLogs = async (req, res) => {
       success: true,
       data: {
         logs: filteredLogs,
-        pagination: result.pagination
-      }
+        pagination: result.pagination,
+      },
     });
   } catch (error) {
-    console.error('Error fetching logs:', error);
+    console.error("Error fetching logs:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت لاگ‌ها'
+      message: "خطا در دریافت لاگ‌ها",
     });
   }
 };
@@ -78,7 +73,7 @@ const getUserLogs = async (req, res) => {
     if (!userId || isNaN(userId)) {
       return res.status(400).json({
         success: false,
-        message: 'شناسه کاربر نامعتبر است'
+        message: "شناسه کاربر نامعتبر است",
       });
     }
 
@@ -91,13 +86,13 @@ const getUserLogs = async (req, res) => {
 
     res.json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error) {
-    console.error('Error fetching user logs:', error);
+    console.error("Error fetching user logs:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت لاگ‌های کاربر'
+      message: "خطا در دریافت لاگ‌های کاربر",
     });
   }
 };
@@ -113,13 +108,13 @@ const getLogStatistics = async (req, res) => {
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
-    console.error('Error fetching log statistics:', error);
+    console.error("Error fetching log statistics:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت آمار لاگ‌ها'
+      message: "خطا در دریافت آمار لاگ‌ها",
     });
   }
 };
@@ -137,7 +132,7 @@ const cleanupOldLogs = async (req, res) => {
     if (!daysOld || isNaN(daysOld) || daysOld < 1 || daysOld > 365) {
       return res.status(400).json({
         success: false,
-        message: 'تعداد روزها باید بین 1 تا 365 باشد'
+        message: "تعداد روزها باید بین 1 تا 365 باشد",
       });
     }
 
@@ -148,14 +143,14 @@ const cleanupOldLogs = async (req, res) => {
       message: `${result.affectedRows} لاگ قدیمی حذف شد`,
       data: {
         deletedCount: result.affectedRows,
-        daysOld: parseInt(daysOld)
-      }
+        daysOld: parseInt(daysOld),
+      },
     });
   } catch (error) {
-    console.error('Error cleaning up old logs:', error);
+    console.error("Error cleaning up old logs:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در پاکسازی لاگ‌های قدیمی'
+      message: "خطا در پاکسازی لاگ‌های قدیمی",
     });
   }
 };
@@ -167,7 +162,7 @@ const cleanupOldLogs = async (req, res) => {
  */
 const exportLogs = async (req, res) => {
   try {
-    const { userId, action, date, format = 'csv' } = req.query;
+    const { userId, action, date, format = "csv" } = req.query;
 
     // Get all logs without pagination for export
     const result = await userLogModel.getAllLogsWithUserInfo(
@@ -178,30 +173,35 @@ const exportLogs = async (req, res) => {
       date
     );
 
-    if (format === 'csv') {
+    if (format === "csv") {
       // Set headers for CSV download
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename="user_logs.csv"');
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="user_logs.csv"'
+      );
 
       // Create CSV header
-      const csvHeader = 'ID,User ID,User Name,User Email,User Role,Action,Details,IP Address,User Agent,Created At\n';
+      const csvHeader =
+        "ID,User ID,User Name,User Email,User Role,Action,Details,IP Address,User Agent,Created At\n";
       res.write(csvHeader);
 
       // Write each log as CSV row
-      result.logs.forEach(log => {
-        const csvRow = [
-          log.id,
-          log.user_id,
-          `"${log.user_name || ''}"`,
-          `"${log.user_email || ''}"`,
-          `"${log.user_role || ''}"`,
-          `"${log.action || ''}"`,
-          `"${(log.details || '').replace(/"/g, '""')}"`,
-          `"${log.ip_address || ''}"`,
-          `"${(log.user_agent || '').replace(/"/g, '""')}"`,
-          `"${log.created_at || ''}"`
-        ].join(',') + '\n';
-        
+      result.logs.forEach((log) => {
+        const csvRow =
+          [
+            log.id,
+            log.user_id,
+            `"${log.user_name || ""}"`,
+            `"${log.user_email || ""}"`,
+            `"${log.user_role || ""}"`,
+            `"${log.action || ""}"`,
+            `"${(log.details || "").replace(/"/g, '""')}"`,
+            `"${log.ip_address || ""}"`,
+            `"${(log.user_agent || "").replace(/"/g, '""')}"`,
+            `"${log.created_at || ""}"`,
+          ].join(",") + "\n";
+
         res.write(csvRow);
       });
 
@@ -209,14 +209,14 @@ const exportLogs = async (req, res) => {
     } else {
       res.status(400).json({
         success: false,
-        message: 'فرمت نامعتبر است. فقط CSV پشتیبانی می‌شود'
+        message: "فرمت نامعتبر است. فقط CSV پشتیبانی می‌شود",
       });
     }
   } catch (error) {
-    console.error('Error exporting logs:', error);
+    console.error("Error exporting logs:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در صادرات لاگ‌ها'
+      message: "خطا در صادرات لاگ‌ها",
     });
   }
 };
@@ -228,31 +228,20 @@ const exportLogs = async (req, res) => {
  */
 const getLogActions = async (req, res) => {
   try {
-    const db = require('../config/db');
-    
-    const sql = 'SELECT DISTINCT action FROM user_logs ORDER BY action';
-    
-    db.query(sql, (err, results) => {
-      if (err) {
-        console.error('Error fetching log actions:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'خطا در دریافت انواع لاگ‌ها'
-        });
-      }
+    const sql = "SELECT DISTINCT action FROM user_logs ORDER BY action";
 
-      const actions = results.map(row => row.action);
+    const [results] = await promise.execute(sql);
+    const actions = results.map((row) => row.action);
 
-      res.json({
-        success: true,
-        data: actions
-      });
+    res.json({
+      success: true,
+      data: actions,
     });
   } catch (error) {
-    console.error('Error fetching log actions:', error);
+    console.error("Error fetching log actions:", error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت انواع لاگ‌ها'
+      message: "خطا در دریافت انواع لاگ‌ها",
     });
   }
 };
@@ -268,20 +257,24 @@ const logDailyVisit = async (req, res) => {
     // Check if already logged today
     const alreadyLogged = await userLogModel.hasVisitLogToday(userId);
     if (alreadyLogged) {
-      return res.status(200).json({ success: true, message: 'Visit already logged for today' });
+      return res
+        .status(200)
+        .json({ success: true, message: "Visit already logged for today" });
     }
     // Log the visit
     await userLogModel.createUserLog(
       userId,
-      'visit',
-      'User visited the site',
+      "visit",
+      "User visited the site",
       req.ip,
-      req.headers['user-agent']
+      req.headers["user-agent"]
     );
-    res.status(201).json({ success: true, message: 'Visit logged for today' });
+    res.status(201).json({ success: true, message: "Visit logged for today" });
   } catch (error) {
-    console.error('Error logging daily visit:', error);
-    res.status(500).json({ success: false, message: 'خطا در ثبت بازدید روزانه' });
+    console.error("Error logging daily visit:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "خطا در ثبت بازدید روزانه" });
   }
 };
 
@@ -292,5 +285,5 @@ module.exports = {
   cleanupOldLogs,
   exportLogs,
   getLogActions,
-  logDailyVisit
-}; 
+  logDailyVisit,
+};

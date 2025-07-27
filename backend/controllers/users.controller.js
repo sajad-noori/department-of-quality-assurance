@@ -1,4 +1,4 @@
-const db = require("../config/db");
+const { promise } = require("../config/db");
 const { hashPassword, comparePassword } = require("../utils/hash");
 
 exports.getUsers = async (req, res) => {
@@ -13,19 +13,17 @@ exports.getUsers = async (req, res) => {
     const searchParams = search ? [`%${search}%`, `%${search}%`] : [];
 
     // Get total count for pagination
-    const [countResult] = await db
-      .promise()
-      .query(
-        `SELECT COUNT(*) as total FROM users ${searchCondition}`,
-        searchParams
-      );
+    const [countResult] = await promise.execute(
+      `SELECT COUNT(*) as total FROM users ${searchCondition}`,
+      searchParams
+    );
     const total = countResult[0].total;
 
     // Get paginated users
-    const [users] = await db.promise().query(
+    const [users] = await promise.execute(
       `SELECT id, name, email, role FROM users ${searchCondition} 
-       ORDER BY id DESC LIMIT ? OFFSET ?`,
-      [...searchParams, limit, offset]
+       ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`,
+      searchParams
     );
 
     res.json({
@@ -58,16 +56,14 @@ exports.getUsersByRole = async (req, res) => {
     }
 
     // Get total count for pagination
-    const [countResult] = await db
-      .promise()
-      .query(
-        `SELECT COUNT(*) as total FROM users ${searchCondition}`,
-        searchParams
-      );
+    const [countResult] = await promise.execute(
+      `SELECT COUNT(*) as total FROM users ${searchCondition}`,
+      searchParams
+    );
     const total = countResult[0].total;
 
     // Get paginated users by role
-    const [users] = await db.promise().query(
+    const [users] = await promise.execute(
       `SELECT id, name, email, role FROM users ${searchCondition} 
        ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...searchParams, limit, offset]
@@ -97,18 +93,19 @@ exports.updateUserRole = async (req, res) => {
     }
 
     // Check if user exists
-    const [users] = await db
-      .promise()
-      .query("SELECT id FROM users WHERE id = ?", [userId]);
+    const [users] = await promise.execute("SELECT id FROM users WHERE id = ?", [
+      userId,
+    ]);
 
     if (users.length === 0) {
       return res.status(404).json({ message: "کاربر یافت نشد" });
     }
 
     // Update user role
-    await db
-      .promise()
-      .query("UPDATE users SET role = ? WHERE id = ?", [role, userId]);
+    await promise.execute("UPDATE users SET role = ? WHERE id = ?", [
+      role,
+      userId,
+    ]);
 
     res.json({ message: "نقش کاربر با موفقیت بروزرسانی شد" });
   } catch (error) {
@@ -128,9 +125,10 @@ exports.updateMe = async (req, res) => {
     if (!name || name.trim().length < 3) {
       return res.status(400).json({ message: "نام باید حداقل ۳ حرف باشد" });
     }
-    await db
-      .promise()
-      .query("UPDATE users SET name = ? WHERE id = ?", [name, userId]);
+    await promise.execute("UPDATE users SET name = ? WHERE id = ?", [
+      name,
+      userId,
+    ]);
     res.json({ message: "نام با موفقیت بروزرسانی شد" });
   } catch (error) {
     console.error("Error updating user name:", error);
@@ -157,9 +155,10 @@ exports.updateMyPassword = async (req, res) => {
         .json({ message: "رمز عبور جدید باید حداقل ۶ حرف باشد" });
     }
     // Get current hashed password
-    const [users] = await db
-      .promise()
-      .query("SELECT password FROM users WHERE id = ?", [userId]);
+    const [users] = await promise.execute(
+      "SELECT password FROM users WHERE id = ?",
+      [userId]
+    );
     if (!users.length) {
       return res.status(404).json({ message: "کاربر یافت نشد" });
     }
@@ -169,9 +168,10 @@ exports.updateMyPassword = async (req, res) => {
       return res.status(400).json({ message: "رمز عبور فعلی اشتباه است" });
     }
     const hashed = await hashPassword(newPassword);
-    await db
-      .promise()
-      .query("UPDATE users SET password = ? WHERE id = ?", [hashed, userId]);
+    await promise.execute("UPDATE users SET password = ? WHERE id = ?", [
+      hashed,
+      userId,
+    ]);
     res.json({ message: "رمز عبور با موفقیت بروزرسانی شد" });
   } catch (error) {
     console.error("Error updating user password:", error);

@@ -1,7 +1,7 @@
 const ProfileDocument = require("../models/profile_document.model");
 const fs = require("fs").promises;
 const path = require("path");
-const db = require("../config/db");
+const { promise } = require("../config/db");
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads/profile");
 
@@ -146,12 +146,10 @@ exports.deleteDocument = async (req, res) => {
     }
 
     // Fetch the document row by ID and user
-    const [rows] = await db
-      .promise()
-      .execute("SELECT * FROM profile_documents WHERE id = ? AND user_id = ?", [
-        id,
-        userId,
-      ]);
+    const [rows] = await promise.execute(
+      "SELECT * FROM profile_documents WHERE id = ? AND user_id = ?",
+      [id, userId]
+    );
     if (!rows.length) {
       return res
         .status(404)
@@ -180,12 +178,10 @@ exports.deleteDocument = async (req, res) => {
       console.error("Error deleting file:", e);
     }
     // Set the column to null
-    await db
-      .promise()
-      .execute(
-        `UPDATE profile_documents SET ${document_type} = NULL WHERE id = ? AND user_id = ?`,
-        [id, userId]
-      );
+    await promise.execute(
+      `UPDATE profile_documents SET ${document_type} = NULL WHERE id = ? AND user_id = ?`,
+      [id, userId]
+    );
     res.json({ success: true, message: "Document deleted successfully" });
   } catch (error) {
     console.error("Error deleting document:", error);

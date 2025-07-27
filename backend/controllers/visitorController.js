@@ -1,4 +1,4 @@
-const connection = require('../config/db');
+const { promise } = require("../config/db");
 
 function getStartOfDay(date = new Date()) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -15,81 +15,66 @@ function getStartOfMonth(date = new Date()) {
 }
 
 // POST /api/visit - record a visit
-function recordVisit(req, res) {
-  const { visitorId } = req.body;
-  if (!visitorId) return res.status(400).json({ error: 'visitorId required' });
+async function recordVisit(req, res) {
+  try {
+    const { visitorId } = req.body;
+    if (!visitorId)
+      return res.status(400).json({ error: "visitorId required" });
 
-  const visitorQuery = `
-    INSERT INTO visitors (visitor_id, last_active)
-    VALUES (?, NOW())
-    ON DUPLICATE KEY UPDATE last_active = NOW()
-  `;
+    const visitorQuery = `
+      INSERT INTO visitors (visitor_id, last_active)
+      VALUES (?, NOW())
+      ON DUPLICATE KEY UPDATE last_active = NOW()
+    `;
 
-  connection.query(visitorQuery, [visitorId], (err) => {
-    if (err) {
-      console.error('Error inserting/updating visitor:', err);
-      return res.status(500).json({ error: 'Server error' });
-    }
+    await promise.execute(visitorQuery, [visitorId]);
 
-    connection.query(
-      'INSERT INTO visits (visitor_id, visit_time) VALUES (?, NOW())',
-      [visitorId],
-      (err2) => {
-        if (err2) {
-          console.error('Error inserting visit:', err2);
-          return res.status(500).json({ error: 'Server error' });
-        }
-        res.json({ message: 'Visit recorded' });
-      }
+    await promise.execute(
+      "INSERT INTO visits (visitor_id, visit_time) VALUES (?, NOW())",
+      [visitorId]
     );
-  });
+
+    res.json({ message: "Visit recorded" });
+  } catch (error) {
+    console.error("Error recording visit:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 }
 
 // GET /api/visitor-stats - return visitor stats
-function getVisitorStats(req, res) {
-  // Use Promise wrapper to avoid callback hell
-  const queryAsync = (sql) =>
-    new Promise((resolve, reject) => {
-      connection.query(sql, (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
+async function getVisitorStats(req, res) {
+  try {
+    const [activeRows] = await promise.execute(
+      `SELECT COUNT(*) AS activeUsers FROM visitors WHERE last_active >= (NOW() - INTERVAL 15 MINUTE)`
+    );
+
+    const [totalRows] = await promise.execute(
+      `SELECT COUNT(*) AS total FROM visits`
+    );
+
+    const [dailyRows] = await promise.execute(
+      `SELECT COUNT(*) AS daily FROM visits WHERE visit_time >= CURDATE()`
+    );
+
+    const [weeklyRows] = await promise.execute(
+      `SELECT COUNT(*) AS weekly FROM visits WHERE visit_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)`
+    );
+
+    const [monthlyRows] = await promise.execute(
+      `SELECT COUNT(*) AS monthly FROM visits WHERE visit_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
+    );
+
+    res.json({
+      activeUsers: activeRows[0].activeUsers,
+      daily: dailyRows[0].daily,
+      weekly: weeklyRows[0].weekly,
+      monthly: monthlyRows[0].monthly,
+      total: totalRows[0].total,
     });
-
-  (async () => {
-    try {
-      const activeRows = await queryAsync(
-        `SELECT COUNT(*) AS activeUsers FROM visitors WHERE last_active >= (NOW() - INTERVAL 15 MINUTE)`
-      );
-
-      const totalRows = await queryAsync(
-        `SELECT COUNT(*) AS total FROM visits`
-      );
-
-      const dailyRows = await queryAsync(
-        `SELECT COUNT(*) AS daily FROM visits WHERE visit_time >= CURDATE()`
-      );
-
-      const weeklyRows = await queryAsync(
-        `SELECT COUNT(*) AS weekly FROM visits WHERE visit_time >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)`
-      );
-
-      const monthlyRows = await queryAsync(
-        `SELECT COUNT(*) AS monthly FROM visits WHERE visit_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
-      );
-
-      res.json({
-        activeUsers: activeRows[0].activeUsers,
-        daily: dailyRows[0].daily,
-        weekly: weeklyRows[0].weekly,
-        monthly: monthlyRows[0].monthly,
-        total: totalRows[0].total,
-      });
-    } catch (err) {
-      console.error('Error fetching visitor stats:', err);
-      res.status(500).json({ error: 'Server error' });
-    }
-  })();
+  } catch (error) {
+    console.error("Error fetching visitor stats:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 }
 
 module.exports = {

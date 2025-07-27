@@ -1,56 +1,67 @@
-const db = require('../config/db');
+const { promise } = require("../config/db");
 
 class Announcement {
-  static create(announcementData) {
-    return new Promise((resolve, reject) => {
-      const { title, content, target_audience, created_by, attachment_path = null } = announcementData;
+  static async create(announcementData) {
+    try {
+      const {
+        title,
+        content,
+        target_audience,
+        created_by,
+        attachment_path = null,
+      } = announcementData;
       const query = `
         INSERT INTO announcements (title, content, target_audience, created_by, attachment_path, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, NOW(), NOW())
       `;
-      db.execute(query, [title, content, target_audience, created_by, attachment_path], (err, result) => {
-        if (err) {
-          reject(new Error(`Error creating announcement: ${err.message}`));
-        } else {
-          resolve(result.insertId);
-        }
-      });
-    });
+      const [result] = await promise.execute(query, [
+        title,
+        content,
+        target_audience,
+        created_by,
+        attachment_path,
+      ]);
+      return result.insertId;
+    } catch (error) {
+      throw new Error(`Error creating announcement: ${error.message}`);
+    }
   }
 
   static async findAll(options = {}) {
-    let query = `
-      SELECT a.*, u.name as creator_name, u.email as creator_email
-      FROM announcements a
-      LEFT JOIN users u ON a.created_by = u.id
-    `;
-    
-    const params = [];
-    
-    if (options.target_audience) {
-      query += ` WHERE a.target_audience = ?`;
-      params.push(options.target_audience);
-    }
-    
-    if (options.created_by) {
-      query += options.target_audience ? ` AND a.created_by = ?` : ` WHERE a.created_by = ?`;
-      params.push(options.created_by);
-    }
-    
-    query += ` ORDER BY a.created_at DESC`;
-    
-    if (options.limit) {
-      query += ` LIMIT ?`;
-      params.push(options.limit);
-    }
-    
-    if (options.offset) {
-      query += ` OFFSET ?`;
-      params.push(options.offset);
-    }
-    
     try {
-      const [rows] = await db.execute(query, params);
+      let query = `
+        SELECT a.*, u.name as creator_name, u.email as creator_email
+        FROM announcements a
+        LEFT JOIN users u ON a.created_by = u.id
+      `;
+
+      const params = [];
+
+      if (options.target_audience) {
+        query += ` WHERE a.target_audience = ?`;
+        params.push(options.target_audience);
+      }
+
+      if (options.created_by) {
+        query += options.target_audience
+          ? ` AND a.created_by = ?`
+          : ` WHERE a.created_by = ?`;
+        params.push(options.created_by);
+      }
+
+      query += ` ORDER BY a.created_at DESC`;
+
+      if (options.limit) {
+        query += ` LIMIT ?`;
+        params.push(options.limit);
+      }
+
+      if (options.offset) {
+        query += ` OFFSET ?`;
+        params.push(options.offset);
+      }
+
+      const [rows] = await promise.execute(query, params);
       return rows;
     } catch (error) {
       throw new Error(`Error fetching announcements: ${error.message}`);
@@ -58,15 +69,15 @@ class Announcement {
   }
 
   static async findById(id) {
-    const query = `
-      SELECT a.*, u.name as creator_name, u.email as creator_email
-      FROM announcements a
-      LEFT JOIN users u ON a.created_by = u.id
-      WHERE a.id = ?
-    `;
-    
     try {
-      const [rows] = await db.execute(query, [id]);
+      const query = `
+        SELECT a.*, u.name as creator_name, u.email as creator_email
+        FROM announcements a
+        LEFT JOIN users u ON a.created_by = u.id
+        WHERE a.id = ?
+      `;
+
+      const [rows] = await promise.execute(query, [id]);
       return rows[0];
     } catch (error) {
       throw new Error(`Error fetching announcement: ${error.message}`);
@@ -74,16 +85,22 @@ class Announcement {
   }
 
   static async update(id, updateData) {
-    const { title, content, target_audience, attachment_path } = updateData;
-    
-    const query = `
-      UPDATE announcements 
-      SET title = ?, content = ?, target_audience = ?, attachment_path = ?, updated_at = NOW()
-      WHERE id = ?
-    `;
-    
     try {
-      const [result] = await db.execute(query, [title, content, target_audience, attachment_path, id]);
+      const { title, content, target_audience, attachment_path } = updateData;
+
+      const query = `
+        UPDATE announcements 
+        SET title = ?, content = ?, target_audience = ?, attachment_path = ?, updated_at = NOW()
+        WHERE id = ?
+      `;
+
+      const [result] = await promise.execute(query, [
+        title,
+        content,
+        target_audience,
+        attachment_path,
+        id,
+      ]);
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(`Error updating announcement: ${error.message}`);
@@ -91,149 +108,123 @@ class Announcement {
   }
 
   static async delete(id) {
-    const query = `DELETE FROM announcements WHERE id = ?`;
-    
     try {
-      const [result] = await db.execute(query, [id]);
+      const query = `DELETE FROM announcements WHERE id = ?`;
+      const [result] = await promise.execute(query, [id]);
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(`Error deleting announcement: ${error.message}`);
     }
   }
 
-  static markAsEmailSent(id) {
-    return new Promise((resolve, reject) => {
+  static async markAsEmailSent(id) {
+    try {
       const query = `
         UPDATE announcements 
         SET email_sent = 1, email_sent_at = NOW()
         WHERE id = ?
       `;
-      db.execute(query, [id], (err, result) => {
-        if (err) {
-          reject(new Error(`Error marking announcement as sent: ${err.message}`));
-        } else {
-          resolve(result.affectedRows > 0);
-        }
-      });
-    });
+      const [result] = await promise.execute(query, [id]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error marking announcement as sent: ${error.message}`);
+    }
   }
 
   static async getRecipientsByType(targetAudience) {
-    return new Promise((resolve) => {
-      let query = '';
+    try {
+      let query = "";
       const params = [];
-      
+
       switch (targetAudience) {
-        case 'all':
+        case "all":
           query = `SELECT id, name, email, role FROM users WHERE is_verified = 1`;
           break;
-        case 'institute':
+        case "institute":
           // For now, treat as all verified users since 'institute' role might not exist
           query = `SELECT id, name, email, role FROM users WHERE is_verified = 1`;
           break;
-        case 'user':
+        case "user":
           query = `SELECT id, name, email, role FROM users WHERE role = 'user' AND is_verified = 1`;
           break;
-        case 'employee':
+        case "employee":
           // For now, treat as all verified users since 'employee' role might not exist
           query = `SELECT id, name, email, role FROM users WHERE is_verified = 1`;
           break;
         default:
           query = `SELECT id, name, email, role FROM users WHERE is_verified = 1`;
       }
-      
-      
-      db.execute(query, params, (err, rows) => {
-        if (err) {
-          console.error('Database error in getRecipientsByType:', err);
-          resolve([]);
-          return;
-        }
-        
-        resolve(Array.isArray(rows) ? rows : []);
-      });
-    });
+
+      const [rows] = await promise.execute(query, params);
+      return Array.isArray(rows) ? rows : [];
+    } catch (error) {
+      console.error("Database error in getRecipientsByType:", error);
+      return [];
+    }
   }
 
   // Get all available roles from the users table
   static async getAvailableRoles() {
-    return new Promise((resolve) => {
-      try {
-        // First, let's check if the users table exists and has data
-        db.execute('SELECT COUNT(*) as count FROM users', (err, userCountResult) => {
-          if (err) {
-            console.error('Error getting user count:', err);
-            resolve([]);
-            return;
-          }
-          
-          
-          // Get distinct roles
-          db.execute('SELECT DISTINCT role FROM users WHERE role IS NOT NULL AND role != ""', (err, rows) => {
-            if (err) {
-              console.error('Error getting roles:', err);
-              resolve([]);
-              return;
-            }
-            
-            
-            if (!Array.isArray(rows)) {
-              console.error('Rows is not an array:', rows);
-              resolve([]);
-              return;
-            }
-            
-            const roles = rows
-              .map(row => row && row.role ? row.role : null)
-              .filter(role => role && role.trim() !== '');
-            
-            resolve(roles);
-          });
-        });
-        
-      } catch (error) {
-        console.error('Database error in getAvailableRoles:', error);
-        resolve([]);
+    try {
+      // First, let's check if the users table exists and has data
+      const [userCountResult] = await promise.execute(
+        "SELECT COUNT(*) as count FROM users"
+      );
+
+      // Get distinct roles
+      const [rows] = await promise.execute(
+        'SELECT DISTINCT role FROM users WHERE role IS NOT NULL AND role != ""'
+      );
+
+      if (!Array.isArray(rows)) {
+        console.error("Rows is not an array:", rows);
+        return [];
       }
-    });
+
+      const roles = rows
+        .map((row) => (row && row.role ? row.role : null))
+        .filter((role) => role && role.trim() !== "");
+
+      return roles;
+    } catch (error) {
+      console.error("Database error in getAvailableRoles:", error);
+      return [];
+    }
   }
 
   // Get recipients count by role
   static async getRecipientsCountByRole() {
-    return new Promise((resolve) => {
+    try {
       const query = `
         SELECT role, COUNT(*) as count 
         FROM users 
         WHERE is_verified = 1 
         GROUP BY role
       `;
-      
-      db.execute(query, (err, rows) => {
-        if (err) {
-          console.error('Error fetching recipients count by role:', err);
-          resolve([]);
-          return;
-        }
-        resolve(Array.isArray(rows) ? rows : []);
-      });
-    });
+
+      const [rows] = await promise.execute(query);
+      return Array.isArray(rows) ? rows : [];
+    } catch (error) {
+      console.error("Error fetching recipients count by role:", error);
+      return [];
+    }
   }
 
   static async getStats() {
-    const query = `
-      SELECT 
-        COUNT(*) as total_announcements,
-        COUNT(CASE WHEN email_sent = 1 THEN 1 END) as sent_announcements,
-        COUNT(CASE WHEN email_sent = 0 THEN 1 END) as pending_announcements,
-        target_audience,
-        DATE(created_at) as date
-      FROM announcements 
-      GROUP BY target_audience, DATE(created_at)
-      ORDER BY date DESC
-    `;
-    
     try {
-      const [rows] = await db.execute(query);
+      const query = `
+        SELECT 
+          COUNT(*) as total_announcements,
+          COUNT(CASE WHEN email_sent = 1 THEN 1 END) as sent_announcements,
+          COUNT(CASE WHEN email_sent = 0 THEN 1 END) as pending_announcements,
+          target_audience,
+          DATE(created_at) as date
+        FROM announcements 
+        GROUP BY target_audience, DATE(created_at)
+        ORDER BY date DESC
+      `;
+
+      const [rows] = await promise.execute(query);
       return rows;
     } catch (error) {
       throw new Error(`Error fetching announcement stats: ${error.message}`);
@@ -241,4 +232,4 @@ class Announcement {
   }
 }
 
-module.exports = Announcement; 
+module.exports = Announcement;

@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const { promise } = require("../config/db");
 
 /**
  * Create a new user log entry
@@ -9,21 +9,31 @@ const db = require('../config/db');
  * @param {string} userAgent - User's browser/device info
  * @returns {Promise<Object>} Result of insert query
  */
-const createUserLog = (userId, action, details = null, ipAddress = null, userAgent = null) => {
-  const sql = `
-    INSERT INTO user_logs (user_id, action, details, ip_address, user_agent)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  
-  return new Promise((resolve, reject) => {
-    db.query(sql, [userId, action, details, ipAddress, userAgent], (err, result) => {
-      if (err) {
-        console.error('Error creating user log:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+const createUserLog = async (
+  userId,
+  action,
+  details = null,
+  ipAddress = null,
+  userAgent = null
+) => {
+  try {
+    const sql = `
+      INSERT INTO user_logs (user_id, action, details, ip_address, user_agent)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await promise.execute(sql, [
+      userId,
+      action,
+      details,
+      ipAddress,
+      userAgent,
+    ]);
+    return result;
+  } catch (error) {
+    console.error("Error creating user log:", error);
+    throw error;
+  }
 };
 
 /**
@@ -34,55 +44,57 @@ const createUserLog = (userId, action, details = null, ipAddress = null, userAge
  * @param {string} actionFilter - Filter by action type (optional)
  * @returns {Promise<Object>} Object with logs and pagination info
  */
-const getUserLogs = (userId, page = 1, limit = 20, actionFilter = null) => {
-  const offset = (page - 1) * limit;
-  
-  let sql = `
-    SELECT * FROM user_logs 
-    WHERE user_id = ?
-  `;
-  
-  let countSql = `
-    SELECT COUNT(*) as total FROM user_logs 
-    WHERE user_id = ?
-  `;
-  
-  const params = [userId];
-  const countParams = [userId];
-  
-  if (actionFilter) {
-    sql += ' AND action = ?';
-    countSql += ' AND action = ?';
-    params.push(actionFilter);
-    countParams.push(actionFilter);
-  }
-  
-  sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-  params.push(limit, offset);
-  
-  return new Promise((resolve, reject) => {
+const getUserLogs = async (
+  userId,
+  page = 1,
+  limit = 20,
+  actionFilter = null
+) => {
+  try {
+    const offset = (page - 1) * limit;
+
+    let sql = `
+      SELECT * FROM user_logs 
+      WHERE user_id = ?
+    `;
+
+    let countSql = `
+      SELECT COUNT(*) as total FROM user_logs 
+      WHERE user_id = ?
+    `;
+
+    const params = [userId];
+    const countParams = [userId];
+
+    if (actionFilter) {
+      sql += " AND action = ?";
+      countSql += " AND action = ?";
+      params.push(actionFilter);
+      countParams.push(actionFilter);
+    }
+
+    sql += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
     // Get total count
-    db.query(countSql, countParams, (err, countResult) => {
-      if (err) return reject(err);
-      
-      const total = countResult[0].total;
-      
-      // Get logs
-      db.query(sql, params, (err, results) => {
-        if (err) return reject(err);
-        
-        resolve({
-          logs: results,
-          pagination: {
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            totalItems: total,
-            itemsPerPage: limit
-          }
-        });
-      });
-    });
-  });
+    const [countResult] = await promise.execute(countSql, countParams);
+    const total = countResult[0].total;
+
+    // Get logs
+    const [results] = await promise.execute(sql, params);
+
+    return {
+      logs: results,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting user logs:", error);
+    throw error;
+  }
 };
 
 /**
@@ -94,140 +106,144 @@ const getUserLogs = (userId, page = 1, limit = 20, actionFilter = null) => {
  * @param {string} dateFilter - Filter by date range (optional)
  * @returns {Promise<Object>} Object with logs and pagination info
  */
-const getAllLogsWithUserInfo = (page = 1, limit = 50, userId = null, actionFilter = null, dateFilter = null) => {
-  const offset = (page - 1) * limit;
-  
-  let sql = `
-    SELECT 
-      ul.id,
-      ul.user_id,
-      u.name as user_name,
-      u.email as user_email,
-      u.role as user_role,
-      ec.centerName as institute_name,
-      ul.action,
-      ul.details,
-      ul.ip_address,
-      ul.user_agent,
-      ul.created_at,
-      ul.updated_at
-    FROM user_logs ul
-    JOIN users u ON ul.user_id = u.id
-    LEFT JOIN educational_centers ec ON u.id = ec.user_id
-    WHERE 1=1
-  `;
-  
-  let countSql = `
-    SELECT COUNT(*) as total 
-    FROM user_logs ul
-    JOIN users u ON ul.user_id = u.id
-    LEFT JOIN educational_centers ec ON u.id = ec.user_id
-    WHERE 1=1
-  `;
-  
-  const params = [];
-  const countParams = [];
-  
-  if (userId) {
-    sql += ' AND ul.user_id = ?';
-    countSql += ' AND ul.user_id = ?';
-    params.push(userId);
-    countParams.push(userId);
-  }
-  
-  if (actionFilter) {
-    sql += ' AND ul.action = ?';
-    countSql += ' AND ul.action = ?';
-    params.push(actionFilter);
-    countParams.push(actionFilter);
-  }
-  
-  if (dateFilter) {
-    sql += ' AND DATE(ul.created_at) = ?';
-    countSql += ' AND DATE(ul.created_at) = ?';
-    params.push(dateFilter);
-    countParams.push(dateFilter);
-  }
-  
-  sql += ' ORDER BY ul.created_at DESC LIMIT ? OFFSET ?';
-  params.push(limit, offset);
-  
-  return new Promise((resolve, reject) => {
+const getAllLogsWithUserInfo = async (
+  page = 1,
+  limit = 50,
+  userId = null,
+  actionFilter = null,
+  dateFilter = null
+) => {
+  try {
+    const offset = (page - 1) * limit;
+
+    let sql = `
+      SELECT 
+        ul.id,
+        ul.user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.role as user_role,
+        ec.centerName as institute_name,
+        ul.action,
+        ul.details,
+        ul.ip_address,
+        ul.user_agent,
+        ul.created_at,
+        ul.updated_at
+      FROM user_logs ul
+      JOIN users u ON ul.user_id = u.id
+      LEFT JOIN educational_centers ec ON u.id = ec.user_id
+      WHERE 1=1
+    `;
+
+    let countSql = `
+      SELECT COUNT(*) as total 
+      FROM user_logs ul
+      JOIN users u ON ul.user_id = u.id
+      LEFT JOIN educational_centers ec ON u.id = ec.user_id
+      WHERE 1=1
+    `;
+
+    const params = [];
+    const countParams = [];
+
+    if (userId) {
+      sql += " AND ul.user_id = ?";
+      countSql += " AND ul.user_id = ?";
+      params.push(userId);
+      countParams.push(userId);
+    }
+
+    if (actionFilter) {
+      sql += " AND ul.action = ?";
+      countSql += " AND ul.action = ?";
+      params.push(actionFilter);
+      countParams.push(actionFilter);
+    }
+
+    if (dateFilter) {
+      sql += " AND DATE(ul.created_at) = ?";
+      countSql += " AND DATE(ul.created_at) = ?";
+      params.push(dateFilter);
+      countParams.push(dateFilter);
+    }
+
+    sql += ` ORDER BY ul.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
     // Get total count
-    db.query(countSql, countParams, (err, countResult) => {
-      if (err) return reject(err);
-      
-      const total = countResult[0].total;
-      
-      // Get logs
-      db.query(sql, params, (err, results) => {
-        if (err) return reject(err);
-        
-        resolve({
-          logs: results,
-          pagination: {
-            currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            totalItems: total,
-            itemsPerPage: limit
-          }
-        });
-      });
-    });
-  });
+    const [countResult] = await promise.execute(countSql, countParams);
+    const total = countResult[0].total;
+
+    // Get logs
+    const [results] = await promise.execute(sql, params);
+
+    return {
+      logs: results,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: limit,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting all logs with user info:", error);
+    throw error;
+  }
 };
 
 /**
  * Get log statistics for admin dashboard
  * @returns {Promise<Object>} Statistics object
  */
-const getLogStatistics = () => {
-  const sql = `
-    SELECT 
-      action,
-      COUNT(*) as count,
-      DATE(created_at) as date
-    FROM user_logs 
-    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    GROUP BY action, DATE(created_at)
-    ORDER BY date DESC, count DESC
-  `;
-  
-  return new Promise((resolve, reject) => {
-    db.query(sql, (err, results) => {
-      if (err) return reject(err);
-      
-      // Process results into statistics
-      const stats = {
-        totalLogs: 0,
-        actionBreakdown: {},
-        dailyActivity: {},
-        topActions: []
-      };
-      
-      results.forEach(row => {
-        stats.totalLogs += row.count;
-        
-        if (!stats.actionBreakdown[row.action]) {
-          stats.actionBreakdown[row.action] = 0;
-        }
-        stats.actionBreakdown[row.action] += row.count;
-        
-        if (!stats.dailyActivity[row.date]) {
-          stats.dailyActivity[row.date] = 0;
-        }
-        stats.dailyActivity[row.date] += row.count;
-      });
-      
-      // Get top 5 actions
-      stats.topActions = Object.entries(stats.actionBreakdown)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([action, count]) => ({ action, count }));
-      
-      resolve(stats);
+const getLogStatistics = async () => {
+  try {
+    const sql = `
+      SELECT 
+        action,
+        COUNT(*) as count,
+        DATE(created_at) as date
+      FROM user_logs 
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+      GROUP BY action, DATE(created_at)
+      ORDER BY date DESC, count DESC
+    `;
+
+    const [results] = await promise.execute(sql);
+
+    // Process results into statistics
+    const stats = {
+      totalLogs: 0,
+      actionBreakdown: {},
+      dailyActivity: {},
+      topActions: [],
+    };
+
+    results.forEach((row) => {
+      stats.totalLogs += row.count;
+
+      if (!stats.actionBreakdown[row.action]) {
+        stats.actionBreakdown[row.action] = 0;
+      }
+      stats.actionBreakdown[row.action] += row.count;
+
+      if (!stats.dailyActivity[row.date]) {
+        stats.dailyActivity[row.date] = 0;
+      }
+      stats.dailyActivity[row.date] += row.count;
     });
-  });
+
+    // Get top 5 actions
+    stats.topActions = Object.entries(stats.actionBreakdown)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([action, count]) => ({ action, count }));
+
+    return stats;
+  } catch (error) {
+    console.error("Error getting log statistics:", error);
+    throw error;
+  }
 };
 
 /**
@@ -235,15 +251,16 @@ const getLogStatistics = () => {
  * @param {number} daysOld - Delete logs older than this many days
  * @returns {Promise<Object>} Result of delete operation
  */
-const deleteOldLogs = (daysOld = 90) => {
-  const sql = 'DELETE FROM user_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)';
-  
-  return new Promise((resolve, reject) => {
-    db.query(sql, [daysOld], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+const deleteOldLogs = async (daysOld = 90) => {
+  try {
+    const sql =
+      "DELETE FROM user_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)";
+    const [result] = await promise.execute(sql, [daysOld]);
+    return result;
+  } catch (error) {
+    console.error("Error deleting old logs:", error);
+    throw error;
+  }
 };
 
 /**
@@ -251,14 +268,15 @@ const deleteOldLogs = (daysOld = 90) => {
  * @param {number} userId - User ID
  * @returns {Promise<boolean>} True if exists, false otherwise
  */
-const hasVisitLogToday = (userId) => {
-  const sql = `SELECT COUNT(*) as count FROM user_logs WHERE user_id = ? AND action = 'visit' AND DATE(created_at) = CURDATE()`;
-  return new Promise((resolve, reject) => {
-    db.query(sql, [userId], (err, results) => {
-      if (err) return reject(err);
-      resolve(results[0].count > 0);
-    });
-  });
+const hasVisitLogToday = async (userId) => {
+  try {
+    const sql = `SELECT COUNT(*) as count FROM user_logs WHERE user_id = ? AND action = 'visit' AND DATE(created_at) = CURDATE()`;
+    const [results] = await promise.execute(sql, [userId]);
+    return results[0].count > 0;
+  } catch (error) {
+    console.error("Error checking visit log today:", error);
+    throw error;
+  }
 };
 
 module.exports = {
@@ -267,5 +285,5 @@ module.exports = {
   getAllLogsWithUserInfo,
   getLogStatistics,
   deleteOldLogs,
-  hasVisitLogToday
-}; 
+  hasVisitLogToday,
+};

@@ -6,6 +6,7 @@ const fs = require("fs");
 const { authenticate } = require("../middleware/auth.middleware");
 const { authLimiter } = require("../middleware/rateLimiter");
 const { logDownload } = require("../middleware/logging.middleware");
+const { promise } = require("../config/db");
 
 // Controller functions
 const {
@@ -99,24 +100,24 @@ router.get("/documents", getDocumentsByType);
 router.delete("/:id", [authenticate, authLimiter], deleteDocument);
 
 // Download route with logging
-router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
-  const { filename } = req.params;
-  const filePath = path.join(__dirname, "..", "uploads", "files", filename);
+router.get(
+  "/download/:filename",
+  [authenticate, logDownload()],
+  async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(__dirname, "..", "uploads", "files", filename);
 
-  // Check if file exists
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ message: "فایل یافت نشد" });
-  }
-
-  // Get file info for logging
-  const db = require("../config/db");
-  db.execute(
-    "SELECT name, category FROM docs_center_and_uploads WHERE fileName = ?",
-    [filename],
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching document info:", err);
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "فایل یافت نشد" });
       }
+
+      // Get file info for logging
+      const [results] = await promise.execute(
+        "SELECT name, category FROM docs_center_and_uploads WHERE fileName = ?",
+        [filename]
+      );
 
       const documentName = results.length > 0 ? results[0].name : filename;
       const category = results.length > 0 ? results[0].category : "unknown";
@@ -132,8 +133,11 @@ router.get("/download/:filename", [authenticate, logDownload()], (req, res) => {
           return res.status(500).json({ message: "خطا در دانلود فایل" });
         }
       });
+    } catch (error) {
+      console.error("Error in download route:", error);
+      res.status(500).json({ message: "خطا در دانلود فایل" });
     }
-  );
-});
+  }
+);
 
 module.exports = router;

@@ -1,14 +1,21 @@
-const db = require("../config/db");
+const { promise } = require("../config/db");
 
 const ClassFacility = {
   async create(facilityData) {
-    const { user_id, name, equipment_name, equipment_count, equipment_status } = facilityData;
+    const { user_id, name, equipment_name, equipment_count, equipment_status } =
+      facilityData;
     const query = `
       INSERT INTO class_facilities (user_id, name, equipment_name, equipment_count, equipment_status)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const values = [user_id, name, equipment_name, equipment_count, equipment_status];
-    const [result] = await db.promise().execute(query, values);
+    const values = [
+      user_id,
+      name,
+      equipment_name,
+      equipment_count,
+      equipment_status,
+    ];
+    const [result] = await promise.execute(query, values);
     return result.insertId;
   },
 
@@ -18,7 +25,7 @@ const ClassFacility = {
       WHERE user_id = ? 
       ORDER BY created_at DESC
     `;
-    const [rows] = await db.promise().execute(query, [userId]);
+    const [rows] = await promise.execute(query, [userId]);
     return rows;
   },
 
@@ -27,9 +34,9 @@ const ClassFacility = {
       DELETE FROM class_facilities 
       WHERE id = ? AND user_id = ?
     `;
-    const [result] = await db.promise().execute(query, [id, userId]);
+    const [result] = await promise.execute(query, [id, userId]);
     return result.affectedRows > 0;
-  }
+  },
 };
 
-module.exports = ClassFacility; 
+module.exports = ClassFacility;

@@ -1,13 +1,13 @@
 const fs = require("fs");
 const path = require("path");
-const db = require("../config/db");
+const { promise } = require("../config/db");
 
 exports.uploadDocument = async (req, res) => {
   try {
     const { name, category, description, video_link } = req.body;
     const fileName = req.file.filename;
 
-    await db.execute(
+    await promise.execute(
       "INSERT INTO docs_center_and_uploads (name, category, description, fileName, video_link) VALUES (?, ?, ?, ?, ?)",
       [name, category, description, fileName, video_link]
     );
@@ -19,167 +19,151 @@ exports.uploadDocument = async (req, res) => {
   }
 };
 
-exports.getDocuments = (req, res) => {
-  db.execute(
-    "SELECT * FROM docs_center_and_uploads ORDER BY id DESC",
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching documents:", err);
-        return res.status(500).json({ message: "Failed to fetch documents" });
-      }
-      res.json(results);
-    }
-  );
-};
-
-exports.deleteDocument = (req, res) => {
-  const { id } = req.params;
-
-  db.execute(
-    "SELECT fileName FROM docs_center_and_uploads WHERE id = ?",
-    [id],
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching document:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to find document for deletion" });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-
-      const filePath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "files",
-        results[0].fileName
-      );
-
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr && unlinkErr.code !== "ENOENT") {
-          console.error("Error deleting file:", unlinkErr);
-          return res
-            .status(500)
-            .json({ message: "Error deleting associated file" });
-        }
-
-        db.execute(
-          "DELETE FROM docs_center_and_uploads WHERE id = ?",
-          [id],
-          (deleteErr, deleteResults) => {
-            if (deleteErr) {
-              console.error("Error deleting document:", deleteErr);
-              return res
-                .status(500)
-                .json({ message: "Failed to delete document" });
-            }
-
-            res.json({ message: "Document and file deleted successfully" });
-          }
-        );
-      });
-    }
-  );
-};
-
-exports.updateDocumentWithFile = (req, res) => {
-  const { id } = req.params;
-  const { name, category, description, video_link } = req.body;
-  const newFile = req.file;
-
-  if (!newFile) {
-    return db.execute(
-      "UPDATE docs_center_and_uploads SET name = ?, category = ?, description = ?, video_link = ? WHERE id = ?",
-      [name, category, description, video_link, id],
-      (err, results) => {
-        if (err) {
-          console.error("Error updating document:", err);
-          return res.status(500).json({ message: "Failed to update document" });
-        }
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ message: "Document not found" });
-        }
-        res.json({ message: "Document metadata updated successfully" });
-      }
+exports.getDocuments = async (req, res) => {
+  try {
+    const [results] = await promise.execute(
+      "SELECT * FROM docs_center_and_uploads ORDER BY id DESC"
     );
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching documents:", err);
+    res.status(500).json({ message: "Failed to fetch documents" });
   }
+};
 
-  const newFileName = newFile.filename;
+exports.deleteDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  // First get the old filename
-  db.execute(
-    "SELECT fileName FROM docs_center_and_uploads WHERE id = ?",
-    [id],
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching existing file for update:", err);
+    // First get the filename
+    const [results] = await promise.execute(
+      "SELECT fileName FROM docs_center_and_uploads WHERE id = ?",
+      [id]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      "files",
+      results[0].fileName
+    );
+
+    // Try to delete the file
+    try {
+      fs.unlinkSync(filePath);
+    } catch (unlinkErr) {
+      if (unlinkErr.code !== "ENOENT") {
+        console.error("Error deleting file:", unlinkErr);
         return res
           .status(500)
-          .json({ message: "Failed to fetch existing document" });
+          .json({ message: "Error deleting associated file" });
       }
+    }
 
-      if (results.length === 0) {
+    // Delete from database
+    const [deleteResults] = await promise.execute(
+      "DELETE FROM docs_center_and_uploads WHERE id = ?",
+      [id]
+    );
+
+    res.json({ message: "Document and file deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    res.status(500).json({ message: "Failed to delete document" });
+  }
+};
+
+exports.updateDocumentWithFile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, category, description, video_link } = req.body;
+    const newFile = req.file;
+
+    if (!newFile) {
+      // Update without file
+      const [results] = await promise.execute(
+        "UPDATE docs_center_and_uploads SET name = ?, category = ?, description = ?, video_link = ? WHERE id = ?",
+        [name, category, description, video_link, id]
+      );
+
+      if (results.affectedRows === 0) {
         return res.status(404).json({ message: "Document not found" });
       }
 
-      const oldFilePath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        "files",
-        results[0].fileName
-      );
-
-      // Try deleting the old file
-      fs.unlink(oldFilePath, (unlinkErr) => {
-        if (unlinkErr && unlinkErr.code !== "ENOENT") {
-          console.error("Error deleting old file during update:", unlinkErr);
-          return res
-            .status(500)
-            .json({ message: "Error replacing the old file" });
-        }
-
-        // Continue to update DB
-        db.execute(
-          "UPDATE docs_center_and_uploads SET name = ?, category = ?, description = ?, fileName = ?, video_link = ? WHERE id = ?",
-          [name, category, description, newFileName, video_link, id],
-          (updateErr, updateResults) => {
-            if (updateErr) {
-              console.error("Error updating document with file:", updateErr);
-              return res
-                .status(500)
-                .json({ message: "Failed to update document" });
-            }
-            if (updateResults.affectedRows === 0) {
-              return res.status(404).json({ message: "Document not found" });
-            }
-            res.json({ message: "Document and file updated successfully" });
-          }
-        );
-      });
+      res.json({ message: "Document metadata updated successfully" });
+      return;
     }
-  );
+
+    const newFileName = newFile.filename;
+
+    // First get the old filename
+    const [results] = await promise.execute(
+      "SELECT fileName FROM docs_center_and_uploads WHERE id = ?",
+      [id]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    const oldFilePath = path.join(
+      __dirname,
+      "..",
+      "uploads",
+      "files",
+      results[0].fileName
+    );
+
+    // Try deleting the old file
+    try {
+      fs.unlinkSync(oldFilePath);
+    } catch (unlinkErr) {
+      if (unlinkErr.code !== "ENOENT") {
+        console.error("Error deleting old file during update:", unlinkErr);
+        return res
+          .status(500)
+          .json({ message: "Error replacing the old file" });
+      }
+    }
+
+    // Update database with new file
+    const [updateResults] = await promise.execute(
+      "UPDATE docs_center_and_uploads SET name = ?, category = ?, description = ?, fileName = ?, video_link = ? WHERE id = ?",
+      [name, category, description, newFileName, video_link, id]
+    );
+
+    if (updateResults.affectedRows === 0) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    res.json({ message: "Document and file updated successfully" });
+  } catch (error) {
+    console.error("Error updating document:", error);
+    res.status(500).json({ message: "Failed to update document" });
+  }
 };
 
-exports.getDocumentsByType = (req, res) => {
-  const { type } = req.query;
+exports.getDocumentsByType = async (req, res) => {
+  try {
+    const { type } = req.query;
 
-  if (!type) {
-    return res.status(400).json({ message: "Type is required" });
-  }
-
-  db.execute(
-    "SELECT * FROM docs_center_and_uploads WHERE category = ? ORDER BY id DESC",
-    [type],
-    (err, results) => {
-      if (err) {
-        console.error("Error fetching documents:", err);
-        return res.status(500).json({ message: "Server error" });
-      }
-      res.json(results);
+    if (!type) {
+      return res.status(400).json({ message: "Type is required" });
     }
-  );
+
+    const [results] = await promise.execute(
+      "SELECT * FROM docs_center_and_uploads WHERE category = ? ORDER BY id DESC",
+      [type]
+    );
+
+    res.json(results);
+  } catch (err) {
+    console.error("Error fetching documents:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };

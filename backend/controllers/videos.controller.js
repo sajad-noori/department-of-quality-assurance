@@ -1,8 +1,8 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const db = require("../config/db");
-const Video = require('../models/video.model');
+const { promise } = require("../config/db");
+const Video = require("../models/video.model");
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "..", "uploads", "videos");
@@ -25,50 +25,47 @@ const storage = multer.diskStorage({
 const upload = multer({ storage }).single("video");
 
 // Upload new video
-const uploadVideo = (req, res) => {
-  const { title, description, category } = req.body;
-  const videoFile = req.file;
+const uploadVideo = async (req, res) => {
+  try {
+    const { title, description, category } = req.body;
+    const videoFile = req.file;
 
-  if (!title || !description || !category || !videoFile) {
-    if (videoFile && videoFile.path) {
-      fs.unlink(videoFile.path, (err) => {
-        if (err) console.error("Failed to delete file:", err);
-      });
-    }
-    return res.status(400).json({ message: "همه فیلدها باید پر شوند." });
-  }
-
-  const sql = `INSERT INTO videos (title, description, category, video_path, uploaded_at)
-               VALUES (?, ?, ?, ?, NOW())`;
-  const params = [title, description, category, videoFile.filename];
-
-  db.query(sql, params, (err, results) => {
-    if (err) {
-      console.error("Database insert error:", err);
+    if (!title || !description || !category || !videoFile) {
       if (videoFile && videoFile.path) {
-        fs.unlink(videoFile.path, (unlinkErr) => {
-          if (unlinkErr) console.error("Failed to delete file:", unlinkErr);
+        fs.unlink(videoFile.path, (err) => {
+          if (err) console.error("Failed to delete file:", err);
         });
       }
-      return res.status(500).json({ message: "خطای سرور" });
+      return res.status(400).json({ message: "همه فیلدها باید پر شوند." });
     }
+
+    const sql = `INSERT INTO videos (title, description, category, video_path, uploaded_at)
+                 VALUES (?, ?, ?, ?, NOW())`;
+    const params = [title, description, category, videoFile.filename];
+
+    const [results] = await promise.execute(sql, params);
 
     res.status(200).json({
       message: "ویدیو با موفقیت ذخیره شد.",
       videoId: results.insertId,
     });
-  });
+  } catch (error) {
+    console.error("Database insert error:", error);
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (unlinkErr) => {
+        if (unlinkErr) console.error("Failed to delete file:", unlinkErr);
+      });
+    }
+    res.status(500).json({ message: "خطای سرور" });
+  }
 };
 
 // Get list of videos
-const getVideos = (req, res) => {
-  const sql = `SELECT id, title, description, category, video_path AS videoUrl, uploaded_at FROM videos ORDER BY uploaded_at DESC`;
+const getVideos = async (req, res) => {
+  try {
+    const sql = `SELECT id, title, description, category, video_path AS videoUrl, uploaded_at FROM videos ORDER BY uploaded_at DESC`;
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Database fetch error:", err);
-      return res.status(500).json({ message: "خطا در بارگذاری ویدیوها" });
-    }
+    const [results] = await promise.execute(sql);
 
     const baseUrl = "/uploads/videos/";
     const videos = results.map((video) => ({
@@ -77,18 +74,21 @@ const getVideos = (req, res) => {
     }));
 
     res.json(videos);
-  });
+  } catch (error) {
+    console.error("Database fetch error:", error);
+    res.status(500).json({ message: "خطا در بارگذاری ویدیوها" });
+  }
 };
 
 // Delete a video by ID
-const deleteVideo = (req, res) => {
-  const videoId = req.params.id;
+const deleteVideo = async (req, res) => {
+  try {
+    const videoId = req.params.id;
 
-  db.query("SELECT video_path FROM videos WHERE id = ?", [videoId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ message: "خطای سرور" });
-    }
+    const [results] = await promise.execute(
+      "SELECT video_path FROM videos WHERE id = ?",
+      [videoId]
+    );
 
     if (results.length === 0) {
       return res.status(404).json({ message: "ویدیو پیدا نشد." });
@@ -97,47 +97,40 @@ const deleteVideo = (req, res) => {
     const videoFile = results[0].video_path;
     const filePath = path.join(uploadDir, videoFile);
 
-    db.query("DELETE FROM videos WHERE id = ?", [videoId], (err2) => {
-      if (err2) {
-        console.error("Database delete error:", err2);
-        return res.status(500).json({ message: "خطای سرور در حذف ویدیو" });
+    await promise.execute("DELETE FROM videos WHERE id = ?", [videoId]);
+
+    fs.unlink(filePath, (unlinkErr) => {
+      if (unlinkErr) {
+        console.error("Failed to delete file:", unlinkErr);
       }
-
-      fs.unlink(filePath, (unlinkErr) => {
-        if (unlinkErr) {
-          console.error("Failed to delete file:", unlinkErr);
-        }
-
-        res.json({ message: "ویدیو با موفقیت حذف شد." });
-      });
     });
-  });
+
+    res.json({ message: "ویدیو با موفقیت حذف شد." });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({ message: "خطای سرور" });
+  }
 };
 
 // Update video info and optionally replace video file
-const updateVideo = (req, res) => {
-  const videoId = req.params.id;
-  const { title, description, category } = req.body;
+const updateVideo = async (req, res) => {
+  try {
+    const videoId = req.params.id;
+    const { title, description, category } = req.body;
 
-  if (!title || !description || !category) {
-    if (req.file && req.file.path) {
-      fs.unlink(req.file.path, (err) => {
-        if (err) console.error("Failed to delete file:", err);
-      });
-    }
-    return res.status(400).json({ message: "همه فیلدها باید پر شوند." });
-  }
-
-  db.query("SELECT video_path FROM videos WHERE id = ?", [videoId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
+    if (!title || !description || !category) {
       if (req.file && req.file.path) {
-        fs.unlink(req.file.path, (err2) => {
-          if (err2) console.error("Failed to delete file:", err2);
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error("Failed to delete file:", err);
         });
       }
-      return res.status(500).json({ message: "خطای سرور" });
+      return res.status(400).json({ message: "همه فیلدها باید پر شوند." });
     }
+
+    const [results] = await promise.execute(
+      "SELECT video_path FROM videos WHERE id = ?",
+      [videoId]
+    );
 
     if (results.length === 0) {
       if (req.file && req.file.path) {
@@ -155,27 +148,26 @@ const updateVideo = (req, res) => {
       newVideoFileName = req.file.filename;
       const oldFilePath = path.join(uploadDir, oldVideoFile);
       fs.unlink(oldFilePath, (unlinkErr) => {
-        if (unlinkErr) console.error("Failed to delete old video file:", unlinkErr);
+        if (unlinkErr)
+          console.error("Failed to delete old video file:", unlinkErr);
       });
     }
 
     const sql = `UPDATE videos SET title = ?, description = ?, category = ?, video_path = ? WHERE id = ?`;
     const params = [title, description, category, newVideoFileName, videoId];
 
-    db.query(sql, params, (updateErr) => {
-      if (updateErr) {
-        console.error("Database update error:", updateErr);
-        if (req.file && req.file.path) {
-          fs.unlink(req.file.path, (unlinkErr) => {
-            if (unlinkErr) console.error("Failed to delete file:", unlinkErr);
-          });
-        }
-        return res.status(500).json({ message: "خطای سرور در به‌روزرسانی ویدیو" });
-      }
+    await promise.execute(sql, params);
 
-      res.json({ message: "ویدیو با موفقیت به‌روزرسانی شد." });
-    });
-  });
+    res.json({ message: "ویدیو با موفقیت به‌روزرسانی شد." });
+  } catch (error) {
+    console.error("Database update error:", error);
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, (unlinkErr) => {
+        if (unlinkErr) console.error("Failed to delete file:", unlinkErr);
+      });
+    }
+    res.status(500).json({ message: "خطای سرور در به‌روزرسانی ویدیو" });
+  }
 };
 
 // Add comment
