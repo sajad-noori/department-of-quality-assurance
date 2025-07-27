@@ -65,8 +65,8 @@ exports.getUsersByRole = async (req, res) => {
     // Get paginated users by role
     const [users] = await promise.execute(
       `SELECT id, name, email, role FROM users ${searchCondition} 
-       ORDER BY id DESC LIMIT ? OFFSET ?`,
-      [...searchParams, limit, offset]
+       ORDER BY id DESC LIMIT ${limit} OFFSET ${offset}`,
+      searchParams
     );
 
     res.json({
