@@ -1,35 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
-import PropTypes from 'prop-types';
-
-const categoryColors = {
-  'آموزشی': 'info',
-  'ارزیابی': 'success',
-  'نیازسنجی': 'warning',
-};
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('fa-IR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-}
+import React, { useState, useRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
+import PropTypes from "prop-types";
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
 
 function getFileIcon(fileName) {
-  const ext = fileName.split('.').pop().toLowerCase();
-  if (ext === 'pdf') return '📄';
-  if (ext === 'doc' || ext === 'docx') return '📝';
-  return '📎';
+  const ext = fileName.split(".").pop().toLowerCase();
+  if (ext === "pdf") return "📄";
+  if (ext === "doc" || ext === "docx") return "📝";
+  return "📎";
 }
 
 const LoadingSkeleton = ({ theme }) => (
   <div className="row g-3 justify-content-center">
     {[1, 2, 3, 4, 5, 6].map((i) => (
       <div key={i} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div className={`card h-100 ${theme === 'light' ? 'light-card' : 'dark-card'} skeleton-card`}>
+        <div
+          className={`card h-100 ${
+            theme === "light" ? "light-card" : "dark-card"
+          } skeleton-card`}
+        >
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
               <div className="skeleton-icon me-3"></div>
@@ -60,46 +54,88 @@ function Questionnaires() {
   const { theme } = useTheme();
   const query = useQuery();
   const navigate = useNavigate();
-  const [search, setSearch] = useState(query.get('search') || '');
+  const [search, setSearch] = useState(query.get("search") || "");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [questionnaires, setQuestionnaires] = useState([]);
   const fileInputs = useRef({});
   const [uploading, setUploading] = useState({});
-  const [uploadMessage, setUploadMessage] = useState('');
+  const [uploadMessage, setUploadMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
   const [uploaded, setUploaded] = useState({});
+  const [deleting, setDeleting] = useState({});
+
+  // Delete filled questionnaire for a given questionnaire id (now expects filled questionnaire record)
+  const handleDeleteFilled = async (questionnaireId) => {
+    const filled = uploaded[questionnaireId];
+    if (!filled || !filled.id) {
+      setUploadMessage("شناسه پرسشنامه پر شده یافت نشد.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "آیا مطمئن هستید که می‌خواهید فایل ارسال شده را حذف کنید؟"
+      )
+    )
+      return;
+    setDeleting((prev) => ({ ...prev, [questionnaireId]: true }));
+    setUploadMessage("");
+    try {
+      const res = await fetch(`http://localhost:5000/api/questionnaires/filled/${filled.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUploadMessage("فایل ارسال شده با موفقیت حذف شد.");
+        setUploaded((prev) => {
+          const copy = { ...prev };
+          delete copy[questionnaireId];
+          return copy;
+        });
+      } else {
+        setUploadMessage(data.message || "خطا در حذف فایل ارسال شده");
+      }
+    } catch (err) {
+      setUploadMessage("خطا در ارتباط با سرور");
+    }
+    setDeleting((prev) => ({ ...prev, [questionnaireId]: false }));
+  };
 
   // Fetch questionnaires from backend
   useEffect(() => {
     setLoading(true);
-    setError('');
-    fetch('/api/questionnaires', { credentials: 'include' })
-      .then(res => res.json())
-      .then(async data => {
+    setError("");
+    fetch("http://localhost:5000/api/questionnaires", { credentials: "include" })
+      .then((res) => res.json())
+      .then(async (data) => {
         if (data.success) {
           setQuestionnaires(data.data || []);
           // Fetch filled questionnaires for this user
           try {
-            const filledRes = await fetch('/api/questionnaires/filled/user', { credentials: 'include' });
+            const filledRes = await fetch("/api/questionnaires/filled/user", {
+              credentials: "include",
+            });
             const filledData = await filledRes.json();
             if (filledData.success && Array.isArray(filledData.data)) {
-              // Build uploaded state: { [questionnaire_id]: true }
+              // Build uploaded state: { [questionnaire_id]: filledQuestionnaireObject }
               const uploadedMap = {};
-              filledData.data.forEach(fq => { uploadedMap[fq.questionnaire_id] = true; });
+              filledData.data.forEach((fq) => {
+                uploadedMap[fq.questionnaire_id] = fq;
+              });
               setUploaded(uploadedMap);
             }
           } catch (err) {
             // Ignore error, just don't set uploaded
           }
         } else {
-          setError(data.message || 'خطا در دریافت پرسشنامه‌ها');
+          setError(data.message || "خطا در دریافت پرسشنامه‌ها");
         }
         setLoading(false);
       })
       .catch(() => {
-        setError('خطا در ارتباط با سرور');
+        setError("خطا در ارتباط با سرور");
         setLoading(false);
       });
   }, []);
@@ -109,13 +145,14 @@ function Questionnaires() {
     if (search) {
       navigate(`?search=${encodeURIComponent(search)}`, { replace: true });
     } else {
-      navigate('', { replace: true });
+      navigate("", { replace: true });
     }
   }, [search, navigate]);
 
-  const filtered = questionnaires.filter(q =>
-    (q.title && q.title.includes(search)) ||
-    (q.description && q.description.includes(search))
+  const filtered = questionnaires.filter(
+    (q) =>
+      (q.title && q.title.includes(search)) ||
+      (q.description && q.description.includes(search))
   );
 
   // Pagination logic
@@ -131,9 +168,9 @@ function Questionnaires() {
 
   // Auto-clear success message after 10 seconds
   useEffect(() => {
-    if (uploadMessage && uploadMessage.includes('موفقیت')) {
+    if (uploadMessage && uploadMessage.includes("موفقیت")) {
       const timer = setTimeout(() => {
-        setUploadMessage('');
+        setUploadMessage("");
       }, 10000); // 10 seconds
       return () => clearTimeout(timer);
     }
@@ -146,7 +183,8 @@ function Questionnaires() {
   };
 
   // Download link uses backend file_url
-  const getFileUrl = (file_url) => file_url ? `http://localhost:5000/uploads/${file_url}` : '#';
+  const getFileUrl = (file_url) =>
+    file_url ? `http://localhost:5000/uploads/${file_url}` : "#";
 
   const handleUploadClick = (id) => {
     if (fileInputs.current[id]) {
@@ -157,50 +195,65 @@ function Questionnaires() {
   const handleFileChange = async (e, q) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadMessage('');
+    setUploadMessage("");
     // Only allow PDF, DOC, DOCX
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      setUploadMessage('فقط فایل PDF یا Word مجاز است.');
-      e.target.value = '';
+      setUploadMessage("فقط فایل PDF یا Word مجاز است.");
+      e.target.value = "";
       return;
     }
-    setUploading(prev => ({ ...prev, [q.id]: true }));
+    setUploading((prev) => ({ ...prev, [q.id]: true }));
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('questionnaire_id', q.id);
+    formData.append("file", file);
+    formData.append("questionnaire_id", q.id);
     try {
-      const res = await fetch('/api/questionnaires/filled', {
-        method: 'POST',
-        credentials: 'include',
+      const res = await fetch("/api/questionnaires/filled", {
+        method: "POST",
+        credentials: "include",
         body: formData,
       });
       const data = await res.json();
       if (data.success) {
-        setUploadMessage('پرسشنامه با موفقیت ارسال شد.');
-        setUploaded(prev => ({ ...prev, [q.id]: true }));
+        setUploadMessage("پرسشنامه با موفقیت ارسال شد.");
+        setUploaded((prev) => ({ ...prev, [q.id]: data.data }));
       } else {
-        setUploadMessage(data.message || 'خطا در ارسال پرسشنامه');
+        setUploadMessage(data.message || "خطا در ارسال پرسشنامه");
       }
     } catch (err) {
-      setUploadMessage('خطا در ارتباط با سرور');
+      setUploadMessage("خطا در ارتباط با سرور");
     }
-    setUploading(prev => ({ ...prev, [q.id]: false }));
-    e.target.value = '';
+    setUploading((prev) => ({ ...prev, [q.id]: false }));
+    e.target.value = "";
   };
 
   return (
-    <div className={theme === 'light' ? 'light-container' : 'dark-container'} dir="rtl">
+    <div
+      className={theme === "light" ? "light-container" : "dark-container"}
+      dir="rtl"
+    >
       <div className="container-fluid px-3 px-md-4 px-lg-5">
         {/* Header Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-lg-10 col-xl-8">
             <div className="text-center mb-4">
-              <h2 className={`mb-2 responsive-title ${theme === 'light' ? 'light-text' : 'dark-text'}`}> 
+              <h2
+                className={`mb-2 responsive-title ${
+                  theme === "light" ? "light-text" : "dark-text"
+                }`}
+              >
                 <i className="fas fa-list-alt me-2 text-info"></i>
                 پرسشنامه‌ها
               </h2>
-              <p className={`mb-0 responsive-subtitle ${theme === 'light' ? 'light-text' : 'text-light'}`}>
+              <p
+                className={`mb-0 responsive-subtitle ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
                 {filtered.length} پرسشنامه یافت شد
               </p>
             </div>
@@ -210,23 +263,39 @@ function Questionnaires() {
         {/* Search Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12">
-            <div className={`card ${theme === 'light' ? 'light-card' : 'dark-card'}`}>
+            <div
+              className={`card ${
+                theme === "light" ? "light-card" : "dark-card"
+              }`}
+            >
               <div className="card-body">
                 <div className="input-group">
-                  <span className={`input-group-text ${theme === 'light' ? 'light-input-group' : 'dark-input-group'}`}>
-                    <i className={`fas fa-search ${theme === 'light' ? 'text-dark' : 'text-light'}`}></i>
+                  <span
+                    className={`input-group-text ${
+                      theme === "light"
+                        ? "light-input-group"
+                        : "dark-input-group"
+                    }`}
+                  >
+                    <i
+                      className={`fas fa-search ${
+                        theme === "light" ? "text-dark" : "text-light"
+                      }`}
+                    ></i>
                   </span>
                   <input
                     type="text"
-                    className={`form-control ${theme === 'light' ? 'light-input' : 'dark-input'}`}
+                    className={`form-control ${
+                      theme === "light" ? "light-input" : "dark-input"
+                    }`}
                     placeholder={"جستجو براساس عنوان، توضیحات یا دسته‌بندی..."}
                     value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                   {search && (
                     <button
                       className="btn btn-outline-light"
-                      onClick={() => setSearch('')}
+                      onClick={() => setSearch("")}
                     >
                       <i className="fas fa-times"></i>
                     </button>
@@ -241,8 +310,23 @@ function Questionnaires() {
         {uploadMessage && (
           <div className="row justify-content-center mb-4">
             <div className="col-12 col-lg-8">
-              <div className={`alert ${uploadMessage.includes('موفقیت') ? 'alert-success' : 'alert-danger'} d-flex align-items-center text-center ${theme === 'light' ? 'light-alert' : 'dark-alert'}`} role="alert">
-                <i className={`fas ${uploadMessage.includes('موفقیت') ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
+              <div
+                className={`alert ${
+                  uploadMessage.includes("موفقیت")
+                    ? "alert-success"
+                    : "alert-danger"
+                } d-flex align-items-center text-center ${
+                  theme === "light" ? "light-alert" : "dark-alert"
+                }`}
+                role="alert"
+              >
+                <i
+                  className={`fas ${
+                    uploadMessage.includes("موفقیت")
+                      ? "fa-check-circle"
+                      : "fa-exclamation-triangle"
+                  } me-2`}
+                ></i>
                 <div className="responsive-text">{uploadMessage}</div>
               </div>
             </div>
@@ -262,7 +346,12 @@ function Questionnaires() {
         {error && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8">
-              <div className={`alert alert-danger d-flex align-items-center text-center ${theme === 'light' ? 'light-alert' : 'dark-alert'}`} role="alert">
+              <div
+                className={`alert alert-danger d-flex align-items-center text-center ${
+                  theme === "light" ? "light-alert" : "dark-alert"
+                }`}
+                role="alert"
+              >
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 <div className="responsive-text">{error}</div>
               </div>
@@ -274,10 +363,26 @@ function Questionnaires() {
         {!loading && !error && filtered.length === 0 && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8 text-center py-5">
-              <i className={`fas fa-search fa-2x fa-md-3x mb-3 ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}></i>
-              <h4 className={`responsive-title ${theme === 'light' ? 'light-text' : 'text-light'}`}>هیچ پرسشنامه‌ای یافت نشد</h4>
-              <p className={`responsive-text ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}>
-                {search ? "لطفاً کلمات کلیدی دیگری را امتحان کنید." : "در حال حاضر هیچ پرسشنامه‌ای موجود نیست."}
+              <i
+                className={`fas fa-search fa-2x fa-md-3x mb-3 ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              ></i>
+              <h4
+                className={`responsive-title ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
+                هیچ پرسشنامه‌ای یافت نشد
+              </h4>
+              <p
+                className={`responsive-text ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              >
+                {search
+                  ? "لطفاً کلمات کلیدی دیگری را امتحان کنید."
+                  : "در حال حاضر هیچ پرسشنامه‌ای موجود نیست."}
               </p>
             </div>
           </div>
@@ -288,25 +393,41 @@ function Questionnaires() {
           <div className="row g-3">
             {paginatedQuestionnaires.map((q) => (
               <div key={q.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div className={`card h-100 hover-shadow ${theme === 'light' ? 'light-card' : 'dark-card'}`}> 
+                <div
+                  className={`card h-100 hover-shadow ${
+                    theme === "light" ? "light-card" : "dark-card"
+                  }`}
+                >
                   <div className="card-body d-flex flex-column text-center">
                     <div className="d-flex align-items-start mb-3">
                       <div className="me-3 fs-2 flex-shrink-0">
-                        <span style={{ fontSize: '2rem' }}>{getFileIcon(q.file_name || '')}</span>
+                        <span style={{ fontSize: "2rem" }}>
+                          {getFileIcon(q.file_name || "")}
+                        </span>
                       </div>
                       <div className="flex-grow-1 min-width-0">
-                        <h6 className={`card-title mb-1 text-truncate document-title ${theme === 'light' ? 'light-text' : 'dark-text'}`} title={q.title}>
+                        <h6
+                          className={`card-title mb-1 text-truncate document-title ${
+                            theme === "light" ? "light-text" : "dark-text"
+                          }`}
+                          title={q.title}
+                        >
                           {q.title}
                         </h6>
                       </div>
                     </div>
                     {q.description && (
-                      <p className={`card-text small mb-3 flex-grow-1 ${theme === 'light' ? 'text-secondary' : 'text-muted'}`} style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                      }}>
+                      <p
+                        className={`card-text small mb-3 flex-grow-1 ${
+                          theme === "light" ? "text-secondary" : "text-muted"
+                        }`}
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
                         {q.description}
                       </p>
                     )}
@@ -323,36 +444,79 @@ function Questionnaires() {
                       <i className="fas fa-eye me-1"></i>
                       دانلود
                     </a>
-                    <button
-                      className={`btn ${uploading[q.id] || uploaded[q.id] ? 'btn-secondary' : 'btn-outline-info'} btn-sm w-100 touch-target`}
-                      type="button"
-                      onClick={() => handleUploadClick(q.id)}
-                      disabled={uploading[q.id] || uploaded[q.id]}
-                      title={uploaded[q.id] ? 'شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.' : 'پرسش نامه خانه پری شده را با استفاده از این قسمت اضافه نمایید.'}
-                    >
-                      {uploading[q.id] ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          در حال ارسال...
-                        </>
-                      ) : uploaded[q.id] ? (
-                        <>
-                          <i className="fas fa-check-circle me-2 text-success"></i>
-                          ارسال شد
-                        </>
-                      ) : (
-                        <>
-                          <span role="img" aria-label="upload" style={{ marginLeft: 4 }}>📤</span>
-                          اپلود پرسش نامه شما
-                        </>
+                    <div className="d-grid gap-2">
+                      <button
+                        className={`btn ${
+                          uploading[q.id] || uploaded[q.id]
+                            ? "btn-secondary"
+                            : "btn-outline-info"
+                        } btn-sm w-100 touch-target`}
+                        type="button"
+                        onClick={() => handleUploadClick(q.id)}
+                        disabled={uploading[q.id] || uploaded[q.id]}
+                        title={
+                          uploaded[q.id]
+                            ? "شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید."
+                            : "پرسش نامه خانه پری شده را با استفاده از این قسمت اضافه نمایید."
+                        }
+                      >
+                        {uploading[q.id] ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            در حال ارسال...
+                          </>
+                        ) : uploaded[q.id] ? (
+                          <>
+                            <i className="fas fa-check-circle me-2 text-success"></i>
+                            ارسال شد
+                          </>
+                        ) : (
+                          <>
+                            <span
+                              role="img"
+                              aria-label="upload"
+                              style={{ marginLeft: 4 }}
+                            >
+                              📤
+                            </span>
+                            اپلود پرسش نامه شما
+                          </>
+                        )}
+                      </button>
+                      <input
+                        type="file"
+                        style={{ display: "none" }}
+                        ref={(el) => (fileInputs.current[q.id] = el)}
+                        onChange={(e) => handleFileChange(e, q)}
+                      />
+                      {/* Delete button for uploaded filled questionnaire */}
+                      {uploaded[q.id] && (
+                        <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mt: 1 }}>
+                          <Tooltip title="می‌توانید پرسشنامه ارسال شده را حذف کنید" arrow>
+                            <span>
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteFilled(q.id)}
+                                disabled={deleting[q.id]}
+                                aria-label="حذف فایل ارسال شده برای این پرسشنامه"
+                                size="small"
+                                sx={{ border: '1px solid #ff6b6b', background: theme === "light" ? "#fff0f0" : "#2d1b1b", transition: 'all 0.2s', '&:hover': { background: '#ffebee' } }}
+                              >
+                                {deleting[q.id] ? (
+                                  <CircularProgress size={20} color="error" thickness={6} />
+                                ) : (
+                                  <DeleteIcon />
+                                )}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Stack>
                       )}
-                    </button>
-                    <input
-                      type="file"
-                      style={{ display: 'none' }}
-                      ref={el => (fileInputs.current[q.id] = el)}
-                      onChange={e => handleFileChange(e, q)}
-                    />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -366,9 +530,13 @@ function Questionnaires() {
             <div className="col-12 col-lg-8">
               <nav aria-label="Page navigation">
                 <ul className="pagination justify-content-center">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+                  <li
+                    className={`page-item ${
+                      currentPage === 1 ? "disabled" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
                       onClick={() => handlePageChange(currentPage - 1)}
                       title="صفحه قبلی"
                     >
@@ -376,9 +544,14 @@ function Questionnaires() {
                     </button>
                   </li>
                   {Array.from({ length: totalPages }, (_, i) => (
-                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                      <button 
-                        className="page-link" 
+                    <li
+                      key={i + 1}
+                      className={`page-item ${
+                        currentPage === i + 1 ? "active" : ""
+                      }`}
+                    >
+                      <button
+                        className="page-link"
                         onClick={() => handlePageChange(i + 1)}
                         title={`صفحه ${i + 1}`}
                       >
@@ -386,9 +559,13 @@ function Questionnaires() {
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+                  <li
+                    className={`page-item ${
+                      currentPage === totalPages ? "disabled" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
                       onClick={() => handlePageChange(currentPage + 1)}
                       title="صفحه بعدی"
                     >
