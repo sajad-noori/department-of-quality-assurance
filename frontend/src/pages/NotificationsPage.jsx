@@ -3,7 +3,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { questionnairesAPI } from "../api/questionnaires";
-import { countUnansweredComments } from "./NewsCommentsPage";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 
@@ -521,16 +520,33 @@ export default function NotificationsPage() {
                       <button
                         style={{
                           alignSelf: "flex-end",
-                          background: "#0dcaf0",
-                          color: theme === "dark" ? "#23283a" : "#fff",
-                          border: "none",
+                          background: theme === "dark" ? "#00b5d7" : "#0dcaf0",
+                          color: theme === "dark" ? "#121212" : "#fff",
+                          border: theme === "dark" ? "1px solid #00b5d7" : "none",
                           borderRadius: 8,
-                          padding: "4px 14px",
+                          padding: "6px 18px",
                           fontWeight: 700,
-                          fontSize: 13,
+                          fontSize: 14,
                           cursor: "pointer",
                           marginTop: 6,
-                          transition: "background 0.2s, color 0.2s",
+                          boxShadow: theme === "dark" ? "0 2px 8px rgba(0,181,215,0.08)" : "0 2px 8px rgba(13,202,240,0.08)",
+                          transition: "background 0.2s, color 0.2s, box-shadow 0.2s",
+                        }}
+                        onMouseOver={e => {
+                          e.currentTarget.style.background = theme === "dark" ? "#09e2ff" : "#0097a7";
+                          e.currentTarget.style.color = theme === "dark" ? "#23283a" : "#fff";
+                        }}
+                        onMouseOut={e => {
+                          e.currentTarget.style.background = theme === "dark" ? "#00b5d7" : "#0dcaf0";
+                          e.currentTarget.style.color = theme === "dark" ? "#121212" : "#fff";
+                        }}
+                        onFocus={e => {
+                          e.currentTarget.style.background = theme === "dark" ? "#09e2ff" : "#0097a7";
+                          e.currentTarget.style.color = theme === "dark" ? "#23283a" : "#fff";
+                        }}
+                        onBlur={e => {
+                          e.currentTarget.style.background = theme === "dark" ? "#00b5d7" : "#0dcaf0";
+                          e.currentTarget.style.color = theme === "dark" ? "#121212" : "#fff";
                         }}
                         onClick={item.action}
                       >

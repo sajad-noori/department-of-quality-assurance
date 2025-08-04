@@ -278,6 +278,12 @@ const NewsCommentsPage = () => {
           border: 2.5px solid #0dcaf0;
           background: #e0f7fa;
         }
+        .news-comments-container.dark .highlighted-comment {
+          background: #15324a !important;
+          border: 2.5px solid #00b5d7 !important;
+          box-shadow: 0 0 0 4px #00b5d7, 0 0 0 2.5px #00b5d7 !important;
+          color: #e0fbfc !important;
+        }
       `}</style>
       <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
         <h2 style={{ textAlign: "center", marginBottom: 24 }}>

@@ -308,10 +308,16 @@ const FilledQuestionnairesList = () => {
           color: #b0b0b0 !important;
         }
         .highlighted-filled {
-          box-shadow: 0 0 0 4px #0dcaf0, 0 0 0 2.5px #0dcaf0;
-          border: 2.5px solid #0dcaf0;
-          background: #e0f7fa;
-        }
+           box-shadow: 0 0 0 4px #0dcaf0, 0 0 0 2.5px #0dcaf0;
+           border: 2.5px solid #0dcaf0;
+           background: #e0f7fa;
+         }
+         .dark-container .highlighted-filled {
+           background: #15324a !important;
+           border: 2.5px solid #00b5d7 !important;
+           box-shadow: 0 0 0 4px #00b5d7, 0 0 0 2.5px #00b5d7 !important;
+           color: #e0fbfc !important;
+         }
       `}</style>
     </div>
   );

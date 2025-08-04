@@ -692,6 +692,12 @@ const AnswerToQuestions = () => {
           border: 2.5px solid #0dcaf0;
           background: #e0f7fa;
         }
+        .dark-container .highlighted-question {
+          background: #15324a !important; /* deep blue */
+          border: 2.5px solid #00b5d7 !important; /* teal border */
+          box-shadow: 0 0 0 4px #00b5d7, 0 0 0 2.5px #00b5d7 !important;
+          color: #e0fbfc !important; /* light teal text */
+        }
       `}</style>
 
       <div className="row">
