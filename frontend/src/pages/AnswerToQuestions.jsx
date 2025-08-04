@@ -4,13 +4,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useLocation } from "react-router-dom";
 import {
   FaReply,
-  FaEye,
-  FaEyeSlash,
   FaChevronLeft,
   FaChevronRight,
   FaSpinner,
   FaFilter,
-  FaSearch,
   FaTimes,
   FaCheck,
   FaClock,

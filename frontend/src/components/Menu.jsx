@@ -594,6 +594,11 @@ export default function MenuWithUtilityBar() {
       </div>
 
       <nav className={styles.navbar} ref={menuRef} dir="rtl">
+        <img
+          src={require("../assets/Emblem_of_the_Islamic_Emirate_of_Afghanistan.png")}
+          alt="لوگو"
+          className={styles.logo + ' ' + styles.leftLogo}
+        />
         <button
           className={styles.toggle}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -605,14 +610,6 @@ export default function MenuWithUtilityBar() {
         </button>
 
         <ul className={`${styles.menu} ${menuOpen ? styles.menuOpen : ""}`}>
-          <li>
-            <img
-              src={require("../assets/Emblem_of_the_Islamic_Emirate_of_Afghanistan.png")}
-              alt="لوگو"
-              className={styles.logo}
-            />
-          </li>
-
           {menuItems.map((item, idx) => (
             <li
               key={idx}
@@ -685,15 +682,12 @@ export default function MenuWithUtilityBar() {
               )}
             </li>
           ))}
-
-          <li>
-            <img
-              src={require("../assets/tveta-logo-new.png")}
-              alt="لوگو"
-              className={styles.logo}
-            />
-          </li>
         </ul>
+        <img
+          src={require("../assets/tveta-logo-new.png")}
+          alt="لوگو"
+          className={styles.logo + ' ' + styles.rightLogo}
+        />
       </nav>
     </>
   );
