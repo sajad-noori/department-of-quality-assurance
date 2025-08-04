@@ -2,6 +2,7 @@ const mysql = require("mysql2");
 require("dotenv").config();
 
 // Create a connection pool instead of a single connection
+// Only use valid MySQL2 options. See: https://github.com/sidorares/node-mysql2/blob/master/documentation/Extras.md
 const pool = mysql.createPool({
   host: process.env.HOST,
   user: process.env.DATABASE_USER_NAME,
@@ -10,9 +11,6 @@ const pool = mysql.createPool({
 
   // Connection pool settings
   connectionLimit: 10, // Maximum number of connections in the pool
-  acquireTimeout: 60000, // Timeout for acquiring a connection (60 seconds)
-  timeout: 60000, // Query timeout (60 seconds)
-  reconnect: true, // Automatically reconnect if connection is lost
 
   // SSL configuration for production
   ssl:
@@ -24,7 +22,7 @@ const pool = mysql.createPool({
 
   // Additional production settings
   charset: "utf8mb4",
-  timezone: "UTC",
+  timezone: "Z", // Use 'Z' for UTC, 'local' for server time
 
   // Connection settings
   waitForConnections: true,
