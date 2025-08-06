@@ -404,16 +404,16 @@ export default function MenuWithUtilityBar() {
     <>
       <div className={styles.utilityBar} dir="rtl">
         <div className={styles.socialIcons}>
-          <a href="" target="_blank" rel="noopener noreferrer">
+          <a href="https://wa.me/+93778558968" target="_blank" rel="noopener noreferrer">
             <FaWhatsapp />
           </a>
-          <a href="" target="_blank" rel="noopener noreferrer">
+          <a href="https://www.youtube.com/@TVETA-t9q" target="_blank" rel="noopener noreferrer">
             <FaYoutube />
           </a>
           <a href="#">
             <FaFacebookF />
           </a>
-          <a href="#">
+          <a href="https://x.com/DQATVETA">
             <FaXTwitter />
           </a>
         </div>
@@ -576,18 +576,18 @@ export default function MenuWithUtilityBar() {
 
           <div className={styles.email}>
             <a
-              href="mailto:sajadnooribayany2@gmail.com"
+              href="mailto:quality.assurance@tveta.gov.af"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaEnvelope />
             </a>
             <a
-              href="mailto:sajadnooribayany2@gmail.com"
+              href="mailto:quality.assurance@tveta.gov.af"
               target="_blank"
               rel="noopener noreferrer"
             >
-              sajadnooribayany2@gmail.com
+              quality.assurance@tveta.gov.af
             </a>
           </div>
         </div>

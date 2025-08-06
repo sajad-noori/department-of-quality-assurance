@@ -324,13 +324,13 @@ const FeedbackSection = () => {
                 <div className="contact-details">
                   <span className="contact-label">ایمیل</span>
                   <div className="contact-value">
-                    <a href="mailto:sajadnooribayany2@gmail.com" className="contact-link">sajadnooribayany2@gmail.com</a>
+                    <a href="mailto:quality.assurance@tveta.gov.af" className="contact-link">quality.assurance@tveta.gov.af</a>
                     <button
                       type="button"
                       className={`copy-btn${copiedField === 'email' ? ' copied' : ''}`}
                       title="کپی ایمیل"
                       aria-label="کپی ایمیل"
-                      onClick={() => handleCopy('email', 'sajadnooribayany@gmail.com')}
+                      onClick={() => handleCopy('email', 'quality.assurance@tveta.gov.af')}
                     >
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                         <rect x="9" y="9" width="13" height="13" rx="2"/>
