@@ -388,6 +388,9 @@ export default function MenuWithUtilityBar() {
       case "برنامه های آنلاین آموزشی":
         navigate("/training/online-programs");
         break;
+      case "زون شمال":
+        navigate("/map");
+        break;
       default:
         console.log("Clicked submenu:", label);
         break;
