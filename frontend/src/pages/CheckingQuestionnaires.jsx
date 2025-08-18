@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
-import { questionnairesAPI } from '../api/questionnaires';
-import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useTheme } from "../contexts/ThemeContext";
+import { questionnairesAPI } from "../api/questionnaires";
+import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 
 const LoadingSkeleton = ({ theme }) => (
   <div className="row g-3 justify-content-center">
     {[1, 2, 3, 4].map((i) => (
       <div key={i} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div className={`card h-100 ${theme === 'light' ? 'light-card' : 'dark-card'} skeleton-card`}>
+        <div
+          className={`card h-100 ${
+            theme === "light" ? "light-card" : "dark-card"
+          } skeleton-card`}
+        >
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
               <div className="skeleton-icon me-3"></div>
@@ -32,19 +36,19 @@ LoadingSkeleton.propTypes = {
 };
 
 function getFileIcon(fileName) {
-  if (!fileName) return '📄';
-  const ext = fileName.split('.').pop().toLowerCase();
-  if (ext === 'pdf') return '📄';
-  if (ext === 'doc' || ext === 'docx') return '📝';
-  return '📎';
+  if (!fileName) return "📄";
+  const ext = fileName.split(".").pop().toLowerCase();
+  if (ext === "pdf") return "📄";
+  if (ext === "doc" || ext === "docx") return "📝";
+  return "📎";
 }
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('fa-IR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  return date.toLocaleDateString("fa-IR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
 }
 
@@ -52,8 +56,8 @@ const CheckingQuestionnaires = () => {
   const { theme } = useTheme();
   const [questionnaires, setQuestionnaires] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
   const [uncheckedCounts, setUncheckedCounts] = useState({});
@@ -64,14 +68,19 @@ const CheckingQuestionnaires = () => {
     const counts = {};
     for (const questionnaire of questionnairesList) {
       try {
-        const response = await questionnairesAPI.getUncheckedFilledCount(questionnaire.id);
+        const response = await questionnairesAPI.getUncheckedFilledCount(
+          questionnaire.id
+        );
         if (response.success) {
           counts[questionnaire.id] = response.data.count || 0;
         } else {
           counts[questionnaire.id] = 0;
         }
       } catch (err) {
-        console.error(`Error fetching unchecked count for questionnaire ${questionnaire.id}:`, err);
+        console.error(
+          `Error fetching unchecked count for questionnaire ${questionnaire.id}:`,
+          err
+        );
         counts[questionnaire.id] = 0;
       }
     }
@@ -83,22 +92,22 @@ const CheckingQuestionnaires = () => {
     const fetchQuestionnaires = async () => {
       try {
         setLoading(true);
-        setError('');
+        setError("");
         const response = await questionnairesAPI.getAllQuestionnaires();
-        
+
         if (response.success) {
-          console.log('Questionnaires data:', response.data); // Debug log
+          console.log("Questionnaires data:", response.data); // Debug log
           const questionnairesData = response.data || [];
           setQuestionnaires(questionnairesData);
-          
+
           // Fetch unchecked counts for all questionnaires
           await fetchUncheckedCounts(questionnairesData);
         } else {
-          setError(response.message || 'خطا در دریافت پرسشنامه‌ها');
+          setError(response.message || "خطا در دریافت پرسشنامه‌ها");
         }
       } catch (err) {
-        setError('خطا در ارتباط با سرور');
-        console.error('Error fetching questionnaires:', err);
+        setError("خطا در ارتباط با سرور");
+        console.error("Error fetching questionnaires:", err);
       } finally {
         setLoading(false);
       }
@@ -108,16 +117,20 @@ const CheckingQuestionnaires = () => {
   }, []);
 
   // Filter questionnaires based on search
-  const filteredQuestionnaires = questionnaires.filter(q =>
-    (q.title && q.title.includes(search)) ||
-    (q.description && q.description.includes(search))
+  const filteredQuestionnaires = questionnaires.filter(
+    (q) =>
+      (q.title && q.title.includes(search)) ||
+      (q.description && q.description.includes(search))
   );
 
   // Pagination logic
   const totalPages = Math.ceil(filteredQuestionnaires.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedQuestionnaires = filteredQuestionnaires.slice(startIndex, endIndex);
+  const paginatedQuestionnaires = filteredQuestionnaires.slice(
+    startIndex,
+    endIndex
+  );
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -131,20 +144,32 @@ const CheckingQuestionnaires = () => {
   };
 
   // Get file URL for download
-  const getFileUrl = (file_url) => file_url ? `http://localhost:5000/uploads/${file_url}` : '#';
+  const getFileUrl = (file_url) =>
+    file_url ? `http://localhost:5000/uploads/${file_url}` : "#";
 
   return (
-    <div className={theme === 'light' ? 'light-container' : 'dark-container'} dir="rtl">
+    <div
+      className={theme === "light" ? "light-container" : "dark-container"}
+      dir="rtl"
+    >
       <div className="container-fluid px-3 px-md-4 px-lg-5">
         {/* Header Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-lg-10 col-xl-8">
             <div className="text-center mb-4">
-              <h2 className={`mb-2 responsive-title ${theme === 'light' ? 'light-text' : 'dark-text'}`}> 
+              <h2
+                className={`mb-2 responsive-title ${
+                  theme === "light" ? "light-text" : "dark-text"
+                }`}
+              >
                 <i className="fas fa-list-alt me-2 text-info"></i>
                 بررسی پرسشنامه‌ها
               </h2>
-              <p className={`mb-0 responsive-subtitle ${theme === 'light' ? 'light-text' : 'text-light'}`}>
+              <p
+                className={`mb-0 responsive-subtitle ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
                 {filteredQuestionnaires.length} پرسشنامه یافت شد
               </p>
             </div>
@@ -154,23 +179,39 @@ const CheckingQuestionnaires = () => {
         {/* Search Section */}
         <div className="row justify-content-center mb-4">
           <div className="col-12">
-            <div className={`card ${theme === 'light' ? 'light-card' : 'dark-card'}`}>
+            <div
+              className={`card ${
+                theme === "light" ? "light-card" : "dark-card"
+              }`}
+            >
               <div className="card-body">
                 <div className="input-group">
-                  <span className={`input-group-text ${theme === 'light' ? 'light-input-group' : 'dark-input-group'}`}>
-                    <i className={`fas fa-search ${theme === 'light' ? 'text-dark' : 'text-light'}`}></i>
+                  <span
+                    className={`input-group-text ${
+                      theme === "light"
+                        ? "light-input-group"
+                        : "dark-input-group"
+                    }`}
+                  >
+                    <i
+                      className={`fas fa-search ${
+                        theme === "light" ? "text-dark" : "text-light"
+                      }`}
+                    ></i>
                   </span>
                   <input
                     type="text"
-                    className={`form-control ${theme === 'light' ? 'light-input' : 'dark-input'}`}
+                    className={`form-control ${
+                      theme === "light" ? "light-input" : "dark-input"
+                    }`}
                     placeholder="جستجو براساس عنوان یا توضیحات..."
                     value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                   {search && (
                     <button
                       className="btn btn-outline-light"
-                      onClick={() => setSearch('')}
+                      onClick={() => setSearch("")}
                     >
                       <i className="fas fa-times"></i>
                     </button>
@@ -194,7 +235,12 @@ const CheckingQuestionnaires = () => {
         {error && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8">
-              <div className={`alert alert-danger d-flex align-items-center text-center ${theme === 'light' ? 'light-alert' : 'dark-alert'}`} role="alert">
+              <div
+                className={`alert alert-danger d-flex align-items-center text-center ${
+                  theme === "light" ? "light-alert" : "dark-alert"
+                }`}
+                role="alert"
+              >
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 <div className="responsive-text">{error}</div>
               </div>
@@ -206,10 +252,26 @@ const CheckingQuestionnaires = () => {
         {!loading && !error && filteredQuestionnaires.length === 0 && (
           <div className="row justify-content-center">
             <div className="col-12 col-lg-8 text-center py-5">
-              <i className={`fas fa-search fa-2x fa-md-3x mb-3 ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}></i>
-              <h4 className={`responsive-title ${theme === 'light' ? 'light-text' : 'text-light'}`}>هیچ پرسشنامه‌ای یافت نشد</h4>
-              <p className={`responsive-text ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}>
-                {search ? "لطفاً کلمات کلیدی دیگری را امتحان کنید." : "در حال حاضر هیچ پرسشنامه‌ای موجود نیست."}
+              <i
+                className={`fas fa-search fa-2x fa-md-3x mb-3 ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              ></i>
+              <h4
+                className={`responsive-title ${
+                  theme === "light" ? "light-text" : "text-light"
+                }`}
+              >
+                هیچ پرسشنامه‌ای یافت نشد
+              </h4>
+              <p
+                className={`responsive-text ${
+                  theme === "light" ? "text-secondary" : "text-muted"
+                }`}
+              >
+                {search
+                  ? "لطفاً کلمات کلیدی دیگری را امتحان کنید."
+                  : "در حال حاضر هیچ پرسشنامه‌ای موجود نیست."}
               </p>
             </div>
           </div>
@@ -219,87 +281,130 @@ const CheckingQuestionnaires = () => {
         {!loading && !error && filteredQuestionnaires.length > 0 && (
           <div className="row g-3">
             {paginatedQuestionnaires.map((q) => {
-              console.log('Rendering questionnaire:', q); // Debug log
+              console.log("Rendering questionnaire:", q); // Debug log
               const uncheckedCount = uncheckedCounts[q.id] || 0;
               return (
-              <div key={q.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div className={`card h-100 hover-shadow ${theme === 'light' ? 'light-card' : 'dark-card'}`} style={{ position: 'relative' }}> 
-                  {/* Notification Badge */}
-                  {uncheckedCount > 0 && (
-                    <div 
-                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                      style={{
-                        fontSize: '0.75rem',
-                        padding: '0.5rem 0.75rem',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 1000,
-                        animation: 'pulse 2s infinite'
-                      }}
-                    >
-                      {uncheckedCount}
-                    </div>
-                  )}
-                  <div className="card-body d-flex flex-column text-center">
-                    <div className="d-flex align-items-start mb-3">
-                      <div className="me-3 fs-2 flex-shrink-0">
-                        <span style={{ fontSize: '2rem' }}>{getFileIcon(q.file_name || '')}</span>
+                <div key={q.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                  <div
+                    className={`card h-100 hover-shadow ${
+                      theme === "light" ? "light-card" : "dark-card"
+                    }`}
+                    style={{ position: "relative" }}
+                  >
+                    {/* Notification Badge */}
+                    {uncheckedCount > 0 && (
+                      <div
+                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style={{
+                          fontSize: "0.75rem",
+                          padding: "0.5rem 0.75rem",
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 1000,
+                          animation: "pulse 2s infinite",
+                        }}
+                      >
+                        {uncheckedCount}
                       </div>
-                      <div className="flex-grow-1 min-width-0">
-                        <h6 className={`card-title mb-1 text-truncate document-title ${theme === 'light' ? 'light-text' : 'dark-text'}`} title={q.title}>
-                          <i className="fas fa-file-alt me-2"></i>
-                          {q.title}
-                        </h6>
-                      </div>
-                    </div>
-                    {q.description && (
-                      <div className="mb-3 flex-grow-1">
-                        <div className={`d-flex align-items-start ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}>
-                          <i className="fas fa-info-circle me-2 mt-1"></i>
-                          <p className={`card-text small mb-0 ${theme === 'light' ? 'text-secondary' : 'text-muted'}`} style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textAlign: 'right',
-                          }}>
-                            {q.description}
-                          </p>
+                    )}
+                    <div className="card-body d-flex flex-column text-center">
+                      <div className="d-flex align-items-start mb-3">
+                        <div className="me-3 fs-2 flex-shrink-0">
+                          <span style={{ fontSize: "2rem" }}>
+                            {getFileIcon(q.file_name || "")}
+                          </span>
+                        </div>
+                        <div className="flex-grow-1 min-width-0">
+                          <h6
+                            className={`card-title mb-1 text-truncate document-title ${
+                              theme === "light" ? "light-text" : "dark-text"
+                            }`}
+                            title={q.title}
+                          >
+                            <i className="fas fa-file-alt me-2"></i>
+                            {q.title}
+                          </h6>
+                          {q.category && (
+                            <small
+                              className="badge bg-secondary mt-1"
+                              style={{ fontSize: "0.75rem" }}
+                            >
+                              {q.category}
+                            </small>
+                          )}
                         </div>
                       </div>
-                    )}
-                    {q.created_at && (
-                      <div className="mb-2">
-                        <small className={`text-muted ${theme === 'light' ? 'text-secondary' : 'text-muted'}`}>
-                          <i className="fas fa-calendar-alt me-1"></i>
-                          {formatDate(q.created_at)}
-                        </small>
-                      </div>
-                    )}
-                  </div>
-                  <div className="card-footer bg-transparent border-top-0 mt-auto">
-                    <a
-                      href={getFileUrl(q.file_url)}
-                      className="btn btn-info btn-sm w-100 touch-target"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      disabled={!q.file_url}
-                      title="دانلود پرسشنامه"
-                    >
-                      <i className="fas fa-download me-1"></i>
-                      دانلود
-                    </a>
-                    <button
-                      className="btn btn-outline-info btn-sm w-100 touch-target mt-2"
-                      type="button"
-                      onClick={() => navigate(`/filled-questionnaires/${q.id}`, { state: { title: q.title } })}
-                    >
-                      <i className="fas fa-list me-1"></i>
-                      مشاهده پرسشنامه‌های پرشده
-                    </button>
+                      {q.description && (
+                        <div className="mb-3 flex-grow-1">
+                          <div
+                            className={`d-flex align-items-start ${
+                              theme === "light"
+                                ? "text-secondary"
+                                : "text-muted"
+                            }`}
+                          >
+                            <i className="fas fa-info-circle me-2 mt-1"></i>
+                            <p
+                              className={`card-text small mb-0 ${
+                                theme === "light"
+                                  ? "text-secondary"
+                                  : "text-muted"
+                              }`}
+                              style={{
+                                display: "-webkit-box",
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textAlign: "right",
+                              }}
+                            >
+                              {q.description}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {q.created_at && (
+                        <div className="mb-2">
+                          <small
+                            className={`text-muted ${
+                              theme === "light"
+                                ? "text-secondary"
+                                : "text-muted"
+                            }`}
+                          >
+                            <i className="fas fa-calendar-alt me-1"></i>
+                            {formatDate(q.created_at)}
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                    <div className="card-footer bg-transparent border-top-0 mt-auto">
+                      <a
+                        href={getFileUrl(q.file_url)}
+                        className="btn btn-info btn-sm w-100 touch-target"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        disabled={!q.file_url}
+                        title="دانلود پرسشنامه"
+                      >
+                        <i className="fas fa-download me-1"></i>
+                        دانلود
+                      </a>
+                      <button
+                        className="btn btn-outline-info btn-sm w-100 touch-target mt-2"
+                        type="button"
+                        onClick={() =>
+                          navigate(`/filled-questionnaires/${q.id}`, {
+                            state: { title: q.title },
+                          })
+                        }
+                      >
+                        <i className="fas fa-list me-1"></i>
+                        مشاهده پرسشنامه‌های پرشده
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
         )}
@@ -310,9 +415,13 @@ const CheckingQuestionnaires = () => {
             <div className="col-12 col-lg-8">
               <nav aria-label="Page navigation">
                 <ul className="pagination justify-content-center">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+                  <li
+                    className={`page-item ${
+                      currentPage === 1 ? "disabled" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
                       onClick={() => handlePageChange(currentPage - 1)}
                       title="صفحه قبلی"
                     >
@@ -320,9 +429,14 @@ const CheckingQuestionnaires = () => {
                     </button>
                   </li>
                   {Array.from({ length: totalPages }, (_, i) => (
-                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                      <button 
-                        className="page-link" 
+                    <li
+                      key={i + 1}
+                      className={`page-item ${
+                        currentPage === i + 1 ? "active" : ""
+                      }`}
+                    >
+                      <button
+                        className="page-link"
                         onClick={() => handlePageChange(i + 1)}
                         title={`صفحه ${i + 1}`}
                       >
@@ -330,9 +444,13 @@ const CheckingQuestionnaires = () => {
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                    <button 
-                      className="page-link" 
+                  <li
+                    className={`page-item ${
+                      currentPage === totalPages ? "disabled" : ""
+                    }`}
+                  >
+                    <button
+                      className="page-link"
                       onClick={() => handlePageChange(currentPage + 1)}
                       title="صفحه بعدی"
                     >
@@ -533,4 +651,3 @@ const CheckingQuestionnaires = () => {
 };
 
 export default CheckingQuestionnaires;
-

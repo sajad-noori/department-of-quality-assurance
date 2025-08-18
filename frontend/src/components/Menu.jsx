@@ -362,7 +362,7 @@ export default function MenuWithUtilityBar() {
         navigate("/documents/guideline");
         break;
       case "فورم ها":
-        navigate("/documents/form");
+        navigate("/questionnaires?category=form");
         break;
       case "اسناد تقنینی":
         navigate("/documents/legal-doc");
@@ -371,10 +371,10 @@ export default function MenuWithUtilityBar() {
         navigate("/documents/standards");
         break;
       case "چک لیست ها":
-        navigate("/documents/check-list");
+        navigate("/questionnaires?category=check-list");
         break;
       case "پرسش نامه ها":
-        navigate("/questionnaires");
+        navigate("/questionnaires?category=questionnaire");
         break;
       case "برنامه های آموزشی استادان و کارمندان":
         navigate("/training/teacher-staff-programs");
@@ -387,6 +387,9 @@ export default function MenuWithUtilityBar() {
         break;
       case "برنامه های آنلاین آموزشی":
         navigate("/training/online-programs");
+        break;
+      case "زون شمال":
+        navigate("/map");
         break;
       default:
         console.log("Clicked submenu:", label);
@@ -404,10 +407,18 @@ export default function MenuWithUtilityBar() {
     <>
       <div className={styles.utilityBar} dir="rtl">
         <div className={styles.socialIcons}>
-          <a href="https://wa.me/+93778558968" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://wa.me/+93778558968"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <FaWhatsapp />
           </a>
-          <a href="https://www.youtube.com/@TVETA-t9q" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://www.youtube.com/@TVETA-t9q"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <FaYoutube />
           </a>
           <a href="#">
@@ -597,7 +608,7 @@ export default function MenuWithUtilityBar() {
         <img
           src={require("../assets/Emblem_of_the_Islamic_Emirate_of_Afghanistan.png")}
           alt="لوگو"
-          className={styles.logo + ' ' + styles.leftLogo}
+          className={styles.logo + " " + styles.leftLogo}
         />
         <button
           className={styles.toggle}
@@ -686,7 +697,7 @@ export default function MenuWithUtilityBar() {
         <img
           src={require("../assets/tveta-logo-new.png")}
           alt="لوگو"
-          className={styles.logo + ' ' + styles.rightLogo}
+          className={styles.logo + " " + styles.rightLogo}
         />
       </nav>
     </>

@@ -64,7 +64,7 @@ const upload = multer({
 function multerErrorHandler(err, req, res, next) {
   if (err) {
     if (err.message === "فقط فایل‌های PDF، Word و Excel مجاز هستند.") {
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: "فرمت فایل پشتیبانی نمی‌شود." });
     }
     if (err.code === "LIMIT_FILE_SIZE") {
       return res

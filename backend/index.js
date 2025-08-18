@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const compression = require("compression");
 const authRoutes = require("./routes/auth.route");
 const newsRoutes = require("./routes/news.route");
 const path = require("path");
@@ -40,6 +43,22 @@ require("dotenv").config();
 
 const app = express();
 
+// Basic security headers
+app.disable("x-powered-by");
+app.use(helmet());
+
+// Global rate limiter (adjust limits for your environment)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
+
+// Compression for responses
+app.use(compression());
+
 // CORS configuration
 app.use(
   cors({
@@ -51,8 +70,9 @@ app.use(
 );
 
 // Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Increase body parser size slightly for API JSON payloads; uploads still handled by multer
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // Create uploads directories if they don't exist
@@ -67,14 +87,29 @@ const tempUploadsDir = path.join(__dirname, "uploads", "temp");
 });
 
 // Static files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve uploads with reasonable caching headers
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res, filePath) => {
+      // Cache static assets for 1 day
+      res.setHeader("Cache-Control", "public, max-age=86400");
+    },
+  })
+);
 app.use(
   "/uploads/files",
-  express.static(path.join(__dirname, "uploads/files"))
+  express.static(path.join(__dirname, "uploads/files"), {
+    setHeaders: (res) =>
+      res.setHeader("Cache-Control", "public, max-age=86400"),
+  })
 );
 app.use(
   "/uploads/videos",
-  express.static(path.join(__dirname, "uploads/videos"))
+  express.static(path.join(__dirname, "uploads/videos"), {
+    setHeaders: (res) =>
+      res.setHeader("Cache-Control", "public, max-age=86400"),
+  })
 );
 
 // API Routes
@@ -115,6 +150,16 @@ app.set("trust proxy", 1);
 
 const port = process.env.PORT || 5000;
 
+// Global error handler (last middleware)
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  if (res.headersSent) return next(err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: "Internal server error",
+  });
+});
+
 app.listen(port, () => {
-  console.log("✅ Server is running on port 5000");
+  console.log("✅ Server is running on port " + port);
 });

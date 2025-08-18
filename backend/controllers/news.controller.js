@@ -133,9 +133,20 @@ const updateNews = async (req, res) => {
       );
 
       try {
-        fs.unlinkSync(filePath);
+        const uploadRoot = path.resolve(__dirname, "..", "uploads");
+        const safePath = path.resolve(uploadRoot, "news-images", fileName);
+        if (safePath.startsWith(uploadRoot)) {
+          await fs.promises.unlink(safePath).catch((err) => {
+            if (err && err.code !== "ENOENT") throw err;
+          });
+        } else {
+          console.warn(
+            "Attempted to delete file outside upload dir:",
+            safePath
+          );
+        }
       } catch (unlinkErr) {
-        if (unlinkErr.code !== "ENOENT") {
+        if (unlinkErr && unlinkErr.code !== "ENOENT") {
           console.error("Failed to delete old image file:", unlinkErr);
         }
       }
@@ -180,9 +191,20 @@ const deleteNews = async (req, res) => {
       );
 
       try {
-        fs.unlinkSync(filePath);
+        const uploadRoot = path.resolve(__dirname, "..", "uploads");
+        const safePath = path.resolve(uploadRoot, "news-images", fileName);
+        if (safePath.startsWith(uploadRoot)) {
+          await fs.promises.unlink(safePath).catch((err) => {
+            if (err && err.code !== "ENOENT") throw err;
+          });
+        } else {
+          console.warn(
+            "Attempted to delete file outside upload dir:",
+            safePath
+          );
+        }
       } catch (unlinkErr) {
-        if (unlinkErr.code !== "ENOENT") {
+        if (unlinkErr && unlinkErr.code !== "ENOENT") {
           console.error("Failed to delete image file:", unlinkErr);
         }
       }

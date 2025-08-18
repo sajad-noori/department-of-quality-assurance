@@ -7,7 +7,7 @@ class QuestionnairesController {
   // Create a new questionnaire
   static async createQuestionnaire(req, res) {
     try {
-      const { title, description } = req.body;
+      const { title, description, category } = req.body;
       if (!title) {
         return res
           .status(400)
@@ -21,9 +21,14 @@ class QuestionnairesController {
         file_url = `questionnaires/${file_name}`;
       }
 
+      // validate category against allowed values
+      const ALLOWED = new Set(["form", "check-list", "questionnaire"]);
+      const categoryValue = ALLOWED.has(category) ? category : "form";
+
       const questionnaireId = await Questionnaire.create({
         title,
         description,
+        category: categoryValue,
         file_name,
         file_url,
       });
@@ -31,35 +36,43 @@ class QuestionnairesController {
       res.status(201).json({
         success: true,
         message: "Questionnaire created successfully",
-        data: { id: questionnaireId, title, description, file_name, file_url },
+        data: {
+          id: questionnaireId,
+          title,
+          description,
+          category: categoryValue,
+          file_name,
+          file_url,
+        },
       });
     } catch (error) {
       console.error("Error creating questionnaire:", error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error creating questionnaire",
-          error: error.message,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
     }
   }
 
   // Get all questionnaires
   static async getAllQuestionnaires(req, res) {
     try {
-      const query = `SELECT id, title, description, file_name, file_url FROM questionnaires ORDER BY created_at DESC`;
-      const [rows] = await promise.execute(query);
+      const { category } = req.query;
+      let query = `SELECT id, title, description, category, file_name, file_url FROM questionnaires`;
+      const params = [];
+      if (category) {
+        query += ` WHERE category = ?`;
+        params.push(category);
+      }
+      query += ` ORDER BY created_at DESC`;
+      const [rows] = await promise.execute(query, params);
       res.status(200).json({ success: true, data: rows });
     } catch (error) {
       console.error("Error fetching questionnaires:", error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error fetching questionnaires",
-          error: error.message,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Error fetching questionnaires",
+      });
     }
   }
 
@@ -86,12 +99,23 @@ class QuestionnairesController {
       // Delete from DB
       await promise.execute("DELETE FROM questionnaires WHERE id = ?", [id]);
 
-      // Remove file if exists
-      if (
-        fileUrl &&
-        fs.existsSync(path.join(__dirname, "..", "uploads", fileUrl))
-      ) {
-        fs.unlinkSync(path.join(__dirname, "..", "uploads", fileUrl));
+      // Remove file if exists -- use safe path resolution
+      if (fileUrl) {
+        try {
+          const uploadRoot = path.resolve(__dirname, "..", "uploads");
+          const safePath = path.resolve(uploadRoot, fileUrl);
+          if (safePath.startsWith(uploadRoot)) {
+            // async unlink
+            await fs.promises.unlink(safePath).catch(() => {});
+          } else {
+            console.warn(
+              "Attempted to delete file outside upload dir:",
+              safePath
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to remove file:", e);
+        }
       }
 
       res.status(200).json({ success: true });
@@ -99,11 +123,7 @@ class QuestionnairesController {
       console.error("Error deleting questionnaire:", error);
       res
         .status(500)
-        .json({
-          success: false,
-          message: "Error deleting questionnaire",
-          error: error.message,
-        });
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -111,12 +131,12 @@ class QuestionnairesController {
   static async updateQuestionnaire(req, res) {
     try {
       const { id } = req.params;
-      const { title, description } = req.body;
+      const { title, description, category } = req.body;
       const fs = require("fs");
 
       // Get current file
       const [rows] = await promise.execute(
-        "SELECT file_url FROM questionnaires WHERE id = ?",
+        "SELECT file_name, file_url, category FROM questionnaires WHERE id = ?",
         [id]
       );
 
@@ -128,15 +148,26 @@ class QuestionnairesController {
 
       let file_name = rows[0].file_name;
       let file_url = rows[0].file_url;
+      const existingCategory = rows[0].category;
 
       // If new file uploaded, update and remove old
       if (req.file) {
-        if (
-          file_url &&
-          fs.existsSync(path.join(__dirname, "..", "uploads", file_url))
-        ) {
-          fs.unlinkSync(path.join(__dirname, "..", "uploads", file_url));
+        // remove old file asynchronously and safely (prevent path traversal)
+        try {
+          const uploadRoot = path.resolve(__dirname, "..", "uploads");
+          const oldPath = file_url ? path.resolve(uploadRoot, file_url) : null;
+          if (oldPath && oldPath.startsWith(uploadRoot)) {
+            await fs.promises.unlink(oldPath).catch(() => {});
+          } else if (oldPath) {
+            console.warn(
+              "Attempted to delete file outside upload dir:",
+              oldPath
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to remove old file:", e);
         }
+
         file_name = req.file.filename;
         file_url = `questionnaires/${file_name}`;
       }
@@ -145,26 +176,32 @@ class QuestionnairesController {
       file_name = file_name ?? null;
       file_url = file_url ?? null;
 
+      const ALLOWED = new Set(["form", "check-list", "questionnaire"]);
+      const categoryValue = ALLOWED.has(category)
+        ? category
+        : existingCategory || "form";
+
       await promise.execute(
-        "UPDATE questionnaires SET title = ?, description = ?, file_name = ?, file_url = ?, updated_at = NOW() WHERE id = ?",
-        [title, description, file_name, file_url, id]
+        "UPDATE questionnaires SET title = ?, description = ?, category = ?, file_name = ?, file_url = ?, updated_at = NOW() WHERE id = ?",
+        [title, description, categoryValue, file_name, file_url, id]
       );
 
-      res
-        .status(200)
-        .json({
-          success: true,
-          data: { id, title, description, file_name, file_url },
-        });
+      res.status(200).json({
+        success: true,
+        data: {
+          id,
+          title,
+          description,
+          category: categoryValue,
+          file_name,
+          file_url,
+        },
+      });
     } catch (error) {
       console.error("Error updating questionnaire:", error);
       res
         .status(500)
-        .json({
-          success: false,
-          message: "Error updating questionnaire",
-          error: error.message,
-        });
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -189,12 +226,10 @@ class QuestionnairesController {
         user_id
       );
       if (existing) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "شما قبلاً برای این پرسشنامه فایل ارسال کرده‌اید.",
+        });
       }
       const file_name = req.file.filename;
       const file_url = `questionnaires/${file_name}`;
@@ -213,11 +248,7 @@ class QuestionnairesController {
       console.error("Error uploading filled questionnaire:", error);
       res
         .status(500)
-        .json({
-          success: false,
-          message: "خطا در ارسال پرسشنامه",
-          error: error.message,
-        });
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -233,13 +264,11 @@ class QuestionnairesController {
       const filled = await FilledQuestionnaire.findByQuestionnaireId(id);
       res.status(200).json({ success: true, data: filled });
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Error fetching filled questionnaires",
-          error: error.message,
-        });
+      console.error("Error fetching filled questionnaires:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching filled questionnaires",
+      });
     }
   }
 
@@ -256,11 +285,7 @@ class QuestionnairesController {
       console.error("Error fetching filled questionnaires for user:", error);
       res
         .status(500)
-        .json({
-          success: false,
-          message: "Error fetching filled questionnaires",
-          error: error.message,
-        });
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -269,32 +294,26 @@ class QuestionnairesController {
     try {
       const { id } = req.params;
       if (!id) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "filled questionnaire id is required",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "filled questionnaire id is required",
+        });
       }
       const updated = await FilledQuestionnaire.setChecked(id);
       if (updated) {
-        res
-          .status(200)
-          .json({
-            success: true,
-            message: "پرسشنامه به عنوان خوانده شده علامت‌گذاری شد",
-          });
+        res.status(200).json({
+          success: true,
+          message: "پرسشنامه به عنوان خوانده شده علامت‌گذاری شد",
+        });
       } else {
         res.status(404).json({ success: false, message: "پرسشنامه پیدا نشد" });
       }
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "خطا در بروزرسانی وضعیت",
-          error: error.message,
-        });
+      console.error("Error in checkFilledQuestionnaire:", error);
+      res.status(500).json({
+        success: false,
+        message: "خطا در بروزرسانی وضعیت",
+      });
     }
   }
 

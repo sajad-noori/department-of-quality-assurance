@@ -44,6 +44,7 @@ import CheckingQuestionnaires from "./pages/CheckingQuestionnaires";
 import FilledQuestionnairesList from "./components/FilledQuestionnairesList";
 import NewsCommentsPage from "./pages/NewsCommentsPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import AfghanistanMap from "./components/AfghanistanMap";
 
 function App() {
   return (
@@ -267,6 +268,19 @@ function App() {
                 </>
               }
             />
+
+
+
+<Route
+              path="/map"
+              element={
+                <>
+                <AfghanistanMap/>
+                </>
+              }
+            />
+
+
 
             <Route
               path="/dashboard/users"

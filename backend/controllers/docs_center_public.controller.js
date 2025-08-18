@@ -53,16 +53,22 @@ exports.deleteDocument = async (req, res) => {
       results[0].fileName
     );
 
-    // Try to delete the file
+    // Try to delete the file asynchronously and safely
     try {
-      fs.unlinkSync(filePath);
-    } catch (unlinkErr) {
-      if (unlinkErr.code !== "ENOENT") {
-        console.error("Error deleting file:", unlinkErr);
-        return res
-          .status(500)
-          .json({ message: "Error deleting associated file" });
+      const uploadRoot = path.resolve(__dirname, "..", "uploads");
+      const safePath = path.resolve(uploadRoot, "files", results[0].fileName);
+      if (safePath.startsWith(uploadRoot)) {
+        await fs.promises.unlink(safePath).catch((err) => {
+          if (err && err.code !== "ENOENT") throw err;
+        });
+      } else {
+        console.warn("Attempted to delete file outside upload dir:", safePath);
       }
+    } catch (unlinkErr) {
+      console.error("Error deleting file:", unlinkErr);
+      return res
+        .status(500)
+        .json({ message: "Error deleting associated file" });
     }
 
     // Delete from database
@@ -119,16 +125,27 @@ exports.updateDocumentWithFile = async (req, res) => {
       results[0].fileName
     );
 
-    // Try deleting the old file
+    // Try deleting the old file asynchronously and safely
     try {
-      fs.unlinkSync(oldFilePath);
-    } catch (unlinkErr) {
-      if (unlinkErr.code !== "ENOENT") {
-        console.error("Error deleting old file during update:", unlinkErr);
-        return res
-          .status(500)
-          .json({ message: "Error replacing the old file" });
+      const uploadRoot = path.resolve(__dirname, "..", "uploads");
+      const safeOldPath = path.resolve(
+        uploadRoot,
+        "files",
+        results[0].fileName
+      );
+      if (safeOldPath.startsWith(uploadRoot)) {
+        await fs.promises.unlink(safeOldPath).catch((err) => {
+          if (err && err.code !== "ENOENT") throw err;
+        });
+      } else {
+        console.warn(
+          "Attempted to delete file outside upload dir:",
+          safeOldPath
+        );
       }
+    } catch (unlinkErr) {
+      console.error("Error deleting old file during update:", unlinkErr);
+      return res.status(500).json({ message: "Error replacing the old file" });
     }
 
     // Update database with new file

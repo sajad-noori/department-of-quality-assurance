@@ -2,17 +2,30 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import PropTypes from "prop-types";
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CircularProgress from '@mui/material/CircularProgress';
-import Tooltip from '@mui/material/Tooltip';
+import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CircularProgress from "@mui/material/CircularProgress";
+import Tooltip from "@mui/material/Tooltip";
 
 function getFileIcon(fileName) {
   const ext = fileName.split(".").pop().toLowerCase();
   if (ext === "pdf") return "📄";
   if (ext === "doc" || ext === "docx") return "📝";
   return "📎";
+}
+
+// Build absolute URL for files saved by the backend
+function getFileUrl(filePath) {
+  if (!filePath) return "";
+  // normalize backslashes
+  const p = filePath.replace(/\\/g, "/");
+  // ensure path is served under /uploads
+  const normalized =
+    p.startsWith("uploads/") || p.startsWith("/uploads/")
+      ? p.replace(/^\/+/, "")
+      : `uploads/${p.replace(/^\/+/, "")}`;
+  return `http://localhost:5000/${encodeURI(normalized)}`;
 }
 
 const LoadingSkeleton = ({ theme }) => (
@@ -53,11 +66,13 @@ function useQuery() {
 function Questionnaires() {
   const { theme } = useTheme();
   const query = useQuery();
+  const selectedCategory = query.get("category") || "questionnaire";
   const navigate = useNavigate();
   const [search, setSearch] = useState(query.get("search") || "");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [questionnaires, setQuestionnaires] = useState([]);
+  const [allQuestionnaires, setAllQuestionnaires] = useState([]);
   const fileInputs = useRef({});
   const [uploading, setUploading] = useState({});
   const [uploadMessage, setUploadMessage] = useState("");
@@ -82,10 +97,13 @@ function Questionnaires() {
     setDeleting((prev) => ({ ...prev, [questionnaireId]: true }));
     setUploadMessage("");
     try {
-      const res = await fetch(`http://localhost:5000/api/questionnaires/filled/${filled.id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/questionnaires/filled/${filled.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
       const data = await res.json();
       if (data.success) {
         setUploadMessage("فایل ارسال شده با موفقیت حذف شد.");
@@ -107,11 +125,18 @@ function Questionnaires() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    fetch("http://localhost:5000/api/questionnaires", { credentials: "include" })
+    fetch("http://localhost:5000/api/questionnaires", {
+      credentials: "include",
+    })
       .then((res) => res.json())
       .then(async (data) => {
         if (data.success) {
-          setQuestionnaires(data.data || []);
+          // Filter by selected category if provided
+          const all = data.data || [];
+          const filteredByCategory = all.filter(
+            (item) => (item.category || "form") === selectedCategory
+          );
+          setQuestionnaires(filteredByCategory);
           // Fetch filled questionnaires for this user
           try {
             const filledRes = await fetch("/api/questionnaires/filled/user", {
@@ -142,52 +167,81 @@ function Questionnaires() {
 
   // Keep URL in sync with search
   useEffect(() => {
-    if (search) {
-      navigate(`?search=${encodeURIComponent(search)}`, { replace: true });
-    } else {
-      navigate("", { replace: true });
-    }
+    // Preserve category when updating search query
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (selectedCategory) params.set("category", selectedCategory);
+    const qs = params.toString();
+    navigate(qs ? `?${qs}` : "", { replace: true });
   }, [search, navigate]);
 
-  const filtered = questionnaires.filter(
-    (q) =>
-      (q.title && q.title.includes(search)) ||
-      (q.description && q.description.includes(search))
+  // Fetch questionnaires for the selected category (reactive)
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    const url = `http://localhost:5000/api/questionnaires${
+      selectedCategory ? `?category=${selectedCategory}` : ""
+    }`;
+    fetch(url, { credentials: "include" })
+      .then((res) => res.json())
+      .then(async (data) => {
+        if (data.success) {
+          const all = data.data || [];
+          setQuestionnaires(all);
+          setAllQuestionnaires(all);
+          // Fetch filled questionnaires for this user
+          try {
+            const filledRes = await fetch("/api/questionnaires/filled/user", {
+              credentials: "include",
+            });
+            const filledData = await filledRes.json();
+            if (filledData.success && Array.isArray(filledData.data)) {
+              const uploadedMap = {};
+              filledData.data.forEach((fq) => {
+                uploadedMap[fq.questionnaire_id] = fq;
+              });
+              setUploaded(uploadedMap);
+            }
+          } catch (err) {
+            // ignore
+          }
+        } else {
+          setError(data.message || "خطا در دریافت پرسشنامه‌ها");
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("خطا در ارتباط با سرور");
+        setLoading(false);
+      });
+  }, [selectedCategory]);
+
+  // Derived filtered list based on search
+  const filtered = (questionnaires || []).filter((q) => {
+    if (!search) return true;
+    const s = search.trim().toLowerCase();
+    return (
+      (q.title || "").toLowerCase().includes(s) ||
+      (q.description || "").toLowerCase().includes(s) ||
+      (q.category || "form").toLowerCase().includes(s)
+    );
+  });
+
+  // Pagination helpers
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedQuestionnaires = filtered.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  // Pagination logic
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedQuestionnaires = filtered.slice(startIndex, endIndex);
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
-  // Auto-clear success message after 10 seconds
-  useEffect(() => {
-    if (uploadMessage && uploadMessage.includes("موفقیت")) {
-      const timer = setTimeout(() => {
-        setUploadMessage("");
-      }, 10000); // 10 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [uploadMessage]);
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
+  const handlePageChange = (page) => {
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    setCurrentPage(page);
   };
 
-  // Download link uses backend file_url
-  const getFileUrl = (file_url) =>
-    file_url ? `http://localhost:5000/uploads/${file_url}` : "#";
-
   const handleUploadClick = (id) => {
-    if (fileInputs.current[id]) {
+    if (fileInputs.current && fileInputs.current[id]) {
       fileInputs.current[id].click();
     }
   };
@@ -247,14 +301,18 @@ function Questionnaires() {
                 }`}
               >
                 <i className="fas fa-list-alt me-2 text-info"></i>
-                پرسشنامه‌ها
+                {selectedCategory === "form"
+                  ? "فورم‌ها"
+                  : selectedCategory === "check-list"
+                  ? "چک لیست‌ها"
+                  : "پرسشنامه‌ها"}
               </h2>
               <p
                 className={`mb-0 responsive-subtitle ${
                   theme === "light" ? "light-text" : "text-light"
                 }`}
               >
-                {filtered.length} پرسشنامه یافت شد
+                {filtered.length} نتیجه
               </p>
             </div>
           </div>
@@ -495,8 +553,17 @@ function Questionnaires() {
                       />
                       {/* Delete button for uploaded filled questionnaire */}
                       {uploaded[q.id] && (
-                        <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mt: 1 }}>
-                          <Tooltip title="می‌توانید پرسشنامه ارسال شده را حذف کنید" arrow>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          justifyContent="center"
+                          alignItems="center"
+                          sx={{ mt: 1 }}
+                        >
+                          <Tooltip
+                            title="می‌توانید پرسشنامه ارسال شده را حذف کنید"
+                            arrow
+                          >
                             <span>
                               <IconButton
                                 color="error"
@@ -504,10 +571,20 @@ function Questionnaires() {
                                 disabled={deleting[q.id]}
                                 aria-label="حذف فایل ارسال شده برای این پرسشنامه"
                                 size="small"
-                                sx={{ border: '1px solid #ff6b6b', background: theme === "light" ? "#fff0f0" : "#2d1b1b", transition: 'all 0.2s', '&:hover': { background: '#ffebee' } }}
+                                sx={{
+                                  border: "1px solid #ff6b6b",
+                                  background:
+                                    theme === "light" ? "#fff0f0" : "#2d1b1b",
+                                  transition: "all 0.2s",
+                                  "&:hover": { background: "#ffebee" },
+                                }}
                               >
                                 {deleting[q.id] ? (
-                                  <CircularProgress size={20} color="error" thickness={6} />
+                                  <CircularProgress
+                                    size={20}
+                                    color="error"
+                                    thickness={6}
+                                  />
                                 ) : (
                                   <DeleteIcon />
                                 )}

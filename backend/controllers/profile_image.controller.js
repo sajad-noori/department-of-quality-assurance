@@ -1,8 +1,8 @@
-const ProfileImage = require('../models/profile_image.model');
-const fs = require('fs').promises;
-const path = require('path');
+const ProfileImage = require("../models/profile_image.model");
+const fs = require("fs").promises;
+const path = require("path");
 
-const UPLOAD_DIR = path.join(__dirname, '../uploads/profile');
+const UPLOAD_DIR = path.join(__dirname, "../uploads/profile");
 
 // Ensure upload directory exists
 const ensureUploadDir = async () => {
@@ -23,15 +23,23 @@ const generateUniqueFilename = (originalFilename) => {
 
 // Validate image file
 const validateImageFile = (file) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
   const maxSize = 5 * 1024 * 1024; // 5MB
 
   if (!allowedTypes.includes(file.mimetype)) {
-    throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.');
+    throw new Error(
+      "Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed."
+    );
   }
 
   if (file.size > maxSize) {
-    throw new Error('File size too large. Maximum size is 5MB.');
+    throw new Error("File size too large. Maximum size is 5MB.");
   }
 
   return true;
@@ -46,7 +54,7 @@ exports.uploadProfileImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'No image file uploaded'
+        message: "No image file uploaded",
       });
     }
 
@@ -58,11 +66,11 @@ exports.uploadProfileImage = async (req, res) => {
       try {
         await fs.unlink(req.file.path);
       } catch (unlinkError) {
-        console.error('Failed to delete invalid file:', unlinkError);
+        console.error("Failed to delete invalid file:", unlinkError);
       }
       return res.status(400).json({
         success: false,
-        message: error.message
+        message: "Invalid image upload",
       });
     }
 
@@ -76,17 +84,17 @@ exports.uploadProfileImage = async (req, res) => {
     await fs.rename(req.file.path, filePath);
 
     // Get the relative path for database storage
-    const relativePath = path.relative(path.join(__dirname, '..'), filePath);
+    const relativePath = path.relative(path.join(__dirname, ".."), filePath);
 
     // Check if user already has a profile image and delete the old one
     const existingImage = await ProfileImage.findByUserId(userId);
     if (existingImage) {
       try {
-        const oldFilePath = path.join(__dirname, '..', existingImage.file_path);
+        const oldFilePath = path.join(__dirname, "..", existingImage.file_path);
         await fs.unlink(oldFilePath);
-        console.log('Deleted old profile image:', oldFilePath);
+        console.log("Deleted old profile image:", oldFilePath);
       } catch (error) {
-        console.error('Failed to delete old profile image:', error);
+        console.error("Failed to delete old profile image:", error);
       }
     }
 
@@ -94,9 +102,9 @@ exports.uploadProfileImage = async (req, res) => {
     const imageData = {
       file_name: uniqueFilename,
       original_name: req.file.originalname,
-      file_path: relativePath.replace(/\\/g, '/'),
+      file_path: relativePath.replace(/\\/g, "/"),
       file_type: req.file.mimetype,
-      file_size: req.file.size
+      file_size: req.file.size,
     };
 
     const profileImage = await ProfileImage.upsert(userId, imageData);
@@ -106,16 +114,15 @@ exports.uploadProfileImage = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Profile image uploaded successfully',
+      message: "Profile image uploaded successfully",
       imageUrl: imageUrl,
-      data: profileImage
+      data: profileImage,
     });
-
   } catch (error) {
-    console.error('Error uploading profile image:', error);
+    console.error("Error uploading profile image:", error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error uploading profile image'
+      message: "Error uploading profile image",
     });
   }
 };
@@ -132,7 +139,7 @@ exports.getProfileImage = async (req, res) => {
     if (!profileImage) {
       return res.status(404).json({
         success: false,
-        message: 'No profile image found'
+        message: "No profile image found",
       });
     }
 
@@ -141,14 +148,13 @@ exports.getProfileImage = async (req, res) => {
     res.json({
       success: true,
       imageUrl: imageUrl,
-      data: profileImage
+      data: profileImage,
     });
-
   } catch (error) {
-    console.error('Error fetching profile image:', error);
+    console.error("Error fetching profile image:", error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error fetching profile image'
+      message: "Error fetching profile image",
     });
   }
 };
@@ -165,17 +171,17 @@ exports.deleteProfileImage = async (req, res) => {
     if (!profileImage) {
       return res.status(404).json({
         success: false,
-        message: 'No profile image found'
+        message: "No profile image found",
       });
     }
 
     // Delete the file from filesystem
     try {
-      const filePath = path.join(__dirname, '..', profileImage.file_path);
+      const filePath = path.join(__dirname, "..", profileImage.file_path);
       await fs.unlink(filePath);
-      console.log('Deleted profile image file:', filePath);
+      console.log("Deleted profile image file:", filePath);
     } catch (error) {
-      console.error('Failed to delete profile image file:', error);
+      console.error("Failed to delete profile image file:", error);
     }
 
     // Delete the database record
@@ -183,14 +189,13 @@ exports.deleteProfileImage = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Profile image deleted successfully'
+      message: "Profile image deleted successfully",
     });
-
   } catch (error) {
-    console.error('Error deleting profile image:', error);
+    console.error("Error deleting profile image:", error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error deleting profile image'
+      message: "Error deleting profile image",
     });
   }
-}; 
+};

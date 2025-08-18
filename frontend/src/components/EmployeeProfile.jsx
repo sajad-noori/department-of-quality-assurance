@@ -1086,8 +1086,8 @@ const EmployeeProfile = () => {
             onMouseLeave={(e) => (e.target.style.transform = "translateY(0)")}
           >
             <div className="card-body">
-              <h5 className="card-title">پرسش نامه </h5>
-              <p className="card-text">تحلیل پرسش نامه ها!</p>
+              <h5 className="card-title">تحلیل اسناد</h5>
+              <p className="card-text">چک لیست، پرسش نامه، فورم</p>
             </div>
             {totalUncheckedFilledCount > 0 && (
               <div
