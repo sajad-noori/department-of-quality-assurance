@@ -163,14 +163,14 @@ const CheckingQuestionnaires = () => {
                 }`}
               >
                 <i className="fas fa-list-alt me-2 text-info"></i>
-                بررسی پرسشنامه‌ها
+                بررسی پرسش نامه های، فورم ها و چک لیست ها
               </h2>
               <p
                 className={`mb-0 responsive-subtitle ${
                   theme === "light" ? "light-text" : "text-light"
                 }`}
               >
-                {filteredQuestionnaires.length} پرسشنامه یافت شد
+                {filteredQuestionnaires.length} سند یافت شد
               </p>
             </div>
           </div>
