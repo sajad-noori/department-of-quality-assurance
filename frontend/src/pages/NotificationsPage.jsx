@@ -215,7 +215,7 @@ export default function NotificationsPage() {
     // Unchecked filled questionnaires
     ...sortedUncheckedFilleds.flatMap(({ questionnaire, filleds }) =>
       filleds.map((f) => ({
-        type: "پرسش‌نامه بررسی نشده",
+        type: "سند بررسی نشده",
         date: f.filled_at,
         content: questionnaire.title,
         file_name: f.file_name,
@@ -442,7 +442,7 @@ export default function NotificationsPage() {
                   const isUnanswered =
                     item.type === "نظر بدون پاسخ" ||
                     item.type === "سوال بدون پاسخ" ||
-                    item.type === "پرسش‌نامه بررسی نشده" ||
+                    item.type === "سند بررسی نشده" ||
                     item.type === "پاسخ به سوال شما" ||
                     item.type === "پاسخ به نظر شما";
                   const isRead = item.isRead;
@@ -522,31 +522,44 @@ export default function NotificationsPage() {
                           alignSelf: "flex-end",
                           background: theme === "dark" ? "#00b5d7" : "#0dcaf0",
                           color: theme === "dark" ? "#121212" : "#fff",
-                          border: theme === "dark" ? "1px solid #00b5d7" : "none",
+                          border:
+                            theme === "dark" ? "1px solid #00b5d7" : "none",
                           borderRadius: 8,
                           padding: "6px 18px",
                           fontWeight: 700,
                           fontSize: 14,
                           cursor: "pointer",
                           marginTop: 6,
-                          boxShadow: theme === "dark" ? "0 2px 8px rgba(0,181,215,0.08)" : "0 2px 8px rgba(13,202,240,0.08)",
-                          transition: "background 0.2s, color 0.2s, box-shadow 0.2s",
+                          boxShadow:
+                            theme === "dark"
+                              ? "0 2px 8px rgba(0,181,215,0.08)"
+                              : "0 2px 8px rgba(13,202,240,0.08)",
+                          transition:
+                            "background 0.2s, color 0.2s, box-shadow 0.2s",
                         }}
-                        onMouseOver={e => {
-                          e.currentTarget.style.background = theme === "dark" ? "#09e2ff" : "#0097a7";
-                          e.currentTarget.style.color = theme === "dark" ? "#23283a" : "#fff";
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background =
+                            theme === "dark" ? "#09e2ff" : "#0097a7";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#23283a" : "#fff";
                         }}
-                        onMouseOut={e => {
-                          e.currentTarget.style.background = theme === "dark" ? "#00b5d7" : "#0dcaf0";
-                          e.currentTarget.style.color = theme === "dark" ? "#121212" : "#fff";
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background =
+                            theme === "dark" ? "#00b5d7" : "#0dcaf0";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#121212" : "#fff";
                         }}
-                        onFocus={e => {
-                          e.currentTarget.style.background = theme === "dark" ? "#09e2ff" : "#0097a7";
-                          e.currentTarget.style.color = theme === "dark" ? "#23283a" : "#fff";
+                        onFocus={(e) => {
+                          e.currentTarget.style.background =
+                            theme === "dark" ? "#09e2ff" : "#0097a7";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#23283a" : "#fff";
                         }}
-                        onBlur={e => {
-                          e.currentTarget.style.background = theme === "dark" ? "#00b5d7" : "#0dcaf0";
-                          e.currentTarget.style.color = theme === "dark" ? "#121212" : "#fff";
+                        onBlur={(e) => {
+                          e.currentTarget.style.background =
+                            theme === "dark" ? "#00b5d7" : "#0dcaf0";
+                          e.currentTarget.style.color =
+                            theme === "dark" ? "#121212" : "#fff";
                         }}
                         onClick={item.action}
                       >

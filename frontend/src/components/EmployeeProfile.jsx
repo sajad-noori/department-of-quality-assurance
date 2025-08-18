@@ -1087,7 +1087,9 @@ const EmployeeProfile = () => {
           >
             <div className="card-body">
               <h5 className="card-title">تحلیل اسناد</h5>
-              <p className="card-text">چک لیست، پرسش نامه، فورم</p>
+              <p className="card-text" style={{ fontSize: "13px" }}>
+                چک لیست، پرسش نامه، فورم
+              </p>
             </div>
             {totalUncheckedFilledCount > 0 && (
               <div
