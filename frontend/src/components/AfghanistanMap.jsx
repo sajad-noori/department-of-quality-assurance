@@ -25,26 +25,28 @@ const AfghanistanMap = () => {
 
   const initializeMap = React.useCallback(() => {
     if (window.simplemaps_countrymap) {
-      window.simplemaps_countrymap.mapdata = JSON.parse(JSON.stringify(mapdata));
+      window.simplemaps_countrymap.mapdata = JSON.parse(
+        JSON.stringify(mapdata)
+      );
       window.simplemaps_countrymap.mapinfo = { ...mapinfo };
-      
+
       // Apply theme-specific styles
       const mapData = window.simplemaps_countrymap.mapdata;
       mapData.main_settings.auto_load = "yes";
       mapData.main_settings.width = "responsive";
-      
-      if (theme === 'dark') {
-        mapData.color_main = '#2d3748';
-        mapData.color_background = '#1a202c';
-        mapData.color_hover = '#4a5568';
-        mapData.color_border = '#4a5568';
-        mapData.color_text = '#e2e8f0';
+
+      if (theme === "dark") {
+        mapData.color_main = "#2d3748";
+        mapData.color_background = "#1a202c";
+        mapData.color_hover = "#4a5568";
+        mapData.color_border = "#4a5568";
+        mapData.color_text = "#e2e8f0";
       } else {
-        mapData.color_main = '#f7fafc';
-        mapData.color_background = '#ffffff';
-        mapData.color_hover = '#e2e8f0';
-        mapData.color_border = '#cbd5e0';
-        mapData.color_text = '#2d3748';
+        mapData.color_main = "#f7fafc";
+        mapData.color_background = "#ffffff";
+        mapData.color_hover = "#e2e8f0";
+        mapData.color_border = "#cbd5e0";
+        mapData.color_text = "#2d3748";
       }
 
       if (!mapInitialized.current) {
@@ -80,7 +82,8 @@ const AfghanistanMap = () => {
 
   // Update highlighted zones
   useEffect(() => {
-    if (!window.simplemaps_countrymap || !window.simplemaps_countrymap.mapdata) return;
+    if (!window.simplemaps_countrymap || !window.simplemaps_countrymap.mapdata)
+      return;
     const states = window.simplemaps_countrymap.mapdata.state_specific;
 
     Object.keys(states).forEach((key) => {
@@ -104,20 +107,21 @@ const AfghanistanMap = () => {
     <div
       style={{
         padding: 24,
-        backgroundColor: theme === 'dark' ? '#1a202c' : '#f9fafb',
-        color: theme === 'dark' ? '#e2e8f0' : '#2d3748',
-        boxShadow: theme === 'dark' 
-          ? "0 4px 6px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)"
-          : "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06)",
+        backgroundColor: theme === "dark" ? "#1a202c" : "#f9fafb",
+        color: theme === "dark" ? "#e2e8f0" : "#2d3748",
+        boxShadow:
+          theme === "dark"
+            ? "0 4px 6px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2)"
+            : "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06)",
         fontFamily: "'Vazirmatn', Tahoma, Arial, sans-serif",
         direction: "rtl",
-        transition: 'background-color 0.3s ease, color 0.3s ease',
+        transition: "background-color 0.3s ease, color 0.3s ease",
       }}
     >
       <h2
         style={{
           marginBottom: 16,
-          color: theme === 'dark' ? '#e2e8f0' : "#222",
+          color: theme === "dark" ? "#e2e8f0" : "#222",
           fontWeight: "700",
           fontSize: "1.8rem",
           textAlign: "center",
@@ -125,7 +129,6 @@ const AfghanistanMap = () => {
       >
         زون ها و مراکز افغانستان
       </h2>
-
       <div
         style={{
           marginBottom: 20,
@@ -161,7 +164,8 @@ const AfghanistanMap = () => {
             color: theme === "dark" ? "#E2E8F0" : "#222",
             boxShadow: "inset 0 1px 3px rgba(0,0,0,0.1)",
             cursor: "pointer",
-            transition: "border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease",
+            transition:
+              "border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease",
           }}
           onFocus={(e) => {
             e.target.style.borderColor = "#FFCC00";
@@ -172,15 +176,15 @@ const AfghanistanMap = () => {
             e.target.style.outline = "none";
           }}
         >
-         <option value="">همه زون ها</option>
-         <option value="north">زون شمال</option>
-         <option value="northeast">زون شمال شرق</option>
-         <option value="central">زون مرکز</option>
-         <option value="capital">زون پایتخت</option>
-         <option value="west">زون غرب</option>
-         <option value="south">زون جنوب</option>
-         <option value="east">زون شرق</option>
-         <option value="southwest">زون جنوب غرب</option>
+          <option value="">همه زون ها</option>
+          <option value="north">زون شمال</option>
+          <option value="northeast">زون شمال شرق</option>
+          <option value="central">زون مرکز</option>
+          <option value="capital">زون پایتخت</option>
+          <option value="west">زون غرب</option>
+          <option value="south">زون جنوب</option>
+          <option value="east">زون شرق</option>
+          <option value="southwest">زون جنوب غرب</option>
         </select>
       </div>
 
@@ -188,13 +192,12 @@ const AfghanistanMap = () => {
         id="map"
         style={{
           width: "100%",
-          minHeight: 400,    // smaller height
-          maxWidth: 700,     // optional max width to reduce horizontal size
-          margin: "0 auto",  // center horizontally if maxWidth applies
+          minHeight: 400, // smaller height
+          maxWidth: 700, // optional max width to reduce horizontal size
+          margin: "0 auto", // center horizontally if maxWidth applies
           borderRadius: 12,
           overflow: "hidden",
-          boxShadow:
-            "0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)",
+          boxShadow: "0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)",
           transition: "all 0.3s ease",
         }}
       />

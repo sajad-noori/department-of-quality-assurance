@@ -68,17 +68,8 @@ const menuItems = [
   },
 
   {
-    label: "زون ها",
-    submenu: [
-      "زون شمال",
-      "زون شمال شرق",
-      "زون مرکز",
-      "زون پایتخت",
-      "زون غرب",
-      "زون جنوب",
-      "زون شرق",
-      "زون جنوب غرب",
-    ],
+    label: "زون",
+    submenu: [],
   },
 
   { label: "اخبار و اطلاعات", submenu: [] },
@@ -388,7 +379,7 @@ export default function MenuWithUtilityBar() {
       case "برنامه های آنلاین آموزشی":
         navigate("/training/online-programs");
         break;
-      case "زون شمال":
+      case "زون":
         navigate("/map");
         break;
       default:
@@ -649,6 +640,10 @@ export default function MenuWithUtilityBar() {
                   className={styles.menuLink}
                   onClick={handleFeedBackClick}
                 >
+                  {item.label}
+                </a>
+              ) : item.label === "زون" ? (
+                <a href="/map" className={styles.menuLink}>
                   {item.label}
                 </a>
               ) : (
