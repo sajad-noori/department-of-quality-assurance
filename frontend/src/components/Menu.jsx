@@ -14,7 +14,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useState as useReactState } from "react";
 import { FaBell } from "react-icons/fa";
 import { questionnairesAPI } from "../api/questionnaires";
-import { countUnansweredComments } from "../pages/NewsCommentsPage";
 import { useAuth } from "../contexts/AuthContext";
 
 const menuItems = [
@@ -207,22 +206,43 @@ export default function MenuWithUtilityBar() {
           const res = await questionnairesAPI.getTotalUncheckedFilledCount();
           if (res.success) totalUncheckedFilledCount = res.data.count || 0;
         } catch {}
-        // 2. Unanswered news comments
+        // 2. Unanswered news comments (only count recent ones from last 2 months)
         let unansweredNewsComments = 0;
         try {
           const res = await axios.get("/api/comments/all-news-comments", {
             withCredentials: true,
           });
-          unansweredNewsComments = countUnansweredComments(res.data);
-        } catch {}
-        // 3. Unanswered questions
+          const twoMonthsAgo = new Date();
+          twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+          
+          const recentUnanswered = res.data.filter(comment => {
+            const commentDate = new Date(comment.created_at);
+            return (!comment.reply_count || comment.reply_count === 0) && 
+                   commentDate >= twoMonthsAgo;
+          });
+          
+          unansweredNewsComments = recentUnanswered.length;
+        } catch (error) {
+          console.error("Error fetching news comments:", error);
+        }
+        // 3. Unanswered questions (only count recent ones from last 2 months)
         let unansweredQuestionsCount = 0;
         try {
-          const res = await axios.get("/api/questions/admin/unanswered-count", {
+          const res = await axios.get("/api/questions/admin/all", {
             withCredentials: true,
           });
-          unansweredQuestionsCount = res.data.count || 0;
-        } catch {}
+          if (res.data.success && Array.isArray(res.data.data.questions)) {
+            const twoMonthsAgo = new Date();
+            twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+            
+            unansweredQuestionsCount = res.data.data.questions.filter(question => {
+              const questionDate = new Date(question.submitted_at || question.created_at);
+              return !question.is_replied && questionDate >= twoMonthsAgo;
+            }).length;
+          }
+        } catch (error) {
+          console.error("Error fetching unanswered questions:", error);
+        }
         const sum =
           totalUncheckedFilledCount +
           unansweredNewsComments +

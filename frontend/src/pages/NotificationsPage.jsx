@@ -303,11 +303,19 @@ export default function NotificationsPage() {
         { questionId },
         { withCredentials: true }
       );
+      // Update the questionReplies state to mark this question as read
+      setQuestionReplies(prevReplies => 
+        prevReplies.map(reply => 
+          reply.id === questionId ? { ...reply, answer_seen: 1 } : reply
+        )
+      );
       if (typeof cb === "function") cb();
     } catch (err) {
+      console.error("Error marking question as seen:", err);
       if (typeof cb === "function") cb();
     }
   };
+
   const markCommentAsSeen = async (commentId, cb) => {
     try {
       await axios.post(
@@ -315,8 +323,15 @@ export default function NotificationsPage() {
         { commentId },
         { withCredentials: true }
       );
+      // Update the commentReplies state to mark this comment as read
+      setCommentReplies(prevReplies => 
+        prevReplies.map(reply => 
+          reply.id === commentId ? { ...reply, reply_seen: 1 } : reply
+        )
+      );
       if (typeof cb === "function") cb();
     } catch (err) {
+      console.error("Error marking comment as seen:", err);
       if (typeof cb === "function") cb();
     }
   };
