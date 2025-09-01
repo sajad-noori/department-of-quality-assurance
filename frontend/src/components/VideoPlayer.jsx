@@ -21,7 +21,31 @@ const formatUploadTime = (isoString) => {
 const formatUploadDate = (isoString) => {
   if (!isoString) return "";
   const date = new Date(isoString);
-  return date.toLocaleDateString('fa-IR');
+  return date.toLocaleDateString("fa-IR");
+};
+
+const isYouTubeUrl = (url) => {
+  if (!url) return false;
+  return /youtube\.com|youtu\.be/i.test(url);
+};
+
+const toYouTubeEmbed = (url) => {
+  if (!url) return url;
+  const idMatch = url.match(/(?:v=|embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  const id = idMatch ? idMatch[1] : null;
+  if (id) return `https://www.youtube.com/embed/${id}`;
+  if (url.includes("watch")) return url.replace("watch?v=", "embed/");
+  if (url.includes("youtu.be/"))
+    return url.replace("youtu.be/", "www.youtube.com/embed/");
+  return url;
+};
+
+const youtubeThumbnail = (url) => {
+  if (!url) return "";
+  const idMatch = url.match(/(?:v=|embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  const id = idMatch ? idMatch[1] : null;
+  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  return "";
 };
 
 const VideoPlayer = () => {
@@ -29,7 +53,9 @@ const VideoPlayer = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [recommendedVideos, setRecommendedVideos] = useState([]);
-  const [currentVideo, setCurrentVideo] = useState(location.state?.video || null);
+  const [currentVideo, setCurrentVideo] = useState(
+    location.state?.video || null
+  );
   const [videoDurations, setVideoDurations] = useState({});
   const videoRef = useRef(null);
 
@@ -46,7 +72,10 @@ const VideoPlayer = () => {
         const response = await fetch("/api/media/videos");
         const data = await response.json();
 
-        const currentCat = currentVideo.category?.toString().trim().toLowerCase();
+        const currentCat = currentVideo.category
+          ?.toString()
+          .trim()
+          .toLowerCase();
 
         const recVideos = data
           .filter((video) => {
@@ -71,6 +100,15 @@ const VideoPlayer = () => {
 
   useEffect(() => {
     recommendedVideos.forEach((video) => {
+      // Skip duration calculation for YouTube videos
+      if (isYouTubeUrl(video.videoUrl)) {
+        setVideoDurations((prev) => ({
+          ...prev,
+          [video.id]: "YouTube",
+        }));
+        return;
+      }
+
       const vid = document.createElement("video");
       vid.src = video.videoUrl;
       vid.preload = "metadata";
@@ -249,6 +287,13 @@ const VideoPlayer = () => {
           object-fit: cover;
           box-shadow: 0 2px 8px rgba(13,202,240,0.08);
         }
+        
+        .recommended-video-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 8px;
+        }
         .recommended-video-info {
           flex: 1;
         }
@@ -300,7 +345,32 @@ const VideoPlayer = () => {
       <div className={theme === "light" ? "light-container" : "dark-container"}>
         <div className="page-container">
           <div className="video-player-container">
-            <video src={currentVideo.videoUrl} controls ref={videoRef} />
+            {isYouTubeUrl(currentVideo.videoUrl) ? (
+              <div
+                style={{
+                  position: "relative",
+                  paddingBottom: "56.25%",
+                  height: 0,
+                }}
+              >
+                <iframe
+                  title={`player-${currentVideo.id}`}
+                  src={toYouTubeEmbed(currentVideo.videoUrl)}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    border: "none",
+                    borderRadius: 12,
+                  }}
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <video src={currentVideo.videoUrl} controls ref={videoRef} />
+            )}
             <div className="video-title">{currentVideo.title}</div>
             <div className="video-description">{currentVideo.description}</div>
           </div>
@@ -313,22 +383,47 @@ const VideoPlayer = () => {
                 className="recommended-video-card"
                 onClick={() => handleVideoSelect(video)}
               >
-                <video
-                  className="recommended-video-thumb"
-                  src={video.videoUrl}
-                  muted
-                  autoPlay
-                  loop
-                  playsInline
-                  preload="metadata"
-                  style={{ objectFit: "cover" }}
-                />
+                {isYouTubeUrl(video.videoUrl) ? (
+                  <img
+                    className="recommended-video-thumb"
+                    src={youtubeThumbnail(video.videoUrl)}
+                    alt={video.title}
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <video
+                    className="recommended-video-thumb"
+                    src={video.videoUrl}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    preload="metadata"
+                    style={{ objectFit: "cover" }}
+                  />
+                )}
                 <div className="recommended-video-info">
                   <div className="recommended-video-title">{video.title}</div>
                   <div className="recommended-video-meta">
-                    مدت: {videoDurations[video.id] || "--:--"}
-                    <br />
-                    تاریخ: {formatUploadDate(video.uploadedAt || video.uploaded_at)}
+                    {videoDurations[video.id] === "YouTube" ? (
+                      <>
+                        منبع: YouTube
+                        <br />
+                        تاریخ:{" "}
+                        {formatUploadDate(
+                          video.uploadedAt || video.uploaded_at
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        مدت: {videoDurations[video.id] || "--:--"}
+                        <br />
+                        تاریخ:{" "}
+                        {formatUploadDate(
+                          video.uploadedAt || video.uploaded_at
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

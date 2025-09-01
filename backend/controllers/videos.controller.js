@@ -27,21 +27,27 @@ const upload = multer({ storage }).single("video");
 // Upload new video
 const uploadVideo = async (req, res) => {
   try {
-    const { title, description, category } = req.body;
+    const { title, description, category, youtubeLink } = req.body;
     const videoFile = req.file;
 
-    if (!title || !description || !category || !videoFile) {
+    // Require title/description/category and at least one source (file or youtubeLink)
+    if (!title || !description || !category || (!videoFile && !youtubeLink)) {
       if (videoFile && videoFile.path) {
         fs.unlink(videoFile.path, (err) => {
           if (err) console.error("Failed to delete file:", err);
         });
       }
-      return res.status(400).json({ message: "همه فیلدها باید پر شوند." });
+      return res
+        .status(400)
+        .json({ message: "همه فیلدها باید پر شوند یا لینک یوتیوب وارد شود." });
     }
+
+    // Determine video_path: filename when file uploaded, otherwise the provided youtubeLink (stored as-is)
+    const videoPath = videoFile ? videoFile.filename : youtubeLink.trim();
 
     const sql = `INSERT INTO videos (title, description, category, video_path, uploaded_at)
                  VALUES (?, ?, ?, ?, NOW())`;
-    const params = [title, description, category, videoFile.filename];
+    const params = [title, description, category, videoPath];
 
     const [results] = await promise.execute(sql, params);
 
@@ -63,15 +69,21 @@ const uploadVideo = async (req, res) => {
 // Get list of videos
 const getVideos = async (req, res) => {
   try {
-    const sql = `SELECT id, title, description, category, video_path AS videoUrl, uploaded_at FROM videos ORDER BY uploaded_at DESC`;
+    const sql = `SELECT id, title, description, category, video_path AS videoPath, uploaded_at FROM videos ORDER BY uploaded_at DESC`;
 
     const [results] = await promise.execute(sql);
 
     const baseUrl = "/uploads/videos/";
-    const videos = results.map((video) => ({
-      ...video,
-      videoUrl: baseUrl + video.videoUrl,
-    }));
+    const videos = results.map((video) => {
+      const raw = video.videoPath || "";
+      // If stored value looks like an absolute URL (youtube or http), return as-is
+      const isUrl =
+        /^(https?:)?\/\//i.test(raw) || /youtube\.com|youtu\.be/i.test(raw);
+      return {
+        ...video,
+        videoUrl: isUrl ? raw : baseUrl + raw,
+      };
+    });
 
     res.json(videos);
   } catch (error) {
@@ -95,15 +107,21 @@ const deleteVideo = async (req, res) => {
     }
 
     const videoFile = results[0].video_path;
-    const filePath = path.join(uploadDir, videoFile);
 
     await promise.execute("DELETE FROM videos WHERE id = ?", [videoId]);
 
-    fs.unlink(filePath, (unlinkErr) => {
-      if (unlinkErr) {
-        console.error("Failed to delete file:", unlinkErr);
-      }
-    });
+    // If the stored video path looks like a local filename (not a URL), delete the file
+    const isUrl =
+      /^(https?:)?\/\//i.test(videoFile) ||
+      /youtube\.com|youtu\.be/i.test(videoFile);
+    if (!isUrl) {
+      const filePath = path.join(uploadDir, videoFile);
+      fs.unlink(filePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Failed to delete file:", unlinkErr);
+        }
+      });
+    }
 
     res.json({ message: "ویدیو با موفقیت حذف شد." });
   } catch (error) {
@@ -112,11 +130,11 @@ const deleteVideo = async (req, res) => {
   }
 };
 
-// Update video info and optionally replace video file
+// Update video info and optionally replace video file or switch to a youtube link
 const updateVideo = async (req, res) => {
   try {
     const videoId = req.params.id;
-    const { title, description, category } = req.body;
+    const { title, description, category, youtubeLink } = req.body;
 
     if (!title || !description || !category) {
       if (req.file && req.file.path) {
@@ -144,13 +162,32 @@ const updateVideo = async (req, res) => {
     const oldVideoFile = results[0].video_path;
     let newVideoFileName = oldVideoFile;
 
+    // If a new file uploaded, use it and delete old file if it was a local file
     if (req.file) {
       newVideoFileName = req.file.filename;
-      const oldFilePath = path.join(uploadDir, oldVideoFile);
-      fs.unlink(oldFilePath, (unlinkErr) => {
-        if (unlinkErr)
-          console.error("Failed to delete old video file:", unlinkErr);
-      });
+      const isOldUrl =
+        /^(https?:)?\/\//i.test(oldVideoFile) ||
+        /youtube\.com|youtu\.be/i.test(oldVideoFile);
+      if (!isOldUrl) {
+        const oldFilePath = path.join(uploadDir, oldVideoFile);
+        fs.unlink(oldFilePath, (unlinkErr) => {
+          if (unlinkErr)
+            console.error("Failed to delete old video file:", unlinkErr);
+        });
+      }
+    } else if (youtubeLink) {
+      // Switching to a YouTube link: delete old local file if it was stored locally
+      newVideoFileName = youtubeLink.trim();
+      const isOldUrl =
+        /^(https?:)?\/\//i.test(oldVideoFile) ||
+        /youtube\.com|youtu\.be/i.test(oldVideoFile);
+      if (!isOldUrl) {
+        const oldFilePath = path.join(uploadDir, oldVideoFile);
+        fs.unlink(oldFilePath, (unlinkErr) => {
+          if (unlinkErr)
+            console.error("Failed to delete old video file:", unlinkErr);
+        });
+      }
     }
 
     const sql = `UPDATE videos SET title = ?, description = ?, category = ?, video_path = ? WHERE id = ?`;

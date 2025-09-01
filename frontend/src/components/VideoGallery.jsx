@@ -5,6 +5,20 @@ import { useTheme } from "../contexts/ThemeContext";
 
 const ITEMS_PER_PAGE = 12;
 
+// YouTube utility functions
+const isYouTubeUrl = (url) => {
+  if (!url) return false;
+  return /youtube\.com|youtu\.be/i.test(url);
+};
+
+const youtubeThumbnail = (url) => {
+  if (!url) return "";
+  const idMatch = url.match(/(?:v=|embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  const id = idMatch ? idMatch[1] : null;
+  if (id) return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+  return "";
+};
+
 const VideoGallery = () => {
   const [videos, setVideos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +47,7 @@ const VideoGallery = () => {
           videoUrl: video.videoUrl,
           description: video.description,
           category: video.category,
-          uploaded_at: video.uploaded_at
+          uploaded_at: video.uploaded_at,
         }));
 
         setVideos(mapped);
@@ -55,12 +69,13 @@ const VideoGallery = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('fa-IR');
+    return date.toLocaleDateString("fa-IR");
   };
 
-  const filteredVideos = videos.filter((video) =>
-    video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    video.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredVideos = videos.filter(
+    (video) =>
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      video.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredVideos.length / ITEMS_PER_PAGE);
@@ -311,7 +326,15 @@ const VideoGallery = () => {
           transition: transform 0.3s ease;
         }
         
-        .video-card:hover .video-thumbnail video {
+        .video-thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+        
+        .video-card:hover .video-thumbnail video,
+        .video-card:hover .video-thumbnail img {
           transform: scale(1.1);
         }
         
@@ -514,7 +537,9 @@ const VideoGallery = () => {
 
           {filteredVideos.length === 0 && !isLoading && (
             <div className="no-results">
-              {searchTerm ? 'هیچ ویدیویی با این جستجو یافت نشد.' : 'هیچ ویدیویی در این دسته موجود نیست.'}
+              {searchTerm
+                ? "هیچ ویدیویی با این جستجو یافت نشد."
+                : "هیچ ویدیویی در این دسته موجود نیست."}
             </div>
           )}
 
@@ -528,24 +553,36 @@ const VideoGallery = () => {
                   role="button"
                   onClick={() => handleVideoClick(video)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (e.key === "Enter" || e.key === " ") {
                       handleVideoClick(video);
                     }
                   }}
                   onMouseEnter={() => setHoveredVideo(video.id)}
                   onMouseLeave={() => setHoveredVideo(null)}
                   style={{
-                    animationDelay: `${index * 0.1}s`
+                    animationDelay: `${index * 0.1}s`,
                   }}
                 >
                   <div className="video-thumbnail">
-                    <video
-                      src={video.videoUrl}
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                    />
+                    {isYouTubeUrl(video.videoUrl) ? (
+                      <img
+                        src={youtubeThumbnail(video.videoUrl)}
+                        alt={video.title}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <video
+                        src={video.videoUrl}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                      />
+                    )}
                     <div className="play-button">
                       <FaPlay />
                     </div>
@@ -562,7 +599,7 @@ const VideoGallery = () => {
                       </span>
                       {video.uploaded_at && (
                         <span>
-                          <FaCalendarAlt style={{ marginLeft: '0.3rem' }} />
+                          <FaCalendarAlt style={{ marginLeft: "0.3rem" }} />
                           {formatDate(video.uploaded_at)}
                         </span>
                       )}
@@ -575,8 +612,8 @@ const VideoGallery = () => {
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button 
-                onClick={() => setCurrentPage(p => p - 1)} 
+              <button
+                onClick={() => setCurrentPage((p) => p - 1)}
                 disabled={currentPage === 1}
               >
                 قبلی
@@ -584,8 +621,8 @@ const VideoGallery = () => {
               <div className="page-info">
                 صفحه {currentPage} از {totalPages}
               </div>
-              <button 
-                onClick={() => setCurrentPage(p => p + 1)} 
+              <button
+                onClick={() => setCurrentPage((p) => p + 1)}
                 disabled={currentPage === totalPages}
               >
                 بعدی
