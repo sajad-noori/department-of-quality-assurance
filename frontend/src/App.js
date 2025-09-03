@@ -45,7 +45,7 @@ import FilledQuestionnairesList from "./components/FilledQuestionnairesList";
 import NewsCommentsPage from "./pages/NewsCommentsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AfghanistanMap from "./components/AfghanistanMap";
-
+import OrganizationalChart from "./components/OrganizationalChart";
 function App() {
   return (
     <Router>
@@ -280,7 +280,14 @@ function App() {
               }
             />
 
-
+<Route
+              path="/organizational-chart"
+              element={
+                <>
+                <OrganizationalChart/>
+                </>
+              }
+            />
 
             <Route
               path="/dashboard/users"

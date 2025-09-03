@@ -8,7 +8,7 @@ import {
   FaEnvelope,
 } from "react-icons/fa6";
 import { FaUserCircle } from "react-icons/fa";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 import { useState as useReactState } from "react";
@@ -73,7 +73,7 @@ const menuItems = [
 
   { label: "اخبار و اطلاعات", submenu: [] },
   { label: "تماس با ما", submenu: [] },
-  { label: "درباره ما", submenu: [] },
+  { label: "درباره ما", submenu: ["چارت تشکیلاتی", "درباره ما"] },
 ];
 
 export default function MenuWithUtilityBar() {
@@ -402,6 +402,12 @@ export default function MenuWithUtilityBar() {
       case "زون":
         navigate("/map");
         break;
+      case "چارت تشکیلاتی":
+        navigate("/organizational-chart");
+        break;
+      case "درباره ما":
+        navigate("/about");
+        break;
       default:
         console.log("Clicked submenu:", label);
         break;
@@ -638,15 +644,7 @@ export default function MenuWithUtilityBar() {
               className={styles.menuItem}
               data-open={dropdownOpen === idx ? "true" : "false"}
             >
-              {item.label === "درباره ما" ? (
-                <Link
-                  to="/about"
-                  className={styles.menuLink}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ) : item.label === "اخبار و اطلاعات" ? (
+              {item.label === "اخبار و اطلاعات" ? (
                 <a
                   href="#news-section"
                   className={styles.menuLink}

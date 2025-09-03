@@ -12,11 +12,6 @@ export default function NotificationsPage() {
   const { user } = useAuth();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState({
-    totalUncheckedFilledCount: 0,
-    unansweredNewsComments: 0,
-    unansweredQuestionsCount: 0,
-  });
   const [unansweredComments, setUnansweredComments] = useState([]);
   const [uncheckedFilleds, setUncheckedFilleds] = useState([]); // [{ questionnaire, filleds: [] }]
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
@@ -28,9 +23,6 @@ export default function NotificationsPage() {
     let isMounted = true;
     async function fetchNotifications() {
       setLoading(true);
-      let totalUncheckedFilledCount = 0;
-      let unansweredNewsComments = 0;
-      let unansweredQuestionsCount = 0;
       let unansweredCommentsList = [];
       let uncheckedFilledsList = [];
       let unansweredQuestionsList = [];
@@ -58,7 +50,7 @@ export default function NotificationsPage() {
                       filleds: unchecked,
                     });
                   }
-                  totalUncheckedFilledCount += unchecked.length;
+                  // Count unused filled questionnaires
                 }
               }
             }
@@ -73,7 +65,7 @@ export default function NotificationsPage() {
           unansweredCommentsList = allComments.filter(
             (c) => !c.reply_count || c.reply_count === 0
           );
-          unansweredNewsComments = unansweredCommentsList.length;
+          // Count unanswered comments
         } catch {}
         // 3. Unanswered questions (detailed)
         try {
@@ -84,16 +76,11 @@ export default function NotificationsPage() {
             unansweredQuestionsList = res.data.data.questions.filter(
               (q) => !q.is_replied
             );
-            unansweredQuestionsCount = unansweredQuestionsList.length;
+            // Count unanswered questions
           }
         } catch {}
       } finally {
         if (isMounted) {
-          setNotifications({
-            totalUncheckedFilledCount,
-            unansweredNewsComments,
-            unansweredQuestionsCount,
-          });
           setUnansweredComments(unansweredCommentsList);
           setUncheckedFilleds(uncheckedFilledsList);
           setUnansweredQuestions(unansweredQuestionsList);
@@ -188,27 +175,6 @@ export default function NotificationsPage() {
   const sortedUnansweredQuestions = unansweredQuestions
     .filter((q) => isWithinLast2Months(q.submitted_at))
     .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
-
-  const actions = [
-    {
-      label: "پرسش‌نامه‌های بررسی نشده",
-      count: notifications.totalUncheckedFilledCount,
-      to: "/checking-questionnaires",
-      description: "پرسش‌نامه‌هایی که نیاز به بررسی دارند.",
-    },
-    {
-      label: "نظرات اخبار بدون پاسخ",
-      count: notifications.unansweredNewsComments,
-      to: "/news-comments",
-      description: "نظراتی که هنوز پاسخی دریافت نکرده‌اند.",
-    },
-    {
-      label: "سوالات بدون پاسخ",
-      count: notifications.unansweredQuestionsCount,
-      to: "/answer-to-questions",
-      description: "سوالاتی که نیاز به پاسخ دارند.",
-    },
-  ];
 
   // Merge all notifications into a single flat list, sorted by date (newest to oldest)
   const mergedNotifications = [

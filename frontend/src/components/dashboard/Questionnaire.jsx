@@ -596,7 +596,15 @@ const Questionnaire = () => {
                     color: "#ccc",
                     fontSize: "1.01rem",
                     minHeight: 32,
+                    maxHeight: '4.5em',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    lineHeight: '1.5em',
                   }}
+                  title={q.description || ''}
                 >
                   {q.description}
                 </div>

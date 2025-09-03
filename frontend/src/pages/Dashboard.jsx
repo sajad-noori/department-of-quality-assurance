@@ -41,8 +41,8 @@ const resources = [
   },
 
   { 
-    title: 'پرسشنامه ها', 
-    description: 'اپلود پرسش نامه ها از این طریق میباشد.', 
+    title: 'چک لیست، فورم و پرسش نامه ها', 
+    description: 'مدیریت چک لیست، فورم و پرسش نامه ها', 
     route: '/dashboard/questionnaires',
     icon: '📝',
     color: '#607D8B'
