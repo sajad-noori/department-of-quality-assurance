@@ -747,7 +747,14 @@ const EmployeeProfile = () => {
               type="submit"
               form="edit-profile-form"
               variant="contained"
-              sx={{ background: "#0dcaf0" }}
+              sx={{
+                background: "#0dcaf0",
+                color: "#030305",
+                fontWeight: 600,
+                "&:hover": {
+                  background: "#00b5d7",
+                },
+              }}
               disabled={editLoading}
             >
               {editLoading ? (
@@ -783,7 +790,7 @@ const EmployeeProfile = () => {
           color: #0dcaf0 !important;
         }
         .dark-container .card-title {
-          color: #007bff !important;
+          color: #0dcaf0 !important;
         }
         .light-container .card-text {
           color: #20c997 !important;
@@ -858,8 +865,8 @@ const EmployeeProfile = () => {
           border-color: #0dcaf0 !important;
         }
         .dark-container .form-check-input:checked {
-          background-color: #007bff !important;
-          border-color: #007bff !important;
+          background-color: #0dcaf0 !important;
+          border-color: #0dcaf0 !important;
         }
         .light-container .form-check-input {
           background-color: #fff !important;
@@ -882,12 +889,12 @@ const EmployeeProfile = () => {
         .light-container .page-item.active .page-link {
           background: #0dcaf0 !important;
           color: #fff !important;
-          border-color: #20c997 !important;
+          border-color: #00b5d7 !important;
         }
         .dark-container .page-item.active .page-link {
-          background: #007bff !important;
+          background: #0dcaf0 !important;
           color: #fff !important;
-          border-color: #007bff !important;
+          border-color: #00b5d7 !important;
         }
         .light-container .rounded-lg {
           background: #fff !important;
@@ -952,7 +959,7 @@ const EmployeeProfile = () => {
           color: #bfc8e6 !important;
         }
         .MuiDialog-root .MuiOutlinedInput-notchedOutline {
-          border-color: #3b82f6 !important;
+          border-color: #0dcaf0 !important;
         }
         /* Light mode input fields */
         [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-root {
@@ -1028,7 +1035,7 @@ const EmployeeProfile = () => {
           color: #bfc8e6 !important;
         }
         .MuiDialog-root .MuiOutlinedInput-notchedOutline {
-          border-color: #3b82f6 !important;
+          border-color: #0dcaf0 !important;
         }
         /* Light mode input fields */
         [data-theme="light"] .MuiDialog-root .MuiOutlinedInput-root {
@@ -1364,7 +1371,7 @@ const EmployeeProfile = () => {
                         disabled={updatingStage === center.id}
                         style={{
                           backgroundColor:
-                            center.stage1 === 1 ? "#007bff" : "#1e1e1e",
+                            center.stage1 === 1 ? "#0dcaf0" : "#1e1e1e",
                           borderColor: "#333",
                         }}
                       />
@@ -1390,7 +1397,7 @@ const EmployeeProfile = () => {
                         disabled={updatingStage === center.id}
                         style={{
                           backgroundColor:
-                            center.stage2 === 1 ? "#007bff" : "#1e1e1e",
+                            center.stage2 === 1 ? "#0dcaf0" : "#1e1e1e",
                           borderColor: "#333",
                         }}
                       />
@@ -1416,7 +1423,7 @@ const EmployeeProfile = () => {
                         disabled={updatingStage === center.id}
                         style={{
                           backgroundColor:
-                            center.stage3 === 1 ? "#007bff" : "#1e1e1e",
+                            center.stage3 === 1 ? "#0dcaf0" : "#1e1e1e",
                           borderColor: "#333",
                         }}
                       />
@@ -1438,7 +1445,10 @@ const EmployeeProfile = () => {
                 >
                   <button
                     className="btn btn-outline-primary btn-sm"
-                    style={{ borderColor: "#007bff" }}
+                    style={{
+                      borderColor: "#0dcaf0",
+                      color: "#0dcaf0",
+                    }}
                     onClick={() => handleViewCenter(center.user_id)}
                   >
                     بررسی
@@ -1492,7 +1502,7 @@ const EmployeeProfile = () => {
                   onClick={() => handlePageChange(index + 1)}
                   style={{
                     background:
-                      currentPage === index + 1 ? "#007bff" : "#1e1e1e",
+                      currentPage === index + 1 ? "#0dcaf0" : "#1e1e1e",
                     borderColor: "#333",
                     color: currentPage === index + 1 ? "#ffffff" : "#ffffff",
                   }}

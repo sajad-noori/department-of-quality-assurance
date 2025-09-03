@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import CircularProgress from '@mui/material/CircularProgress';
-import PropTypes from 'prop-types';
-import { FaExclamationTriangle } from 'react-icons/fa';
-import ProfileSidebar from './ProfileSidebar';
+import CircularProgress from "@mui/material/CircularProgress";
+import PropTypes from "prop-types";
+import { FaExclamationTriangle } from "react-icons/fa";
+import ProfileSidebar from "./ProfileSidebar";
+import Button from "@mui/material/Button";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
-import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter"
-import Personnel from "./accreditation/Personnel"
-import NumberOfStudents from "./accreditation/NumberOfStudents"
-import Laylia from "./accreditation/Laylia"
+import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter";
+import Personnel from "./accreditation/Personnel";
+import NumberOfStudents from "./accreditation/NumberOfStudents";
+import Laylia from "./accreditation/Laylia";
 import Standard from "./accreditation/Standard";
-import Department from "./accreditation/Departments"
+import Department from "./accreditation/Departments";
 import AcademyFacilities from "./accreditation/AcademyFacilities";
 import ClassFacilities from "./accreditation/ClassFacilities";
 import PracticalFacilities from "./accreditation/PracticalFacilities";
-import Documents from "./accreditation/Documents"
+import Documents from "./accreditation/Documents";
 import ReviewAndSubmit from "./accreditation/ReviewAndSubmit";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -41,11 +44,14 @@ function RestrictedAccessAlert() {
           </div>
           <h2 className="restricted-title">دسترسی محدود</h2>
           <p className="restricted-description">
-            برای دسترسی به این بخش، حساب کاربری شما باید به عنوان یک مرکز آموزشی معتبر ثبت شده باشد.
+            برای دسترسی به این بخش، حساب کاربری شما باید به عنوان یک مرکز آموزشی
+            معتبر ثبت شده باشد.
           </p>
           <div className="restricted-contact-info">
             <p>برای راهنمایی و فعال‌سازی حساب، لطفاً با ما تماس بگیرید:</p>
-            <a href="tel:0778558968" className="restricted-phone-number">۰۷۷۸۵۵۸۹۶۸</a>
+            <a href="tel:0778558968" className="restricted-phone-number">
+              ۰۷۷۸۵۵۸۹۶۸
+            </a>
           </div>
         </div>
       </div>
@@ -155,24 +161,27 @@ function Step1({ onStepSubmit, user }) {
   useEffect(() => {
     const fetchCenterData = async () => {
       // Only fetch data if user exists, is an institute, and data hasn't been loaded yet
-      if (!user || user.role !== 'institute' || dataLoaded) {
+      if (!user || user.role !== "institute" || dataLoaded) {
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/educational-centers/centers', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        const response = await axios.get(
+          "http://localhost:5000/api/educational-centers/centers",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
           }
-        });
+        );
 
         if (response.data && response.data.length > 0) {
           const centerData = response.data[0];
           setHasExistingData(true);
-          
+
           // Update form with existing data
           setFormData({
             centerName: centerData.centerName || "",
@@ -186,14 +195,14 @@ function Step1({ onStepSubmit, user }) {
             phoneNumber: centerData.phoneNumber || "",
             email: centerData.email || "",
           });
-          
+
           // Mark step as submitted if data exists
           if (onStepSubmit) {
             onStepSubmit(1);
-        }
+          }
         }
       } catch (err) {
-        console.error('Error fetching center data:', err);
+        console.error("Error fetching center data:", err);
       } finally {
         setLoading(false);
         setDataLoaded(true);
@@ -205,10 +214,10 @@ function Step1({ onStepSubmit, user }) {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Log form data for debugging
-    console.log('Validating form data:', formData);
-    
+    console.log("Validating form data:", formData);
+
     if (!formData.centerName || !formData.centerName.trim()) {
       newErrors.centerName = "نام مرکز الزامی است";
     }
@@ -229,7 +238,11 @@ function Step1({ onStepSubmit, user }) {
     }
     if (!formData.foundingYear) {
       newErrors.foundingYear = "سال تاسیس الزامی است";
-    } else if (isNaN(formData.foundingYear) || formData.foundingYear < 1300 || formData.foundingYear > new Date().getFullYear()) {
+    } else if (
+      isNaN(formData.foundingYear) ||
+      formData.foundingYear < 1300 ||
+      formData.foundingYear > new Date().getFullYear()
+    ) {
       newErrors.foundingYear = "سال تاسیس باید بین ۱۳۰۰ و سال جاری باشد";
     }
     if (!formData.contactName || !formData.contactName.trim()) {
@@ -247,68 +260,75 @@ function Step1({ onStepSubmit, user }) {
     }
 
     // Log validation errors for debugging
-    console.log('Validation errors:', newErrors);
-    
+    console.log("Validation errors:", newErrors);
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-        ...prev,
-      [name]: value
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
     // Clear error for this specific field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
 
   const handleSubmit = async () => {
-    console.log('Submitting form with data:', formData);
-    console.log('Has existing data:', hasExistingData);
-    
+    console.log("Submitting form with data:", formData);
+    console.log("Has existing data:", hasExistingData);
+
     if (!validateForm()) {
-      console.log('Validation failed, errors:', errors);
+      console.log("Validation failed, errors:", errors);
       alert("لطفاً تمام فیلدهای الزامی را پر کنید");
       return;
     }
 
     try {
-      const url = 'http://localhost:5000/api/educational-centers/centers';
-      const method = hasExistingData ? 'PUT' : 'POST';
-      
-      console.log('Making request with method:', method);
-      
+      const url = "http://localhost:5000/api/educational-centers/centers";
+      const method = hasExistingData ? "PUT" : "POST";
+
+      console.log("Making request with method:", method);
+
       const response = await axios({
         method: method,
         url: url,
         data: formData,
         withCredentials: true,
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
-      console.log('Response received:', response.data);
-      
-      const message = hasExistingData ? "اطلاعات با موفقیت بروزرسانی شد" : "اطلاعات با موفقیت ثبت شد";
+      console.log("Response received:", response.data);
+
+      const message = hasExistingData
+        ? "اطلاعات با موفقیت بروزرسانی شد"
+        : "اطلاعات با موفقیت ثبت شد";
       alert(message);
       setHasExistingData(true);
-      
+
       // Mark step as submitted
       if (onStepSubmit) {
         onStepSubmit(1);
       }
     } catch (error) {
       console.error("Error:", error);
-      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-        const errorMessages = error.response.data.errors.map(err => err.msg).join('\n');
+      if (
+        error.response?.data?.errors &&
+        Array.isArray(error.response.data.errors)
+      ) {
+        const errorMessages = error.response.data.errors
+          .map((err) => err.msg)
+          .join("\n");
         alert(errorMessages);
       } else {
         alert(error.response?.data?.message || "خطایی در ارسال اطلاعات رخ داد");
@@ -318,7 +338,11 @@ function Step1({ onStepSubmit, user }) {
 
   if (loading) {
     return (
-      <div className="alert alert-info text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-info text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         در حال بارگذاری...
       </div>
     );
@@ -326,16 +350,18 @@ function Step1({ onStepSubmit, user }) {
 
   if (!user) {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-warning text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
 
-  if (user.role !== 'institute') {
+  if (user.role !== "institute") {
     return <RestrictedAccessAlert />;
   }
 
@@ -351,12 +377,12 @@ function Step1({ onStepSubmit, user }) {
 
 Step1.propTypes = {
   onStepSubmit: PropTypes.func,
-  user: PropTypes.object
+  user: PropTypes.object,
 };
 
 Step1.defaultProps = {
   onStepSubmit: () => {},
-  user: null
+  user: null,
 };
 
 function Step2({ onStepSubmit }) {
@@ -380,22 +406,22 @@ function Step2({ onStepSubmit }) {
 
   return (
     <>
-    <label className="form-label-center"> {steps[1]}</label>
-    <Personnel
-      formData={formData}
-      onChange={handleChange}
-      onSubmit={handleSubmit}
-    />
+      <label className="form-label-center"> {steps[1]}</label>
+      <Personnel
+        formData={formData}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+      />
     </>
   );
 }
 
 Step2.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
 };
 
 Step2.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
 };
 
 function Step3({ onStepSubmit }) {
@@ -412,29 +438,29 @@ function Step3({ onStepSubmit }) {
 
   return (
     <>
-    <label className="form-label-center"> {steps[2]}</label>
-    <div className="d-flex">
-      <NumberOfStudents onStepSubmit={handleStep3Submit} />
-      <Laylia />
-    </div>
+      <label className="form-label-center"> {steps[2]}</label>
+      <div className="d-flex">
+        <NumberOfStudents onStepSubmit={handleStep3Submit} />
+        <Laylia />
+      </div>
     </>
   );
 }
 
 Step3.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
 };
 
 Step3.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
 };
 
 function Step4({ onStepSubmit, user }) {
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
-    vision: '',
-    mission: '',
-    strategicGoals: '',
+    vision: "",
+    mission: "",
+    strategicGoals: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -445,25 +471,28 @@ function Step4({ onStepSubmit, user }) {
 
   useEffect(() => {
     const fetchVisionMission = async () => {
-      if (!user || user.role !== 'institute') {
+      if (!user || user.role !== "institute") {
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/vision-mission', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        const response = await axios.get(
+          "http://localhost:5000/api/vision-mission",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
           }
-        });
+        );
 
         if (response.data) {
           setFormData({
-            vision: response.data.vision || '',
-            mission: response.data.mission || '',
-            strategicGoals: response.data.strategic_goals || ''
+            vision: response.data.vision || "",
+            mission: response.data.mission || "",
+            strategicGoals: response.data.strategic_goals || "",
           });
           setHasExistingData(true);
           // Don't mark as submitted when just loading existing data
@@ -472,8 +501,8 @@ function Step4({ onStepSubmit, user }) {
           // }
         }
       } catch (err) {
-        console.error('Error fetching vision mission:', err);
-        setError('خطا در بارگذاری اطلاعات دیدگاه و ماموریت');
+        console.error("Error fetching vision mission:", err);
+        setError("خطا در بارگذاری اطلاعات دیدگاه و ماموریت");
       } finally {
         setLoading(false);
       }
@@ -484,15 +513,15 @@ function Step4({ onStepSubmit, user }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error for this specific field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -502,15 +531,15 @@ function Step4({ onStepSubmit, user }) {
 
   const validateForm = () => {
     if (!formData.vision.trim()) {
-      setError('دیدگاه مرکز آموزشی الزامی است');
+      setError("دیدگاه مرکز آموزشی الزامی است");
       return false;
     }
     if (!formData.mission.trim()) {
-      setError('ماموریت مرکز آموزشی الزامی است');
+      setError("ماموریت مرکز آموزشی الزامی است");
       return false;
     }
     if (!formData.strategicGoals.trim()) {
-      setError('اهداف استراتیژیک مرکز آموزشی الزامی است');
+      setError("اهداف استراتیژیک مرکز آموزشی الزامی است");
       return false;
     }
     return true;
@@ -522,20 +551,30 @@ function Step4({ onStepSubmit, user }) {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/vision-mission', formData, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await axios.post(
+        "http://localhost:5000/api/vision-mission",
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
-      });
+      );
       setHasExistingData(true);
-      setSuccess(hasExistingData ? 'اطلاعات با موفقیت بروزرسانی شد' : 'اطلاعات با موفقیت ثبت شد');
+      setSuccess(
+        hasExistingData
+          ? "اطلاعات با موفقیت بروزرسانی شد"
+          : "اطلاعات با موفقیت ثبت شد"
+      );
       if (onStepSubmit) {
         onStepSubmit(4);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'خطا در ذخیره اطلاعات دیدگاه و ماموریت');
+      setError(
+        err.response?.data?.message || "خطا در ذخیره اطلاعات دیدگاه و ماموریت"
+      );
     } finally {
       setLoading(false);
     }
@@ -543,22 +582,29 @@ function Step4({ onStepSubmit, user }) {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress style={{ color: '#0dcaf0' }} />
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "200px" }}
+      >
+        <CircularProgress style={{ color: "#0dcaf0" }} />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-warning text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
         <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
 
-  if (user.role !== 'institute') {
+  if (user.role !== "institute") {
     return <RestrictedAccessAlert />;
   }
 
@@ -577,14 +623,18 @@ function Step4({ onStepSubmit, user }) {
             </div>
           )}
         </div>
-        
+
         {success && (
           <div className="success-notification">
             <div className="notification-content">
               <span className="notification-icon">✅</span>
               <span>{success}</span>
             </div>
-            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setSuccess(null)}
+            >
               ✕
             </button>
           </div>
@@ -595,84 +645,100 @@ function Step4({ onStepSubmit, user }) {
               <span className="notification-icon">⚠️</span>
               <span>{error}</span>
             </div>
-            <button type="button" className="close-button" onClick={() => setError(null)}>
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setError(null)}
+            >
               ✕
             </button>
           </div>
         )}
         <div className="form-section">
           <div className="form-group">
-            <label className="form-label">دیدگاه مرکز آموزشی <span className="required">*</span></label>
+            <label className="form-label">
+              دیدگاه مرکز آموزشی <span className="required">*</span>
+            </label>
             <div className="input-wrapper">
-            <textarea
-              name="vision"
-              value={formData.vision}
-              onChange={handleChange}
-                onFocus={() => handleFocus('vision')}
+              <textarea
+                name="vision"
+                value={formData.vision}
+                onChange={handleChange}
+                onFocus={() => handleFocus("vision")}
                 onBlur={handleBlur}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.ctrlKey) {
+                  if (e.key === "Enter" && e.ctrlKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
-              placeholder="دیدگاه مرکز آموزشی را بیان دارید."
-                className={`form-input ${error && formData.vision.trim() === '' ? 'error' : ''} ${focusedField === 'vision' ? 'focused' : ''}`}
+                placeholder="دیدگاه مرکز آموزشی را بیان دارید."
+                className={`form-input ${
+                  error && formData.vision.trim() === "" ? "error" : ""
+                } ${focusedField === "vision" ? "focused" : ""}`}
                 rows={5}
-            />
+              />
               <div className="input-border"></div>
-          </div>
+            </div>
           </div>
           <div className="form-group">
-            <label className="form-label">ماموریت مرکز آموزشی <span className="required">*</span></label>
+            <label className="form-label">
+              ماموریت مرکز آموزشی <span className="required">*</span>
+            </label>
             <div className="input-wrapper">
-            <textarea
-              name="mission"
-              value={formData.mission}
-              onChange={handleChange}
-                onFocus={() => handleFocus('mission')}
+              <textarea
+                name="mission"
+                value={formData.mission}
+                onChange={handleChange}
+                onFocus={() => handleFocus("mission")}
                 onBlur={handleBlur}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.ctrlKey) {
+                  if (e.key === "Enter" && e.ctrlKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
                 placeholder="ماموریت مرکز آموزشی را بیان دارید."
-                className={`form-input ${error && formData.mission.trim() === '' ? 'error' : ''} ${focusedField === 'mission' ? 'focused' : ''}`}
+                className={`form-input ${
+                  error && formData.mission.trim() === "" ? "error" : ""
+                } ${focusedField === "mission" ? "focused" : ""}`}
                 rows={5}
               />
               <div className="input-border"></div>
-          </div>
+            </div>
           </div>
           <div className="form-group">
-            <label className="form-label">اهداف استراتیژیک مرکز آموزشی <span className="required">*</span></label>
+            <label className="form-label">
+              اهداف استراتیژیک مرکز آموزشی <span className="required">*</span>
+            </label>
             <div className="input-wrapper">
-            <textarea
-              name="strategicGoals"
-              value={formData.strategicGoals}
-              onChange={handleChange}
-                onFocus={() => handleFocus('strategicGoals')}
+              <textarea
+                name="strategicGoals"
+                value={formData.strategicGoals}
+                onChange={handleChange}
+                onFocus={() => handleFocus("strategicGoals")}
                 onBlur={handleBlur}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.ctrlKey) {
+                  if (e.key === "Enter" && e.ctrlKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
                 placeholder={`اهداف استراتیژیک مرکز آموزشی را بیان دارید\n1.\n2.\n3.\n4.`}
-                className={`form-input ${error && formData.strategicGoals.trim() === '' ? 'error' : ''} ${focusedField === 'strategicGoals' ? 'focused' : ''}`}
+                className={`form-input ${
+                  error && formData.strategicGoals.trim() === "" ? "error" : ""
+                } ${focusedField === "strategicGoals" ? "focused" : ""}`}
                 rows={6}
               />
               <div className="input-border"></div>
-          </div>
             </div>
+          </div>
           <div className="submit-section">
-          <button 
-            type="button" 
-            onClick={handleSubmit}
+            <button
+              type="button"
+              onClick={handleSubmit}
               disabled={loading}
-              className={`submit-button ${loading ? 'loading' : ''}`}
+              className={`submit-button ${loading ? "loading" : ""}`}
             >
               {loading ? (
                 <>
@@ -682,11 +748,11 @@ function Step4({ onStepSubmit, user }) {
               ) : (
                 <>
                   <span className="button-icon">💾</span>
-                  {hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+                  {hasExistingData ? "بروزرسانی اطلاعات" : "ثبت اطلاعات"}
                 </>
               )}
-          </button>
-        </div>
+            </button>
+          </div>
         </div>
       </div>
       <style>{`
@@ -936,7 +1002,9 @@ function Step4({ onStepSubmit, user }) {
         .form-container {
           user-select: text !important;
         }
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .vision-mission-form {
           background: #fff;
           color: #222;
@@ -1036,7 +1104,9 @@ function Step4({ onStepSubmit, user }) {
             padding: 1.5rem;
           }
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
     </div>
   );
@@ -1044,12 +1114,12 @@ function Step4({ onStepSubmit, user }) {
 
 Step4.propTypes = {
   onStepSubmit: PropTypes.func,
-  user: PropTypes.object
+  user: PropTypes.object,
 };
 
 Step4.defaultProps = {
   onStepSubmit: () => {},
-  user: null
+  user: null,
 };
 
 function Step5({ onStepSubmit }) {
@@ -1061,39 +1131,43 @@ function Step5({ onStepSubmit }) {
 
   return (
     <>
-    <label className="form-label-center"> {steps[4]}</label>
-    <div>
-      <Standard value={description} onChange={handleDescriptionChange} onStepSubmit={onStepSubmit} />
-    </div>
+      <label className="form-label-center"> {steps[4]}</label>
+      <div>
+        <Standard
+          value={description}
+          onChange={handleDescriptionChange}
+          onStepSubmit={onStepSubmit}
+        />
+      </div>
     </>
   );
 }
 
 Step5.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
 };
 
 Step5.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
 };
 
 function Step6({ onStepSubmit }) {
   return (
     <>
-    <label className="form-label-center"> {steps[5]}</label>
-    <div className="d-flex">
-      <Department onStepSubmit={onStepSubmit} />
-    </div>
+      <label className="form-label-center"> {steps[5]}</label>
+      <div className="d-flex">
+        <Department onStepSubmit={onStepSubmit} />
+      </div>
     </>
   );
 }
 
 Step6.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
 };
 
 Step6.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
 };
 
 function Step7({ onStepSubmit }) {
@@ -1110,46 +1184,49 @@ function Step7({ onStepSubmit }) {
 
   return (
     <>
-    <label className="form-label-center"> {steps[6]}</label>
-    <div className="d-flex flex-column gap-4">
-      <div className="facility-section">
-        <h4 className="section-title mb-3">امکانات اکادمیک</h4>
-        <AcademyFacilities onStepSubmit={() => setAcademySubmitted(true)} />
-        {academySubmitted && (
-          <div className="submission-status success">
-            <span>✓ امکانات اکادمیک ثبت شد</span>
-          </div>
-        )}
-      </div>
-      
-      <div className="facility-section">
-        <h4 className="section-title mb-3">امکانات صنفی</h4>
-        <ClassFacilities onStepSubmit={() => setClassSubmitted(true)} />
-        {classSubmitted && (
-          <div className="submission-status success">
-            <span>✓ امکانات صنفی ثبت شد</span>
-          </div>
-        )}
-      </div>
-      
-      <div className="facility-section">
-        <h4 className="section-title mb-3">امکانات عملی (اختیاری)</h4>
-        <PracticalFacilities onStepSubmit={() => setPracticalSubmitted(true)} />
-        {practicalSubmitted && (
-          <div className="submission-status success">
-            <span>✓ امکانات عملی ثبت شد</span>
-          </div>
-        )}
-      </div>
-      
-      {academySubmitted && classSubmitted && (
-        <div className="step-completion-notice">
-          <div className="alert alert-success">
-            <strong>✓ مرحله ۷ تکمیل شد!</strong> شما می‌توانید به مرحله بعدی بروید.
-          </div>
+      <label className="form-label-center"> {steps[6]}</label>
+      <div className="d-flex flex-column gap-4">
+        <div className="facility-section">
+          <h4 className="section-title mb-3">امکانات اکادمیک</h4>
+          <AcademyFacilities onStepSubmit={() => setAcademySubmitted(true)} />
+          {academySubmitted && (
+            <div className="submission-status success">
+              <span>✓ امکانات اکادمیک ثبت شد</span>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+
+        <div className="facility-section">
+          <h4 className="section-title mb-3">امکانات صنفی</h4>
+          <ClassFacilities onStepSubmit={() => setClassSubmitted(true)} />
+          {classSubmitted && (
+            <div className="submission-status success">
+              <span>✓ امکانات صنفی ثبت شد</span>
+            </div>
+          )}
+        </div>
+
+        <div className="facility-section">
+          <h4 className="section-title mb-3">امکانات عملی (اختیاری)</h4>
+          <PracticalFacilities
+            onStepSubmit={() => setPracticalSubmitted(true)}
+          />
+          {practicalSubmitted && (
+            <div className="submission-status success">
+              <span>✓ امکانات عملی ثبت شد</span>
+            </div>
+          )}
+        </div>
+
+        {academySubmitted && classSubmitted && (
+          <div className="step-completion-notice">
+            <div className="alert alert-success">
+              <strong>✓ مرحله ۷ تکمیل شد!</strong> شما می‌توانید به مرحله بعدی
+              بروید.
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -1175,22 +1252,25 @@ function Step8({ onStepSubmit, user }) {
 
   useEffect(() => {
     const fetchStakeholderInvolvement = async () => {
-      if (!user || user.role !== 'institute' || dataLoaded) {
+      if (!user || user.role !== "institute" || dataLoaded) {
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        const response = await axios.get(
+          "http://localhost:5000/api/stakeholder-involvement",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
           }
-        });
+        );
 
         if (response.data.success && response.data.data) {
-          setDescription(response.data.data.description || '');
+          setDescription(response.data.data.description || "");
           setHasExistingData(true);
           setDataLoaded(true);
           // Mark step as submitted if data exists
@@ -1201,8 +1281,8 @@ function Step8({ onStepSubmit, user }) {
           setDataLoaded(true);
         }
       } catch (err) {
-        console.error('Error fetching stakeholder involvement:', err);
-        setError('خطا در بارگذاری اطلاعات');
+        console.error("Error fetching stakeholder involvement:", err);
+        setError("خطا در بارگذاری اطلاعات");
         setDataLoaded(true);
       } finally {
         setLoading(false);
@@ -1232,11 +1312,11 @@ function Step8({ onStepSubmit, user }) {
 
   const validateForm = () => {
     if (!description.trim()) {
-      setError('توضیحات الزامی است');
+      setError("توضیحات الزامی است");
       return false;
     }
     if (description.trim().length < 50) {
-      setError('توضیحات باید حداقل ۵۰ کاراکتر باشد');
+      setError("توضیحات باید حداقل ۵۰ کاراکتر باشد");
       return false;
     }
     return true;
@@ -1252,27 +1332,32 @@ function Step8({ onStepSubmit, user }) {
     setSuccess(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/stakeholder-involvement', 
+      const response = await axios.post(
+        "http://localhost:5000/api/stakeholder-involvement",
         { description },
         {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
       );
 
-      setSuccess(hasExistingData ? 'اطلاعات با موفقیت بروزرسانی شد' : 'اطلاعات با موفقیت ثبت شد');
+      setSuccess(
+        hasExistingData
+          ? "اطلاعات با موفقیت بروزرسانی شد"
+          : "اطلاعات با موفقیت ثبت شد"
+      );
       setHasExistingData(true);
-      
+
       // Mark step as submitted
       if (onStepSubmit) {
         onStepSubmit(8);
       }
     } catch (err) {
-      console.error('Error saving stakeholder involvement:', err);
-      setError(err.response?.data?.message || 'خطا در ذخیره اطلاعات');
+      console.error("Error saving stakeholder involvement:", err);
+      setError(err.response?.data?.message || "خطا در ذخیره اطلاعات");
     } finally {
       setIsSubmitting(false);
     }
@@ -1280,24 +1365,29 @@ function Step8({ onStepSubmit, user }) {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
-        <CircularProgress style={{ color: '#0dcaf0' }} />
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "200px" }}
+      >
+        <CircularProgress style={{ color: "#0dcaf0" }} />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="alert alert-warning text-center p-4" role="alert" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+      <div
+        className="alert alert-warning text-center p-4"
+        role="alert"
+        style={{ maxWidth: "600px", margin: "2rem auto" }}
+      >
         <h4 className="alert-heading mb-3">دسترسی محدود</h4>
-        <p className="mb-3">
-          لطفاً ابتدا وارد حساب کاربری خود شوید.
-        </p>
+        <p className="mb-3">لطفاً ابتدا وارد حساب کاربری خود شوید.</p>
       </div>
     );
   }
 
-  if (user.role !== 'institute') {
+  if (user.role !== "institute") {
     return <RestrictedAccessAlert />;
   }
 
@@ -1310,7 +1400,8 @@ function Step8({ onStepSubmit, user }) {
             دخیل سازی ذینفعان در پروسه آموزشی
           </h3>
           <p className="form-description">
-            در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت ذینفعان را واضح سازد.
+            در این بخش مرکز آموزشی باید شیوه های دخیل سازی و میزان مشارکت
+            ذینفعان را واضح سازد.
           </p>
           {hasExistingData && (
             <div className="entries-badge">
@@ -1319,31 +1410,39 @@ function Step8({ onStepSubmit, user }) {
             </div>
           )}
         </div>
-        
+
         {success && (
           <div className="success-notification">
             <div className="notification-content">
               <span className="notification-icon">✅</span>
               <span>{success}</span>
             </div>
-            <button type="button" className="close-button" onClick={() => setSuccess(null)}>
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setSuccess(null)}
+            >
               ✕
             </button>
           </div>
         )}
-        
+
         {error && (
           <div className="error-notification">
             <div className="notification-content">
               <span className="notification-icon">⚠️</span>
               <span>{error}</span>
             </div>
-            <button type="button" className="close-button" onClick={() => setError(null)}>
+            <button
+              type="button"
+              className="close-button"
+              onClick={() => setError(null)}
+            >
               ✕
             </button>
           </div>
         )}
-        
+
         <div className="form-section">
           <div className="form-group">
             <label className="form-label">
@@ -1354,10 +1453,10 @@ function Step8({ onStepSubmit, user }) {
                 name="description"
                 value={description}
                 onChange={handleChange}
-                onFocus={() => handleFocus('description')}
+                onFocus={() => handleFocus("description")}
                 onBlur={handleBlur}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.ctrlKey) {
+                  if (e.key === "Enter" && e.ctrlKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
@@ -1368,21 +1467,30 @@ function Step8({ onStepSubmit, user }) {
 • همکاری با جامعه محلی
 • بازخورد از فارغ‌التحصیلان
 • مشارکت در تصمیم‌گیری‌های آموزشی"
-                className={`form-input ${error && description.trim() === '' ? 'error' : ''} ${focusedField === 'description' ? 'focused' : ''}`}
+                className={`form-input ${
+                  error && description.trim() === "" ? "error" : ""
+                } ${focusedField === "description" ? "focused" : ""}`}
                 rows={10}
                 disabled={isSubmitting}
                 maxLength={2000}
               />
               <div className="input-border"></div>
             </div>
-            <div className={`character-count ${description.length > 1800 ? 'warning' : ''} ${description.length >= 2000 ? 'error' : ''}`}>
+            <div
+              className={`character-count ${
+                description.length > 1800 ? "warning" : ""
+              } ${description.length >= 2000 ? "error" : ""}`}
+            >
               {description.length} / 2000 کاراکتر
               {description.length < 50 && description.length > 0 && (
-                <span className="min-chars-warning"> (حداقل ۵۰ کاراکتر نیاز است)</span>
+                <span className="min-chars-warning">
+                  {" "}
+                  (حداقل ۵۰ کاراکتر نیاز است)
+                </span>
               )}
             </div>
           </div>
-          
+
           <div className="form-tips">
             <h5 className="tips-title">💡 نکات مهم:</h5>
             <ul className="tips-list">
@@ -1392,13 +1500,15 @@ function Step8({ onStepSubmit, user }) {
               <li>مثال‌های عملی ارائه دهید</li>
             </ul>
           </div>
-          
+
           <div className="submit-section">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || description.trim().length < 50}
-              className={`submit-button ${isSubmitting ? 'loading' : ''} ${description.trim().length < 50 ? 'disabled' : ''}`}
+              className={`submit-button ${isSubmitting ? "loading" : ""} ${
+                description.trim().length < 50 ? "disabled" : ""
+              }`}
             >
               {isSubmitting ? (
                 <>
@@ -1408,7 +1518,7 @@ function Step8({ onStepSubmit, user }) {
               ) : (
                 <>
                   <span className="button-icon">💾</span>
-                  {hasExistingData ? 'بروزرسانی اطلاعات' : 'ثبت اطلاعات'}
+                  {hasExistingData ? "بروزرسانی اطلاعات" : "ثبت اطلاعات"}
                 </>
               )}
             </button>
@@ -1418,7 +1528,7 @@ function Step8({ onStepSubmit, user }) {
           </div>
         </div>
       </div>
-      
+
       <style>{`
         .stakeholder-form {
           background: rgba(255, 255, 255, 0.05);
@@ -1796,7 +1906,9 @@ function Step8({ onStepSubmit, user }) {
             font-size: 1rem;
           }
         }
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .stakeholder-form {
           background: #fff;
           color: #222;
@@ -1924,7 +2036,9 @@ function Step8({ onStepSubmit, user }) {
             padding: 1.5rem;
           }
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
     </div>
   );
@@ -1932,12 +2046,12 @@ function Step8({ onStepSubmit, user }) {
 
 Step8.propTypes = {
   onStepSubmit: PropTypes.func,
-  user: PropTypes.object
+  user: PropTypes.object,
 };
 
 Step8.defaultProps = {
   onStepSubmit: () => {},
-  user: null
+  user: null,
 };
 
 function Step9({ onStepSubmit }) {
@@ -1960,11 +2074,11 @@ function Step9({ onStepSubmit }) {
 }
 
 Step9.propTypes = {
-  onStepSubmit: PropTypes.func
+  onStepSubmit: PropTypes.func,
 };
 
 Step9.defaultProps = {
-  onStepSubmit: () => {}
+  onStepSubmit: () => {},
 };
 
 function Step10() {
@@ -1973,7 +2087,9 @@ function Step10() {
     <>
       <ReviewAndSubmit />
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .review-submit-container {
           background-color: #fff;
         }
@@ -2014,7 +2130,9 @@ function Step10() {
         .support-text {
           color: #666;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
     </>
   );
@@ -2031,7 +2149,7 @@ const stepComponents = {
   7: Step7,
   8: Step8,
   9: Step9,
-  10: Step10
+  10: Step10,
 };
 
 export default function MultiStepForm10() {
@@ -2039,20 +2157,30 @@ export default function MultiStepForm10() {
   const [userLoading, setUserLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [stepSubmissionStatus, setStepSubmissionStatus] = useState({
-    1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false, 9: false, 10: false
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false,
+    7: false,
+    8: false,
+    9: false,
+    10: false,
   });
   const [progressLoading, setProgressLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Fetch user and initialize progress from database
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get("http://localhost:5000/api/auth/me", {
           withCredentials: true,
         });
         setUser(res.data.user);
       } catch (err) {
-        console.error('Error fetching user:', err);
+        console.error("Error fetching user:", err);
         setUser(null);
       } finally {
         setUserLoading(false);
@@ -2063,7 +2191,7 @@ export default function MultiStepForm10() {
 
   // Load progress from database when user changes
   useEffect(() => {
-    if (user && user.id && user.role === 'institute') {
+    if (user && user.id && user.role === "institute") {
       fetchProgressFromDatabase();
     } else {
       setProgressLoading(false);
@@ -2073,53 +2201,75 @@ export default function MultiStepForm10() {
   const fetchProgressFromDatabase = async () => {
     try {
       setProgressLoading(true);
-      const response = await axios.get('http://localhost:5000/api/step-progress', {
-        withCredentials: true,
-      });
-      
+      const response = await axios.get(
+        "http://localhost:5000/api/step-progress",
+        {
+          withCredentials: true,
+        }
+      );
+
       setCurrentStep(response.data.current_step);
       setStepSubmissionStatus(response.data.step_submission_status);
     } catch (error) {
-      console.error('Error fetching progress from database:', error);
+      console.error("Error fetching progress from database:", error);
       // If there's an error, start with default values
       setCurrentStep(1);
       setStepSubmissionStatus({
-        1: false, 2: false, 3: false, 4: false, 5: false,
-        6: false, 7: false, 8: false, 9: false, 10: false
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false,
+        7: false,
+        8: false,
+        9: false,
+        10: false,
       });
     } finally {
       setProgressLoading(false);
     }
   };
 
-  const saveProgressToDatabase = async (newCurrentStep, newStepSubmissionStatus) => {
+  const saveProgressToDatabase = async (
+    newCurrentStep,
+    newStepSubmissionStatus
+  ) => {
     try {
-      await axios.put('http://localhost:5000/api/step-progress', {
-        current_step: newCurrentStep,
-        step_submission_status: newStepSubmissionStatus
-      }, {
-        withCredentials: true,
-      });
+      await axios.put(
+        "http://localhost:5000/api/step-progress",
+        {
+          current_step: newCurrentStep,
+          step_submission_status: newStepSubmissionStatus,
+        },
+        {
+          withCredentials: true,
+        }
+      );
     } catch (error) {
-      console.error('Error saving progress to database:', error);
+      console.error("Error saving progress to database:", error);
     }
   };
 
-  const isInstitute = user && user.role === 'institute';
+  const isInstitute = user && user.role === "institute";
   const displayStep = isInstitute ? currentStep : 1;
   const StepComponent = stepComponents[displayStep];
 
   const handleMarkStepAsSubmitted = async (stepNumber, nextStep) => {
     try {
       // Mark step as submitted in database
-      await axios.post('http://localhost:5000/api/step-progress/mark-step', {
-        stepNumber: stepNumber
-      }, {
-        withCredentials: true,
-      });
+      await axios.post(
+        "http://localhost:5000/api/step-progress/mark-step",
+        {
+          stepNumber: stepNumber,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       // Update local state
-      setStepSubmissionStatus(prev => ({
+      setStepSubmissionStatus((prev) => ({
         ...prev,
         [stepNumber]: true,
       }));
@@ -2128,7 +2278,7 @@ export default function MultiStepForm10() {
       if (nextStep && nextStep <= steps.length) {
         const newCurrentStep = nextStep;
         setCurrentStep(newCurrentStep);
-        
+
         // Save updated progress to database
         await saveProgressToDatabase(newCurrentStep, {
           ...stepSubmissionStatus,
@@ -2136,8 +2286,8 @@ export default function MultiStepForm10() {
         });
       }
     } catch (error) {
-      console.error('Error marking step as submitted:', error);
-      alert('خطا در ثبت مرحله. لطفاً دوباره تلاش کنید.');
+      console.error("Error marking step as submitted:", error);
+      alert("خطا در ثبت مرحله. لطفاً دوباره تلاش کنید.");
     }
   };
 
@@ -2154,11 +2304,13 @@ export default function MultiStepForm10() {
       if (canGo) {
         const newCurrentStep = currentStep + 1;
         setCurrentStep(newCurrentStep);
-        
+
         // Save updated progress to database
         await saveProgressToDatabase(newCurrentStep, stepSubmissionStatus);
       } else {
-        alert(`لطفاً ابتدا مرحله ${steps[currentStep - 1]} را تکمیل و ثبت کنید`);
+        alert(
+          `لطفاً ابتدا مرحله ${steps[currentStep - 1]} را تکمیل و ثبت کنید`
+        );
       }
     }
   };
@@ -2167,17 +2319,24 @@ export default function MultiStepForm10() {
     if (currentStep > 1) {
       const newCurrentStep = currentStep - 1;
       setCurrentStep(newCurrentStep);
-      
+
       // Save updated progress to database
       await saveProgressToDatabase(newCurrentStep, stepSubmissionStatus);
     }
   };
 
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
-  
+
+  const handleSidebarToggle = () => {
+    setShowSidebar((prev) => !prev);
+  };
+
   if (userLoading || progressLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "100vh" }}
+      >
         <CircularProgress />
       </div>
     );
@@ -2185,8 +2344,61 @@ export default function MultiStepForm10() {
 
   return (
     <div className="page-container">
-      <div className="main-content">
-        <h1 className="title mt-4 mb-4">فورم درخواستی مراکز آموزشی برای شمولیت  پروسه اعتبار دهی</h1>
+      {/* Floating sidebar toggle button */}
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          right: 0,
+          transform: "translateY(-50%)",
+          zIndex: 2000,
+          boxShadow: "0 4px 16px rgba(13,202,240,0.10)",
+          borderRadius: "32px 0 0 32px",
+          background: "transparent",
+          padding: 0,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={handleSidebarToggle}
+          sx={{
+            borderRadius: "32px 0 0 32px",
+            px: 3,
+            py: 1,
+            fontWeight: 700,
+            color: "#030305",
+            background: "#0dcaf0",
+            borderColor: "#0dcaf0",
+            boxShadow: "0 4px 15px rgba(13,202,240,0.18)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            transition: "background 0.2s, color 0.2s",
+            "&:hover": {
+              background: "#00b5d7",
+              borderColor: "#00b5d7",
+              color: "#030305",
+            },
+          }}
+        >
+          {showSidebar ? "مخفی کردن پروفایل" : "نمایش پروفایل"}
+          {showSidebar ? (
+            <ExpandLessIcon sx={{ ml: 1 }} />
+          ) : (
+            <ExpandMoreIcon sx={{ ml: 1 }} />
+          )}
+        </Button>
+      </div>
+
+      <div
+        className="main-content"
+        style={{ marginRight: showSidebar ? "320px" : "0" }}
+      >
+        <h1 className="title mt-4 mb-4">
+          فورم درخواستی مراکز آموزشی برای شمولیت پروسه اعتبار دهی
+        </h1>
 
         {isInstitute && (
           <div className="progress-wrapper" aria-label="نوار پیشرفت مراحل">
@@ -2203,14 +2415,17 @@ export default function MultiStepForm10() {
                 const isActive = currentStep === stepNum;
                 const isCompleted = currentStep > stepNum;
                 const isSubmitted = stepSubmissionStatus[stepNum];
-                const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
+                const canNavigate =
+                  stepNum === 1 || stepSubmissionStatus[stepNum - 1];
 
                 return (
                   <li
                     key={stepNum}
                     className={`step-item ${isActive ? "active" : ""} ${
                       isCompleted ? "completed" : ""
-                    } ${isSubmitted ? "submitted" : ""} ${!canNavigate ? "disabled" : ""}`}
+                    } ${isSubmitted ? "submitted" : ""} ${
+                      !canNavigate ? "disabled" : ""
+                    }`}
                     onClick={() => {
                       if (canNavigate) {
                         setCurrentStep(stepNum);
@@ -2263,7 +2478,7 @@ export default function MultiStepForm10() {
         </div>
       </div>
 
-      <ProfileSidebar />
+      {showSidebar && <ProfileSidebar />}
 
       <style>{`
         .page-container {
@@ -2277,8 +2492,8 @@ export default function MultiStepForm10() {
         .main-content {
           flex: 1;
           padding: 2rem;
-          margin-right: 320px; /* Width of sidebar + margin */
           min-height: 100vh;
+          transition: margin-right 0.3s ease;
         }
 
         * {

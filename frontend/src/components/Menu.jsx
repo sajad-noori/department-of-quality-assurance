@@ -214,13 +214,15 @@ export default function MenuWithUtilityBar() {
           });
           const twoMonthsAgo = new Date();
           twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-          
-          const recentUnanswered = res.data.filter(comment => {
+
+          const recentUnanswered = res.data.filter((comment) => {
             const commentDate = new Date(comment.created_at);
-            return (!comment.reply_count || comment.reply_count === 0) && 
-                   commentDate >= twoMonthsAgo;
+            return (
+              (!comment.reply_count || comment.reply_count === 0) &&
+              commentDate >= twoMonthsAgo
+            );
           });
-          
+
           unansweredNewsComments = recentUnanswered.length;
         } catch (error) {
           console.error("Error fetching news comments:", error);
@@ -234,11 +236,15 @@ export default function MenuWithUtilityBar() {
           if (res.data.success && Array.isArray(res.data.data.questions)) {
             const twoMonthsAgo = new Date();
             twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-            
-            unansweredQuestionsCount = res.data.data.questions.filter(question => {
-              const questionDate = new Date(question.submitted_at || question.created_at);
-              return !question.is_replied && questionDate >= twoMonthsAgo;
-            }).length;
+
+            unansweredQuestionsCount = res.data.data.questions.filter(
+              (question) => {
+                const questionDate = new Date(
+                  question.submitted_at || question.created_at
+                );
+                return !question.is_replied && questionDate >= twoMonthsAgo;
+              }
+            ).length;
           }
         } catch (error) {
           console.error("Error fetching unanswered questions:", error);
