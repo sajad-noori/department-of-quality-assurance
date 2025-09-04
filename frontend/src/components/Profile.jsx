@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
+import { motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { FaExclamationTriangle } from "react-icons/fa";
 import ProfileSidebar from "./ProfileSidebar";
 import Button from "@mui/material/Button";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter";
 import Personnel from "./accreditation/Personnel";
@@ -2083,9 +2084,47 @@ Step9.defaultProps = {
 
 function Step10() {
   const { theme } = useTheme();
+  const [formData, setFormData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCenterData = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/educational-centers/centers",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (response.data && response.data.length > 0) {
+          setFormData(response.data[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching center data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCenterData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+        <CircularProgress />
+      </div>
+    );
+  }
+
   return (
     <>
-      <ReviewAndSubmit />
+      <ReviewAndSubmit formData={formData} />
       <style>{`
         ${
           theme === "light"
@@ -2385,9 +2424,10 @@ export default function MultiStepForm10() {
         >
           {showSidebar ? "مخفی کردن پروفایل" : "نمایش پروفایل"}
           {showSidebar ? (
-            <ExpandLessIcon sx={{ ml: 1 }} />
+            <ChevronRightIcon sx={{ ml: 1 }} />
           ) : (
-            <ExpandMoreIcon sx={{ ml: 1 }} />
+            
+            <ChevronLeftIcon sx={{ ml: 1 }} />
           )}
         </Button>
       </div>
