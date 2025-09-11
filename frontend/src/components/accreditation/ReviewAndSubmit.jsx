@@ -1,24 +1,172 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
-import { FaCheckCircle, FaEnvelope, FaHeadset, FaInfoCircle, FaChalkboardTeacher, FaUserTie, FaTools, FaUserShield, FaUserGraduate, FaFilePdf, FaUniversity, FaChalkboard, FaFlask } from 'react-icons/fa';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import { motion } from "framer-motion";
+import {
+  FaCheckCircle,
+  FaEnvelope,
+  FaHeadset,
+  FaInfoCircle,
+  FaChalkboardTeacher,
+  FaUserTie,
+  FaTools,
+  FaUserShield,
+  FaUserGraduate,
+  FaFilePdf,
+  FaUniversity,
+  FaChalkboard,
+  FaFlask,
+  FaPrint,
+} from "react-icons/fa";
+import { Button } from "@mui/material";
+import axios from "axios";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const ReviewAndSubmit = ({ formData }) => {
+  const { theme } = useTheme();
+  const printRef = useRef();
+
+  const handlePrint = () => {
+    const printContents = printRef.current.innerHTML;
+
+    // Create a temporary div to hold our print content
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html dir="rtl" lang="fa">
+      <head>
+        <title>Print</title>
+        <style>
+          @page {
+            size: auto;
+            margin: 10mm 10mm 10mm 10mm;
+          }
+          @media print {
+            body * {
+              visibility: hidden;
+              direction: rtl !important;
+              text-align: right !important;
+              font-family: Arial, 'Segoe UI', Tahoma, sans-serif !important;
+            }
+            .print-container, .print-container * {
+              visibility: visible;
+              max-width: 100% !important;
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+            }
+            .print-container {
+              position: relative;
+              left: 0;
+              top: 0;
+              width: 100% !important;
+              padding: 0 !important;
+              background: white !important;
+              color: black !important;
+              direction: rtl !important;
+              text-align: right !important;
+              font-family: Arial, 'Segoe UI', Tahoma, sans-serif !important;
+            }
+            .no-print,
+            .alert-info,
+            .support-section {
+              display: none !important;
+            }
+            .print-section {
+              page-break-inside: avoid;
+              page-break-after: auto;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+            table {
+              width: 100% !important;
+              border-collapse: collapse;
+              margin: 10px 0 !important;
+              page-break-inside: auto;
+              font-size: 12px !important;
+              table-layout: fixed;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+            th, td {
+              border: 1px solid #ddd !important;
+              padding: 6px 8px 6px 4px !important; /* More padding on the right for RTL */
+              text-align: right !important;
+              font-size: 12px !important;
+              line-height: 1.5 !important; /* Slightly more line height for better readability */
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              direction: rtl !important;
+              font-family: Arial, 'Segoe UI', Tahoma, sans-serif !important;
+            }
+            /* Ensure equal column widths */
+            table td:first-child,
+            table th:first-child {
+              width: 30%;
+            }
+            table td:not(:first-child),
+            table th:not(:first-child) {
+              width: 17.5%;
+            }
+            th {
+              background-color: #f2f2f2 !important;
+              color: black !important;
+              font-weight: bold !important;
+            }
+            h1, h2, h3, h4, h5, h6, p, div, span {
+              color: black !important;
+              margin: 5px 0 !important;
+            }
+            .review-info-card {
+              page-break-inside: avoid;
+              margin-bottom: 15px !important;
+              padding: 10px !important;
+            }
+            .review-card {
+              box-shadow: none !important;
+              border: none !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          ${printContents}
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
   const [personnelData, setPersonnelData] = useState(null);
   const [studentData, setStudentData] = useState([]);
   const [layliaData, setLayliaData] = useState([]);
   const [visionMissionData, setVisionMissionData] = useState({
-    vision: '',
-    mission: '',
-    strategicGoals: ''
+    vision: "",
+    mission: "",
+    strategicGoals: "",
   });
   const [standardsData, setStandardsData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
   const [academyFacilities, setAcademyFacilities] = useState([]);
   const [classFacilities, setClassFacilities] = useState([]);
   const [practicalFacilities, setPracticalFacilities] = useState([]);
-  const [stakeholderInvolvement, setStakeholderInvolvement] = useState('');
+  const [stakeholderInvolvement, setStakeholderInvolvement] = useState("");
   const [loadingStakeholder, setLoadingStakeholder] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(true);
@@ -26,26 +174,31 @@ const ReviewAndSubmit = ({ formData }) => {
   const [loadingVisionMission, setLoadingVisionMission] = useState(true);
   const [loadingStandards, setLoadingStandards] = useState(true);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
-  const [loadingAcademyFacilities, setLoadingAcademyFacilities] = useState(true);
+  const [loadingAcademyFacilities, setLoadingAcademyFacilities] =
+    useState(true);
   const [loadingClassFacilities, setLoadingClassFacilities] = useState(true);
-  const [loadingPracticalFacilities, setLoadingPracticalFacilities] = useState(true);
+  const [loadingPracticalFacilities, setLoadingPracticalFacilities] =
+    useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchPersonnelData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/personnel', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/personnel",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.data) {
           setPersonnelData(response.data);
         }
       } catch (err) {
-        console.error('Error fetching personnel data:', err);
-        setError('Failed to load personnel data');
+        console.error("Error fetching personnel data:", err);
+        setError("Failed to load personnel data");
       } finally {
         setLoading(false);
       }
@@ -55,18 +208,18 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchStudentData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/students', {
+        const response = await axios.get("http://localhost:5000/api/students", {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
         if (response.data.success) {
           setStudentData(response.data.data);
         }
       } catch (err) {
-        console.error('Error fetching student data:', err);
-        setError('Failed to load student data');
+        console.error("Error fetching student data:", err);
+        setError("Failed to load student data");
       } finally {
         setLoadingStudents(false);
       }
@@ -76,18 +229,18 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchLayliaData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/laylia', {
+        const response = await axios.get("http://localhost:5000/api/laylia", {
           withCredentials: true,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
         if (response.data.success) {
           setLayliaData(response.data.data);
         }
       } catch (err) {
-        console.error('Error fetching laylia data:', err);
-        setError('Failed to load laylia data');
+        console.error("Error fetching laylia data:", err);
+        setError("Failed to load laylia data");
       } finally {
         setLoadingLaylia(false);
       }
@@ -97,22 +250,25 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchVisionMissionData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/vision-mission', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/vision-mission",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.data) {
           setVisionMissionData({
-            vision: response.data.vision || '',
-            mission: response.data.mission || '',
-            strategicGoals: response.data.strategic_goals || ''
+            vision: response.data.vision || "",
+            mission: response.data.mission || "",
+            strategicGoals: response.data.strategic_goals || "",
           });
         }
       } catch (err) {
-        console.error('Error fetching vision and mission data:', err);
-        setError('Failed to load vision and mission data');
+        console.error("Error fetching vision and mission data:", err);
+        setError("Failed to load vision and mission data");
       } finally {
         setLoadingVisionMission(false);
       }
@@ -122,18 +278,21 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchStandardsData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/standards', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/standards",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.data) {
           setStandardsData(response.data);
         }
       } catch (err) {
-        console.error('Error fetching standards data:', err);
-        setError('Failed to load standards data');
+        console.error("Error fetching standards data:", err);
+        setError("Failed to load standards data");
       } finally {
         setLoadingStandards(false);
       }
@@ -143,18 +302,21 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchDepartmentsData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/departments', {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/departments",
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.data && response.data.success) {
           setDepartmentsData(response.data.data || []);
         }
       } catch (err) {
-        console.error('Error fetching departments data:', err);
-        setError('Failed to load departments data');
+        console.error("Error fetching departments data:", err);
+        setError("Failed to load departments data");
       } finally {
         setLoadingDepartments(false);
       }
@@ -165,16 +327,19 @@ const ReviewAndSubmit = ({ formData }) => {
     // Fetch Academy Facilities
     const fetchAcademyFacilities = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/academy-facilities', {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/academy-facilities",
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         if (response.data && response.data.success) {
           setAcademyFacilities(response.data.data || []);
         }
       } catch (err) {
-        console.error('Error fetching academy facilities:', err);
-        setError('Failed to load academy facilities');
+        console.error("Error fetching academy facilities:", err);
+        setError("Failed to load academy facilities");
       } finally {
         setLoadingAcademyFacilities(false);
       }
@@ -183,16 +348,19 @@ const ReviewAndSubmit = ({ formData }) => {
     // Fetch Class Facilities
     const fetchClassFacilities = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/class-facilities', {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/class-facilities",
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         if (response.data && response.data.success) {
           setClassFacilities(response.data.data || []);
         }
       } catch (err) {
-        console.error('Error fetching class facilities:', err);
-        setError('Failed to load class facilities');
+        console.error("Error fetching class facilities:", err);
+        setError("Failed to load class facilities");
       } finally {
         setLoadingClassFacilities(false);
       }
@@ -201,16 +369,19 @@ const ReviewAndSubmit = ({ formData }) => {
     // Fetch Practical Facilities
     const fetchPracticalFacilities = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/practical-facilities', {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/practical-facilities",
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         if (response.data && response.data.success) {
           setPracticalFacilities(response.data.data || []);
         }
       } catch (err) {
-        console.error('Error fetching practical facilities:', err);
-        setError('Failed to load practical facilities');
+        console.error("Error fetching practical facilities:", err);
+        setError("Failed to load practical facilities");
       } finally {
         setLoadingPracticalFacilities(false);
       }
@@ -219,16 +390,19 @@ const ReviewAndSubmit = ({ formData }) => {
     // Fetch stakeholder involvement data
     const fetchStakeholderInvolvement = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/stakeholder-involvement', {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/stakeholder-involvement",
+          {
+            withCredentials: true,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         if (response.data && response.data.success && response.data.data) {
-          setStakeholderInvolvement(response.data.data.description || '');
+          setStakeholderInvolvement(response.data.data.description || "");
         }
       } catch (err) {
-        console.error('Error fetching stakeholder involvement:', err);
-        setError('Failed to load stakeholder involvement data');
+        console.error("Error fetching stakeholder involvement:", err);
+        setError("Failed to load stakeholder involvement data");
       } finally {
         setLoadingStakeholder(false);
       }
@@ -239,56 +413,90 @@ const ReviewAndSubmit = ({ formData }) => {
       fetchAcademyFacilities(),
       fetchClassFacilities(),
       fetchPracticalFacilities(),
-      fetchStakeholderInvolvement()
+      fetchStakeholderInvolvement(),
     ]);
   }, []);
 
   const educationLevels = [
-    { key: 'phd', label: 'دوکتور' },
-    { key: 'master', label: 'ماستر' },
-    { key: 'bachelor', label: 'لیسانس' },
-    { key: 'above_baccalaureate', label: 'فوق بکلوریا' },
-    { key: 'baccalaureate', label: 'بکلوریا' },
-    { key: 'elementary', label: 'صنف دوازدهم' },
+    { key: "phd", label: "دوکتور" },
+    { key: "master", label: "ماستر" },
+    { key: "bachelor", label: "لیسانس" },
+    { key: "above_baccalaureate", label: "فوق بکلوریا" },
+    { key: "baccalaureate", label: "بکلوریا" },
+    { key: "elementary", label: "صنف دوازدهم" },
   ];
 
   const personnelSections = [
-    { key: 'teachers', label: 'معلمین', icon: <FaChalkboardTeacher /> },
-    { key: 'technical', label: 'کارکنان تخنیکی', icon: <FaTools /> },
-    { key: 'admin', label: 'کارکنان اداری', icon: <FaUserTie /> },
-    { key: 'service', label: 'کارکنان خدماتی', icon: <FaUserShield /> },
+    { key: "teachers", label: "معلمین", icon: <FaChalkboardTeacher /> },
+    { key: "technical", label: "کارکنان تخنیکی", icon: <FaTools /> },
+    { key: "admin", label: "کارکنان اداری", icon: <FaUserTie /> },
+    { key: "service", label: "کارکنان خدماتی", icon: <FaUserShield /> },
   ];
 
   const getPersonnelCount = (section, level) => {
     const key = `${section}_${level}`;
-    return personnelData && personnelData[key] !== undefined ? personnelData[key] : '0';
+    return personnelData && personnelData[key] !== undefined
+      ? personnelData[key]
+      : "0";
+  };
+
+  const translateStatus = (status) => {
+    if (!status) return "ثبت نشده";
+    const statusMap = {
+      excellent: "عالی",
+      good: "خوب",
+      average: "متوسط",
+      poor: "ضعیف",
+    };
+    return statusMap[status.toLowerCase()] || status;
   };
   return (
     <>
-      <div className="review-submit-container" dir="rtl">
+      <div className={`review-submit-container ${theme}`} dir="rtl">
         <motion.div
-          className="review-card"
+          ref={printRef}
+          className="review-card print-section"
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
+          <div
+            className="no-print"
+            style={{ textAlign: "left", marginBottom: "1.5rem" }}
+          >
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<FaPrint />}
+              onClick={handlePrint}
+              style={{ backgroundColor: "#0dcaf0", color: "white" }}
+            >
+              چاپ فرم
+            </Button>
+          </div>
           <motion.div
             className="icon-wrapper"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 220, damping: 20 }}
+            transition={{
+              delay: 0.2,
+              type: "spring",
+              stiffness: 220,
+              damping: 20,
+            }}
           >
             <FaCheckCircle className="icon" />
           </motion.div>
-          
+
           <h2 className="title">درخواست شما با موفقیت ثبت شد</h2>
-          
+
           <p className="description">
-            از شما سپاسگزاریم. درخواست اعتباردهی شما برای بررسی ارسال شده است. نتیجه از طریق ایمیل به شما اطلاع داده خواهد شد.
+            از شما سپاسگزاریم. درخواست اعتباردهی شما برای بررسی ارسال شده است.
+            نتیجه از طریق ایمیل به شما اطلاع داده خواهد شد.
           </p>
 
           {formData && (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -303,33 +511,33 @@ const ReviewAndSubmit = ({ formData }) => {
                   <tbody>
                     <tr>
                       <th>نام مرکز</th>
-                      <td>{formData.centerName || 'ثبت نشده'}</td>
+                      <td>{formData.centerName || "ثبت نشده"}</td>
                       <th>ولایت</th>
-                      <td>{formData.province || 'ثبت نشده'}</td>
+                      <td>{formData.province || "ثبت نشده"}</td>
                     </tr>
                     <tr>
                       <th>ولسوالی</th>
-                      <td>{formData.district || 'ثبت نشده'}</td>
+                      <td>{formData.district || "ثبت نشده"}</td>
                       <th>قریه/گذر</th>
-                      <td>{formData.village || 'ثبت نشده'}</td>
+                      <td>{formData.village || "ثبت نشده"}</td>
                     </tr>
                     <tr>
                       <th>نوع مرکز</th>
-                      <td>{formData.centerType || 'ثبت نشده'}</td>
+                      <td>{formData.centerType || "ثبت نشده"}</td>
                       <th>نوع برنامه</th>
-                      <td>{formData.programType || 'ثبت نشده'}</td>
+                      <td>{formData.programType || "ثبت نشده"}</td>
                     </tr>
                     <tr>
                       <th>سال تاسیس</th>
-                      <td>{formData.foundingYear || 'ثبت نشده'}</td>
+                      <td>{formData.foundingYear || "ثبت نشده"}</td>
                       <th>نام مسئول</th>
-                      <td>{formData.contactName || 'ثبت نشده'}</td>
+                      <td>{formData.contactName || "ثبت نشده"}</td>
                     </tr>
                     <tr>
                       <th>شماره تماس</th>
-                      <td>{formData.phoneNumber || 'ثبت نشده'}</td>
+                      <td>{formData.phoneNumber || "ثبت نشده"}</td>
                       <th>ایمیل</th>
-                      <td>{formData.email || 'ثبت نشده'}</td>
+                      <td>{formData.email || "ثبت نشده"}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -348,7 +556,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>{error}</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -363,19 +571,19 @@ const ReviewAndSubmit = ({ formData }) => {
                   <thead>
                     <tr>
                       <th>نوع پرسونل</th>
-                      {educationLevels.map(level => (
+                      {educationLevels.map((level) => (
                         <th key={level.key}>{level.label}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {personnelSections.map(section => (
+                    {personnelSections.map((section) => (
                       <tr key={section.key}>
                         <td className="personnel-type">
                           <span className="personnel-icon">{section.icon}</span>
                           {section.label}
                         </td>
-                        {educationLevels.map(level => (
+                        {educationLevels.map((level) => (
                           <td key={`${section.key}-${level.key}`}>
                             {getPersonnelCount(section.key, level.key)}
                           </td>
@@ -394,42 +602,44 @@ const ReviewAndSubmit = ({ formData }) => {
               <div className="spinner"></div>
               <p>در حال بارگیری اطلاعات شاگردان...</p>
             </div>
-          ) : studentData.length > 0 && (
-            <motion.div 
-              className="review-info-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="review-info-header">
-                <FaUserGraduate className="info-icon" />
-                <h3>اطلاعات شاگردان</h3>
-              </div>
-              <div className="table-responsive">
-                <table className="info-table">
-                  <thead>
-                    <tr>
-                      <th>نام رشته</th>
-                      <th>شمولات جدید</th>
-                      <th>مجموع شاگردان</th>
-                      <th>دوران فارغ‌تحصیلی</th>
-                      <th>سال تأسیس</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentData.map((student, index) => (
-                      <tr key={index}>
-                        <td className="text-right">{student.name || '-'}</td>
-                        <td>{student.newEnrollments || '0'}</td>
-                        <td>{student.totalStudents || '0'}</td>
-                        <td>{student.graduationCycles || '-'}</td>
-                        <td>{student.establishmentYear || '-'}</td>
+          ) : (
+            studentData.length > 0 && (
+              <motion.div
+                className="review-info-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="review-info-header">
+                  <FaUserGraduate className="info-icon" />
+                  <h3>اطلاعات شاگردان</h3>
+                </div>
+                <div className="table-responsive">
+                  <table className="info-table">
+                    <thead>
+                      <tr>
+                        <th>نام رشته</th>
+                        <th>شمولات جدید</th>
+                        <th>مجموع شاگردان</th>
+                        <th>دوران فارغ‌تحصیلی</th>
+                        <th>سال تأسیس</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
+                    </thead>
+                    <tbody>
+                      {studentData.map((student, index) => (
+                        <tr key={index}>
+                          <td className="text-right">{student.name || "-"}</td>
+                          <td>{student.newEnrollments || "0"}</td>
+                          <td>{student.totalStudents || "0"}</td>
+                          <td>{student.graduationCycles || "-"}</td>
+                          <td>{student.establishmentYear || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )
           )}
 
           {/* Laylia Data Section */}
@@ -438,38 +648,40 @@ const ReviewAndSubmit = ({ formData }) => {
               <div className="spinner"></div>
               <p>در حال بارگیری اطلاعات لیلیه...</p>
             </div>
-          ) : layliaData.length > 0 && (
-            <motion.div 
-              className="review-info-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="review-info-header">
-                <FaUserGraduate className="info-icon" />
-                <h3>اطلاعات لیلیه</h3>
-              </div>
-              <div className="table-responsive">
-                <table className="info-table">
-                  <thead>
-                    <tr>
-                      <th>نام رشته</th>
-                      <th>شمولات جدید</th>
-                      <th>مجموع شاگردان</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {layliaData.map((item, index) => (
-                      <tr key={index}>
-                        <td className="text-right">{item.name || '-'}</td>
-                        <td>{item.newEnrollments || '0'}</td>
-                        <td>{item.totalStudents || '0'}</td>
+          ) : (
+            layliaData.length > 0 && (
+              <motion.div
+                className="review-info-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="review-info-header">
+                  <FaUserGraduate className="info-icon" />
+                  <h3>اطلاعات لیلیه</h3>
+                </div>
+                <div className="table-responsive">
+                  <table className="info-table">
+                    <thead>
+                      <tr>
+                        <th>نام رشته</th>
+                        <th>شمولات جدید</th>
+                        <th>مجموع شاگردان</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
+                    </thead>
+                    <tbody>
+                      {layliaData.map((item, index) => (
+                        <tr key={index}>
+                          <td className="text-right">{item.name || "-"}</td>
+                          <td>{item.newEnrollments || "0"}</td>
+                          <td>{item.totalStudents || "0"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )
           )}
 
           {/* Vision & Mission Section */}
@@ -479,7 +691,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات دیدگاه و ماموریت...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -493,19 +705,19 @@ const ReviewAndSubmit = ({ formData }) => {
                 <div className="vision-mission-item">
                   <h4>دیدگاه:</h4>
                   <div className="vision-mission-content">
-                    {visionMissionData.vision || 'ثبت نشده'}
+                    {visionMissionData.vision || "ثبت نشده"}
                   </div>
                 </div>
                 <div className="vision-mission-item">
                   <h4>ماموریت:</h4>
                   <div className="vision-mission-content">
-                    {visionMissionData.mission || 'ثبت نشده'}
+                    {visionMissionData.mission || "ثبت نشده"}
                   </div>
                 </div>
                 <div className="vision-mission-item">
                   <h4>اهداف استراتیژیک:</h4>
                   <div className="vision-mission-content">
-                    {visionMissionData.strategicGoals || 'ثبت نشده'}
+                    {visionMissionData.strategicGoals || "ثبت نشده"}
                   </div>
                 </div>
               </div>
@@ -519,7 +731,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات معیارها و استانداردها...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -536,7 +748,9 @@ const ReviewAndSubmit = ({ formData }) => {
                       <div key={standard.id} className="standard-item">
                         <div className="standard-header">
                           <span className="standard-number">{index + 1}.</span>
-                          <h4 className="standard-title">{standard.standard_title || 'بدون عنوان'}</h4>
+                          <h4 className="standard-title">
+                            {standard.standard_title || "بدون عنوان"}
+                          </h4>
                         </div>
                         {standard.description && (
                           <div className="standard-description">
@@ -544,14 +758,14 @@ const ReviewAndSubmit = ({ formData }) => {
                           </div>
                         )}
                         <div className="standard-file">
-                          <a 
-                            href={`http://localhost:5000${standard.file_path}`} 
-                            target="_blank" 
+                          <a
+                            href={`http://localhost:5000${standard.file_path}`}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="file-link"
                           >
                             <FaFilePdf className="file-icon" />
-                            {standard.original_file_name || 'فایل پیوستی'}
+                            {standard.original_file_name || "فایل پیوستی"}
                           </a>
                         </div>
                       </div>
@@ -574,7 +788,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات رشته‌ها...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -603,13 +817,24 @@ const ReviewAndSubmit = ({ formData }) => {
                           // Map the API response fields to the expected field names
                           const department = {
                             id: dept.id,
-                            name: dept.department_name || dept.name || 'ثبت نشده',
-                            establishmentYear: dept.establishment_year || dept.establishmentYear || 'ثبت نشده',
-                            newEnrollments: dept.new_enrollments || dept.newEnrollments || '0',
-                            totalStudents: dept.total_students || dept.totalStudents || '0',
-                            graduationCycles: dept.graduation_cycles || dept.graduationCycles || 'ثبت نشده'
+                            name:
+                              dept.department_name || dept.name || "ثبت نشده",
+                            establishmentYear:
+                              dept.establishment_year ||
+                              dept.establishmentYear ||
+                              "ثبت نشده",
+                            newEnrollments:
+                              dept.new_enrollments ||
+                              dept.newEnrollments ||
+                              "0",
+                            totalStudents:
+                              dept.total_students || dept.totalStudents || "0",
+                            graduationCycles:
+                              dept.graduation_cycles ||
+                              dept.graduationCycles ||
+                              "ثبت نشده",
                           };
-                          
+
                           return (
                             <tr key={department.id}>
                               <td>{index + 1}</td>
@@ -641,7 +866,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات امکانات آکادمیک...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -668,10 +893,12 @@ const ReviewAndSubmit = ({ formData }) => {
                         {academyFacilities.map((facility, index) => (
                           <tr key={facility.id}>
                             <td>{index + 1}</td>
-                            <td>{facility.name || 'ثبت نشده'}</td>
-                            <td>{facility.basic_facilities || 'ثبت نشده'}</td>
-                            <td>{facility.equipment_count || '0'}</td>
-                            <td>{facility.equipment_status || 'ثبت نشده'}</td>
+                            <td>{facility.name || "ثبت نشده"}</td>
+                            <td>{facility.basic_facilities || "ثبت نشده"}</td>
+                            <td>{facility.equipment_count || "0"}</td>
+                            <td>
+                              {translateStatus(facility.equipment_status)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -694,7 +921,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات امکانات صنفی...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -721,10 +948,12 @@ const ReviewAndSubmit = ({ formData }) => {
                         {classFacilities.map((facility, index) => (
                           <tr key={facility.id}>
                             <td>{index + 1}</td>
-                            <td>{facility.name || 'ثبت نشده'}</td>
-                            <td>{facility.equipment_name || 'ثبت نشده'}</td>
-                            <td>{facility.equipment_count || '0'}</td>
-                            <td>{facility.equipment_status || 'ثبت نشده'}</td>
+                            <td>{facility.name || "ثبت نشده"}</td>
+                            <td>{facility.equipment_name || "ثبت نشده"}</td>
+                            <td>{facility.equipment_count || "0"}</td>
+                            <td>
+                              {translateStatus(facility.equipment_status)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -747,7 +976,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات امکانات عملی...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -774,10 +1003,12 @@ const ReviewAndSubmit = ({ formData }) => {
                         {practicalFacilities.map((facility, index) => (
                           <tr key={facility.id}>
                             <td>{index + 1}</td>
-                            <td>{facility.name || 'ثبت نشده'}</td>
-                            <td>{facility.equipment_name || 'ثبت نشده'}</td>
-                            <td>{facility.equipment_count || '0'}</td>
-                            <td>{facility.equipment_status || 'ثبت نشده'}</td>
+                            <td>{facility.name || "ثبت نشده"}</td>
+                            <td>{facility.equipment_name || "ثبت نشده"}</td>
+                            <td>{facility.equipment_count || "0"}</td>
+                            <td>
+                              {translateStatus(facility.equipment_status)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -800,7 +1031,7 @@ const ReviewAndSubmit = ({ formData }) => {
               <p>در حال بارگیری اطلاعات مشارکت ذینفعان...</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               className="review-info-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -828,19 +1059,20 @@ const ReviewAndSubmit = ({ formData }) => {
           )}
 
           <motion.div
-            className="alert-info"
+            className="alert-info no-print"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
             <FaEnvelope className="alert-icon" />
             <div>
-              لطفاً منتظر بمانید. بررسی درخواست شما ممکن است چند روز کاری طول بکشد.
+              لطفاً منتظر بمانید. بررسی درخواست شما ممکن است چند روز کاری طول
+              بکشد.
             </div>
           </motion.div>
 
           <motion.div
-            className="support-section"
+            className="support-section no-print"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -862,20 +1094,39 @@ const ReviewAndSubmit = ({ formData }) => {
           align-items: center;
           justify-content: center;
           padding: 2rem;
-          background-color: #121212;
           min-height: 60vh;
           font-family: sans-serif;
+          transition: background-color 0.3s ease;
+        }
+
+        .review-submit-container.dark {
+          background-color: #121212;
+        }
+
+        .review-submit-container.light {
+          background-color: #f8f9fa;
         }
 
         .review-card {
-          background: #1d1d1d;
-          border: 1px solid rgba(13, 202, 240, 0.2);
           border-radius: 20px;
           padding: 2.5rem;
           width: 100%;
           text-align: center;
+          transition: all 0.3s ease;
+        }
+
+        .dark .review-card {
+          background: #1d1d1d;
+          border: 1px solid rgba(13, 202, 240, 0.2);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
           color: #eee;
+        }
+
+        .light .review-card {
+          background: #ffffff;
+          border: 1px solid rgba(13, 202, 240, 0.3);
+          box-shadow: 0 20px 40px rgba(13, 202, 240, 0.1);
+          color: #333;
         }
 
         .icon-wrapper {
@@ -911,21 +1162,37 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .review-info-card {
-          background: rgba(13, 202, 240, 0.05);
-          border: 1px solid rgba(13, 202, 240, 0.1);
           border-radius: 12px;
           padding: 1.5rem;
           margin: 1.5rem 0;
           text-align: right;
           direction: rtl;
+          transition: all 0.3s ease;
+        }
+
+        .dark .review-info-card {
+          background: rgba(13, 202, 240, 0.05);
+          border: 1px solid rgba(13, 202, 240, 0.1);
+        }
+
+        .light .review-info-card {
+          background: rgba(13, 202, 240, 0.08);
+          border: 1px solid rgba(13, 202, 240, 0.2);
         }
 
         .review-info-header {
           display: flex;
           align-items: center;
           margin-bottom: 1.5rem;
-          color: #0dcaf0;
           gap: 0.5rem;
+        }
+
+        .dark .review-info-header {
+          color: #0dcaf0;
+        }
+
+        .light .review-info-header {
+          color: #0a6ebd;
         }
 
         .review-info-header h3 {
@@ -942,9 +1209,18 @@ const ReviewAndSubmit = ({ formData }) => {
           overflow-x: auto;
           margin: 1.5rem 0;
           border-radius: 12px;
+          padding: 1rem;
+          transition: all 0.3s ease;
+        }
+
+        .dark .table-responsive {
           border: 1px solid rgba(13, 202, 240, 0.2);
           background: rgba(13, 202, 240, 0.05);
-          padding: 1rem;
+        }
+
+        .light .table-responsive {
+          border: 1px solid rgba(13, 202, 240, 0.3);
+          background: rgba(13, 202, 240, 0.08);
         }
 
         .info-table {
@@ -979,14 +1255,23 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .info-table th {
-          background-color: rgba(13, 202, 240, 0.1);
-          color: #0dcaf0;
           font-weight: 600;
           white-space: nowrap;
           padding: 12px 8px;
           position: sticky;
           top: 0;
           z-index: 1;
+          transition: all 0.3s ease;
+        }
+
+        .dark .info-table th {
+          background-color: rgba(13, 202, 240, 0.1);
+          color: #0dcaf0;
+        }
+
+        .light .info-table th {
+          background-color: rgba(13, 202, 240, 0.15);
+          color: #0a6ebd;
         }
 
         .info-table th:first-child {
@@ -998,21 +1283,42 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .info-table td {
-          color: #f0f0f0;
-          background-color: rgba(255, 255, 255, 0.02);
           min-width: 60px;
+          transition: all 0.3s ease;
         }
 
-        .info-table tbody tr:nth-child(odd) {
+        .dark .info-table td {
+          color: #f0f0f0;
           background-color: rgba(255, 255, 255, 0.02);
         }
+
+        .light .info-table td {
+          color: #333;
+          background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .dark .info-table tbody tr:nth-child(odd) {
+          background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .light .info-table tbody tr:nth-child(odd) {
+          background-color: rgba(255, 255, 255, 0.9);
+        }
         
-        .info-table tbody tr:nth-child(even) {
+        .dark .info-table tbody tr:nth-child(even) {
           background-color: rgba(13, 202, 240, 0.02);
         }
 
-        .info-table tbody tr:hover td {
+        .light .info-table tbody tr:nth-child(even) {
+          background-color: rgba(13, 202, 240, 0.05);
+        }
+
+        .dark .info-table tbody tr:hover td {
           background-color: rgba(13, 202, 240, 0.08);
+        }
+
+        .light .info-table tbody tr:hover td {
+          background-color: rgba(13, 202, 240, 0.12);
         }
         
         .info-table tbody tr:hover td:first-child {
@@ -1040,18 +1346,35 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .vision-mission-item h4 {
-          color: #0dcaf0;
           margin-bottom: 0.5rem;
           font-size: 1.1rem;
+          transition: color 0.3s ease;
+        }
+
+        .dark .vision-mission-item h4 {
+          color: #0dcaf0;
+        }
+
+        .light .vision-mission-item h4 {
+          color: #0a6ebd;
         }
 
         .vision-mission-content {
-          background: rgba(13, 202, 240, 0.05);
-          border: 1px solid rgba(13, 202, 240, 0.1);
           border-radius: 8px;
           padding: 1rem;
           line-height: 1.6;
           white-space: pre-wrap;
+          transition: all 0.3s ease;
+        }
+
+        .dark .vision-mission-content {
+          background: rgba(13, 202, 240, 0.05);
+          border: 1px solid rgba(13, 202, 240, 0.1);
+        }
+
+        .light .vision-mission-content {
+          background: rgba(13, 202, 240, 0.08);
+          border: 1px solid rgba(13, 202, 240, 0.2);
         }
 
         .vision-mission-content:empty::before {
@@ -1073,11 +1396,19 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .standard-item {
-          background: rgba(13, 202, 240, 0.03);
-          border: 1px solid rgba(13, 202, 240, 0.1);
           border-radius: 12px;
           padding: 1.25rem;
           transition: all 0.3s ease;
+        }
+
+        .dark .standard-item {
+          background: rgba(13, 202, 240, 0.03);
+          border: 1px solid rgba(13, 202, 240, 0.1);
+        }
+
+        .light .standard-item {
+          background: rgba(13, 202, 240, 0.06);
+          border: 1px solid rgba(13, 202, 240, 0.2);
         }
 
         .standard-item:hover {
@@ -1107,15 +1438,31 @@ const ReviewAndSubmit = ({ formData }) => {
 
         .standard-title {
           margin: 0;
-          color: #0dcaf0;
           font-size: 1.1rem;
+          transition: color 0.3s ease;
+        }
+
+        .dark .standard-title {
+          color: #0dcaf0;
+        }
+
+        .light .standard-title {
+          color: #0a6ebd;
         }
 
         .standard-description {
-          color: #ffffff;
           line-height: 1.7;
           margin-bottom: 1rem;
           white-space: pre-line;
+          transition: color 0.3s ease;
+        }
+
+        .dark .standard-description {
+          color: #ffffff;
+        }
+
+        .light .standard-description {
+          color: #333;
         }
 
         .standard-file {
@@ -1184,9 +1531,19 @@ const ReviewAndSubmit = ({ formData }) => {
           width: 100%;
           border-collapse: collapse;
           margin-top: 1rem;
-          background: rgba(13, 202, 240, 0.03);
           border-radius: 12px;
           overflow: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .dark .departments-table,
+        .dark .facilities-table {
+          background: rgba(13, 202, 240, 0.03);
+        }
+
+        .light .departments-table,
+        .light .facilities-table {
+          background: rgba(13, 202, 240, 0.06);
         }
 
         .departments-table th,
@@ -1200,15 +1557,31 @@ const ReviewAndSubmit = ({ formData }) => {
 
         .departments-table th,
         .facilities-table th {
-          background: rgba(13, 202, 240, 0.1);
-          color: #0dcaf0;
           font-weight: 600;
           white-space: nowrap;
+          transition: all 0.3s ease;
         }
 
-        .departments-table tbody tr:hover,
-        .facilities-table tbody tr:hover {
+        .dark .departments-table th,
+        .dark .facilities-table th {
+          background: rgba(13, 202, 240, 0.1);
+          color: #0dcaf0;
+        }
+
+        .light .departments-table th,
+        .light .facilities-table th {
+          background: rgba(13, 202, 240, 0.15);
+          color: #0a6ebd;
+        }
+
+        .dark .departments-table tbody tr:hover,
+        .dark .facilities-table tbody tr:hover {
           background: rgba(13, 202, 240, 0.05);
+        }
+
+        .light .departments-table tbody tr:hover,
+        .light .facilities-table tbody tr:hover {
+          background: rgba(13, 202, 240, 0.12);
         }
 
         .departments-table tbody tr:last-child td,
@@ -1276,10 +1649,20 @@ const ReviewAndSubmit = ({ formData }) => {
           padding: 1rem;
           margin-bottom: 2rem;
           border-radius: 12px;
+          text-align: right;
+          transition: all 0.3s ease;
+        }
+
+        .dark .alert-info {
           background: rgba(13, 202, 240, 0.08);
           border: 1px solid rgba(13, 202, 240, 0.15);
           color: #a9e5ff;
-          text-align: right;
+        }
+
+        .light .alert-info {
+          background: rgba(13, 202, 240, 0.12);
+          border: 1px solid rgba(13, 202, 240, 0.25);
+          color: #0a6ebd;
         }
 
         .alert-icon {
@@ -1291,7 +1674,15 @@ const ReviewAndSubmit = ({ formData }) => {
 
         .support-section {
           padding-top: 1.5rem;
+          transition: border-color 0.3s ease;
+        }
+
+        .dark .support-section {
           border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light .support-section {
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .support-header {
@@ -1311,12 +1702,28 @@ const ReviewAndSubmit = ({ formData }) => {
           margin-bottom: 0;
           font-size: 1.1rem;
           font-weight: 600;
+          transition: color 0.3s ease;
+        }
+
+        .dark .support-title {
           color: #eee;
+        }
+
+        .light .support-title {
+          color: #333;
         }
 
         .support-text {
           font-size: 0.95rem;
+          transition: color 0.3s ease;
+        }
+
+        .dark .support-text {
           color: rgba(255, 255, 255, 0.7);
+        }
+
+        .light .support-text {
+          color: rgba(0, 0, 0, 0.6);
         }
       `}</style>
     </>
