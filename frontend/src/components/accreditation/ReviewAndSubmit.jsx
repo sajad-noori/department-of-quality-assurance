@@ -1192,7 +1192,7 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .light .review-info-header {
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .review-info-header h3 {
@@ -1271,7 +1271,7 @@ const ReviewAndSubmit = ({ formData }) => {
 
         .light .info-table th {
           background-color: rgba(13, 202, 240, 0.15);
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .info-table th:first-child {
@@ -1356,7 +1356,7 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .light .vision-mission-item h4 {
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .vision-mission-content {
@@ -1447,7 +1447,7 @@ const ReviewAndSubmit = ({ formData }) => {
         }
 
         .light .standard-title {
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .standard-description {
@@ -1571,7 +1571,7 @@ const ReviewAndSubmit = ({ formData }) => {
         .light .departments-table th,
         .light .facilities-table th {
           background: rgba(13, 202, 240, 0.15);
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .dark .departments-table tbody tr:hover,
@@ -1662,7 +1662,7 @@ const ReviewAndSubmit = ({ formData }) => {
         .light .alert-info {
           background: rgba(13, 202, 240, 0.12);
           border: 1px solid rgba(13, 202, 240, 0.25);
-          color: #0a6ebd;
+          color: #0dcaf0;
         }
 
         .alert-icon {
