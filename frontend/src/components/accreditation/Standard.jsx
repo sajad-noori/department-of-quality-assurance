@@ -464,7 +464,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         .standard-form {
           background: rgba(255, 255, 255, 0.05);
           border-radius: 20px;
-          padding: 2rem;
+          padding: clamp(1rem, 3.5vw, 2rem);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -484,7 +484,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1rem, 1.8vw + 0.2rem, 1.3rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -495,12 +495,12 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.1rem, 2.2vw, 1.6rem);
         }
         
         .form-description {
           color: #a9e5ff;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           line-height: 1.6;
           max-width: 800px;
           margin: 0 auto;
@@ -560,7 +560,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         .form-section {
           background: rgba(13, 202, 240, 0.05);
           border-radius: 16px;
-          padding: 1.5rem;
+          padding: clamp(1rem, 3vw, 1.5rem);
           border: 1px solid rgba(13, 202, 240, 0.1);
           margin-bottom: 1.5rem;
         }
@@ -570,7 +570,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .form-label {
-          font-size: 0.9rem;
+          font-size: clamp(0.8rem, 0.9vw + 0.1rem, 0.95rem);
           font-weight: 600;
           color: #a9e5ff;
           display: flex;
@@ -595,7 +595,7 @@ function Standard({ value, onChange, onStepSubmit }) {
           border: 2px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           color: #f0f0f0;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
           resize: vertical;
@@ -641,7 +641,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .upload-title {
-          font-size: 1.2rem;
+          font-size: clamp(1rem, 1.6vw + 0.2rem, 1.2rem);
           font-weight: 600;
           color: #0dcaf0;
           margin-bottom: 0.5rem;
@@ -651,19 +651,19 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .upload-icon {
-          font-size: 1.3rem;
+          font-size: clamp(1rem, 1.4vw + 0.2rem, 1.2rem);
         }
         
         .upload-description {
           color: #a9e5ff;
-          font-size: 0.9rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           margin-bottom: 1rem;
         }
         
         .upload-area {
           border: 2px dashed rgba(13, 202, 240, 0.3);
           border-radius: 12px;
-          padding: 2rem;
+          padding: clamp(1.25rem, 3.5vw, 2rem);
           text-align: center;
           transition: all 0.3s ease;
           cursor: pointer;
@@ -685,20 +685,20 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .upload-icon-large {
-          font-size: 3rem !important;
+          font-size: clamp(2rem, 4vw + 0.5rem, 3rem) !important;
           color: #0dcaf0;
           margin-bottom: 0.5rem;
         }
         
         .upload-text {
-          font-size: 1.1rem;
+          font-size: clamp(0.95rem, 1.4vw + 0.2rem, 1.1rem);
           font-weight: 600;
           color: #f0f0f0;
           margin: 0;
         }
         
         .upload-hint {
-          font-size: 0.85rem;
+          font-size: clamp(0.8rem, 0.9vw + 0.1rem, 0.9rem);
           color: #a9e5ff;
           margin: 0;
         }
@@ -724,7 +724,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .temp-files-title {
-          font-size: 1rem;
+          font-size: clamp(0.9rem, 1vw + 0.1rem, 1rem);
           font-weight: 600;
           color: #a9e5ff;
           margin-bottom: 1rem;
@@ -743,7 +743,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .file-size {
-          font-size: 0.8rem;
+          font-size: clamp(0.75rem, 0.8vw + 0.1rem, 0.85rem);
           color: #a9e5ff;
         }
         
@@ -765,8 +765,8 @@ function Standard({ value, onChange, onStepSubmit }) {
         
         .submit-button {
           position: relative;
-          padding: 1rem 2.5rem;
-          font-size: 1.1rem;
+          padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1.25rem, 4vw, 2.5rem);
+          font-size: clamp(0.95rem, 1vw + 0.1rem, 1.05rem);
           font-weight: 700;
           background: linear-gradient(135deg, #0dcaf0, #00b5d7);
           color: #030305;
@@ -824,7 +824,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .section-title {
-          font-size: 1.3rem;
+          font-size: clamp(1rem, 1.6vw + 0.3rem, 1.3rem);
           font-weight: 600;
           color: #0dcaf0;
           margin: 0;
@@ -834,7 +834,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         .section-icon {
-          font-size: 1.4rem;
+          font-size: clamp(1.05rem, 1.6vw + 0.2rem, 1.2rem);
         }
         
         .file-count {
@@ -910,27 +910,46 @@ function Standard({ value, onChange, onStepSubmit }) {
         }
         
         @media (max-width: 768px) {
-          .standard-form {
-            padding: 1rem;
-          }
-          
-          .form-title {
-            font-size: 1.5rem;
-          }
-          
-          .upload-area {
-            padding: 1.5rem;
-          }
-          
-          .upload-icon-large {
-            font-size: 2.5rem !important;
-          }
+          .standard-form { padding: clamp(0.75rem, 2.5vw, 1rem); border-radius: 12px; }
+          .form-title { font-size: 1.05rem; }
+          .form-description { font-size: 0.9rem; }
+          .form-section { padding: clamp(0.75rem, 2.5vw, 1rem); }
+          .upload-area { padding: clamp(0.75rem, 2.5vw, 1.25rem); }
+          .upload-icon-large { font-size: 1.9rem !important; }
+          .upload-button { padding: 0.55rem 1rem !important; font-size: 0.9rem !important; }
+          .submit-button { min-width: 160px; padding: 0.7rem 1.25rem; font-size: 0.95rem; }
           
           .files-table th,
           .files-table td {
-            padding: 0.75rem 0.5rem;
-            font-size: 0.9rem;
+            padding: 0.6rem 0.4rem;
+            font-size: 0.8rem;
           }
+        }
+
+        /* Extra-small devices */
+        @media (max-width: 480px) {
+          .standard-form { padding: 0.75rem; }
+          .form-title { font-size: 1rem; }
+          .form-icon { font-size: 1rem; }
+          .form-description { font-size: 0.85rem; }
+          .form-label { font-size: 0.8rem; }
+          .form-input { font-size: 0.82rem; padding: 0.6rem 0.75rem; }
+          textarea.form-input { height: 180px; }
+          .upload-title { font-size: 0.95rem; }
+          .upload-text { font-size: 0.9rem; }
+          .upload-hint { font-size: 0.75rem; }
+          .upload-button { padding: 0.5rem 0.9rem !important; font-size: 0.85rem !important; }
+          .submit-button { font-size: 0.85rem; padding: 0.65rem 1rem; min-width: 140px; }
+        }
+
+        @media (max-width: 360px) {
+          .form-title { font-size: 0.9rem; }
+          .form-description { font-size: 0.8rem; }
+          .form-label { font-size: 0.75rem; }
+          .form-input { font-size: 0.78rem; }
+          textarea.form-input { height: 150px; }
+          .upload-title { font-size: 0.9rem; }
+          .submit-button { font-size: 0.8rem; padding: 0.6rem 0.9rem; min-width: 130px; }
         }
         ${theme === 'light' ? `
         .standard-form {

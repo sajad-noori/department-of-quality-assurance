@@ -260,9 +260,12 @@ const VideoGallery = () => {
           backdrop-filter: blur(10px);
         }
         
-        .search-input::placeholder {
-          color: #888;
-        }
+        /* Placeholder baseline */
+        .search-input::placeholder { color: #888; font-size: 0.95rem; }
+        .search-input::-webkit-input-placeholder { color: #888; font-size: 0.95rem; }
+        .search-input::-moz-placeholder { color: #888; font-size: 0.95rem; }
+        .search-input:-ms-input-placeholder { color: #888; font-size: 0.95rem; }
+        .search-input:-moz-placeholder { color: #888; font-size: 0.95rem; }
         
         .search-input:focus {
           border-color: #00d4ff;
@@ -512,6 +515,51 @@ const VideoGallery = () => {
             flex-direction: column;
             gap: 0.5rem;
           }
+        }
+
+        /* Mobile polish */
+        @media (max-width: 576px) {
+          .container { padding: 0.75rem; }
+          .page-header { margin-bottom: 1.5rem; }
+          .page-title { font-size: 1.6rem; margin-bottom: 0.25rem; }
+          .page-subtitle { font-size: 0.95rem; }
+
+          .search-container { margin-bottom: 1.25rem; }
+          .search-input {
+            padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+            font-size: 0.95rem;
+            border-radius: 10px;
+          }
+          /* Smaller placeholder on mobile */
+          .search-input::placeholder { font-size: 0.85rem; }
+          .search-input::-webkit-input-placeholder { font-size: 0.85rem; }
+          .search-input::-moz-placeholder { font-size: 0.85rem; }
+          .search-input:-ms-input-placeholder { font-size: 0.85rem; }
+          .search-input:-moz-placeholder { font-size: 0.85rem; }
+          .search-icon { left: 0.75rem; font-size: 1rem; }
+
+          .grid { gap: 1rem; }
+          .video-card { border-radius: 12px; }
+          .video-thumbnail { height: 160px; }
+          .play-button { width: 50px; height: 50px; box-shadow: 0 3px 14px rgba(0,212,255,0.45); }
+
+          .video-info { padding: 0.9rem; }
+          .video-title { font-size: 0.98rem; line-height: 1.35; margin-bottom: 0.35rem; }
+          .video-description { font-size: 0.86rem; line-height: 1.45; margin-bottom: 0.6rem; -webkit-line-clamp: 2; }
+          .video-meta { font-size: 0.75rem; }
+          .video-category { padding: 0.2rem 0.55rem; gap: 0.25rem; border-radius: 999px; font-weight: 600; }
+
+          .pagination { margin-top: 1.5rem; gap: 0.5rem; }
+          .pagination button, .pagination .page-info {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+            text-align: center;
+          }
+
+          .no-results { padding: 2rem 1rem; font-size: 1rem; }
+          .loading-container { height: 40vh; }
+          .loading-spinner { width: 42px; height: 42px; }
         }
       `}</style>
       <div className={theme === "light" ? "light-container" : "dark-container"}>

@@ -433,7 +433,7 @@ const Laylia = () => {
         .laylia-form {
           background: rgba(255, 255, 255, 0.05);
           border-radius: 20px;
-          padding: 2rem;
+          padding: clamp(1rem, 3.5vw, 2rem);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -453,7 +453,7 @@ const Laylia = () => {
         }
 
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.1rem, 2.2vw + 0.3rem, 1.6rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -464,7 +464,7 @@ const Laylia = () => {
         }
 
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.1rem, 2.2vw, 1.6rem);
         }
 
         .entries-badge {
@@ -475,7 +475,7 @@ const Laylia = () => {
           color: #030305;
           padding: 0.5rem 1rem;
           border-radius: 25px;
-          font-size: 0.9rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           font-weight: 600;
           box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
         }
@@ -545,7 +545,7 @@ const Laylia = () => {
         }
 
         .section-title {
-          font-size: 1.2rem;
+          font-size: clamp(1rem, 1.6vw + 0.2rem, 1.2rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -555,7 +555,7 @@ const Laylia = () => {
         }
 
         .section-icon {
-          font-size: 1.3rem;
+          font-size: clamp(1rem, 1.4vw + 0.2rem, 1.2rem);
         }
 
         .form-grid {
@@ -572,7 +572,7 @@ const Laylia = () => {
         }
 
         .form-label {
-          font-size: 0.9rem;
+          font-size: clamp(0.8rem, 0.9vw + 0.1rem, 0.95rem);
           font-weight: 600;
           color: #a9e5ff;
           display: flex;
@@ -600,7 +600,7 @@ const Laylia = () => {
           border: 2px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           color: #f0f0f0;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
         }
@@ -665,8 +665,8 @@ const Laylia = () => {
 
         .submit-button {
           position: relative;
-          padding: 1rem 2.5rem;
-          font-size: 1.1rem;
+          padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1.25rem, 4vw, 2.5rem);
+          font-size: clamp(0.95rem, 1vw + 0.1rem, 1.05rem);
           font-weight: 700;
           background: linear-gradient(135deg, #0dcaf0, #00b5d7);
           color: #030305;
@@ -818,11 +818,11 @@ const Laylia = () => {
 
         @media (max-width: 768px) {
           .laylia-form {
-            padding: 1.5rem;
+            padding: clamp(1rem, 3vw, 1.5rem);
           }
 
           .form-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
           }
 
           .form-grid {
@@ -830,8 +830,8 @@ const Laylia = () => {
           }
 
           .submit-button {
-            padding: 0.9rem 2rem;
-            font-size: 1rem;
+            padding: 0.85rem 1.4rem;
+            font-size: 0.95rem;
           }
 
           .data-table {

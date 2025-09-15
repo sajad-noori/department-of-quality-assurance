@@ -26,8 +26,8 @@ const toPersianNumbers = (str) => {
   return str.toString().replace(/[0-9]/g, (w) => persianNumbers[w]);
 };
 
-// Truncate text with Persian ellipsis
-const truncatePersianText = (text, maxLength = 80) => {
+// Truncate description text with Persian ellipsis
+const truncatePersianText = (text, maxLength = 100) => {
   if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
@@ -143,7 +143,7 @@ const NewsSection = () => {
             {/* See All News Button */}
             <div className="view-all-container">
               <Link to="/public-news" className="view-all-link" aria-label="مشاهده همه اخبار">
-                مشاهده همه اخبار
+                <span className="view-all-text">مشاهده همه اخبار</span>
                 <FaArrowLeft className="arrow" />
               </Link>
             </div>

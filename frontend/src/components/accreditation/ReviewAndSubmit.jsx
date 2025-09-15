@@ -1725,6 +1725,61 @@ const ReviewAndSubmit = ({ formData }) => {
         .light .support-text {
           color: rgba(0, 0, 0, 0.6);
         }
+
+        /* Mobile compact mode */
+        @media (max-width: 576px) {
+          .review-submit-container { padding: 1rem; }
+          .review-card { padding: 1rem; border-radius: 12px; }
+          .icon-wrapper { width: 56px; height: 56px; margin-bottom: 1rem; }
+          .icon { font-size: 2rem; }
+          .title { font-size: 1.2rem; margin-bottom: 0.5rem; }
+          .description { font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
+
+          .review-info-card { padding: 0.85rem; margin: 0.85rem 0; border-radius: 10px; }
+          .review-info-header { margin-bottom: 0.75rem; }
+          .review-info-header h3 { font-size: 0.95rem; }
+          .info-icon { font-size: 1rem; }
+
+          .table-responsive { padding: 0.5rem; margin: 0.75rem 0; border-radius: 10px; }
+          .info-table { font-size: 0.8rem; margin-top: 0.5rem; }
+          .info-table th, .info-table td { padding: 6px 6px; font-size: 0.8rem; }
+          .info-table td { min-width: 46px; }
+
+          .vision-mission-item { margin-bottom: 0.9rem; }
+          .vision-mission-item h4 { font-size: 0.95rem; margin-bottom: 0.35rem; }
+          .vision-mission-content { padding: 0.6rem; line-height: 1.5; font-size: 0.85rem; }
+
+          .standards-list { gap: 0.9rem; }
+          .standard-item { padding: 0.75rem; border-radius: 10px; }
+          .standard-number { width: 22px; height: 22px; font-size: 0.75rem; margin-left: 8px; }
+          .standard-title { font-size: 0.95rem; }
+          .standard-description { margin-bottom: 0.6rem; line-height: 1.5; font-size: 0.85rem; }
+          .standard-file { margin-top: 0.6rem; padding-top: 0.6rem; }
+          .file-link { font-size: 0.85rem; }
+          .file-icon { font-size: 1rem; margin-left: 4px; }
+
+          .departments-section, .facilities-section { margin-top: 1rem; }
+          .departments-table, .facilities-table { margin-top: 0.5rem; border-radius: 10px; }
+          .departments-table th, .departments-table td, .facilities-table th, .facilities-table td { padding: 0.5rem; font-size: 0.8rem; }
+
+          .no-standards, .no-departments, .no-facilities, .no-stakeholder { padding: 1rem; }
+          .no-standards .info-icon, .no-departments .info-icon, .no-facilities .info-icon, .no-stakeholder .info-icon { font-size: 1.6rem; }
+          .no-standards p, .no-departments p, .no-facilities p { font-size: 0.9rem; }
+
+          .loading-spinner { padding: 1rem; }
+          .spinner { width: 28px; height: 28px; border-width: 3px; margin-bottom: 0.5rem; }
+
+          .alert-info { padding: 0.75rem; margin-bottom: 1rem; border-radius: 10px; font-size: 0.9rem; }
+          .alert-icon { font-size: 1.2rem; margin-left: 0.5rem; }
+          .support-section { padding-top: 1rem; }
+          .support-header { gap: 0.35rem; margin-bottom: 0.35rem; }
+          .support-icon { font-size: 1rem; }
+          .support-title { font-size: 1rem; }
+          .support-text { font-size: 0.85rem; }
+
+          /* Make print button compact on mobile */
+          .no-print button { padding: 0.4rem 0.7rem !important; font-size: 0.8rem !important; line-height: 1.1; border-radius: 8px; }
+        }
       `}</style>
     </>
   );

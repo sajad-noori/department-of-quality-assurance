@@ -387,7 +387,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
         .academy-facilities-form.glass-bg {
           background: rgba(255,255,255,0.05);
           border-radius: 20px;
-          padding: 2rem;
+          padding: clamp(1rem, 3.5vw, 2rem);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255,255,255,0.1);
           box-shadow: 0 20px 40px rgba(0,0,0,0.3);
@@ -404,7 +404,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
           margin-bottom: 2rem;
         }
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.1rem, 2.2vw + 0.3rem, 1.6rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -414,11 +414,11 @@ const PracticalFacilities = ({ onStepSubmit }) => {
           gap: 0.5rem;
         }
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.1rem, 2.2vw, 1.6rem);
         }
         .form-description {
           color: #a9e5ff;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           line-height: 1.6;
           max-width: 800px;
           margin: 0 auto;
@@ -549,17 +549,25 @@ const PracticalFacilities = ({ onStepSubmit }) => {
           }
         }
         @media (max-width: 768px) {
-          .academy-facilities-form.glass-bg {
-            padding: 1rem;
-          }
-          .form-title {
-            font-size: 1.5rem;
-          }
+          .academy-facilities-form.glass-bg { padding: clamp(1rem, 3vw, 1.25rem); }
+          .form-title { font-size: 1.25rem; }
           .files-table th,
           .files-table td {
             padding: 0.75rem 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
           }
+        }
+        /* Extra-small devices */
+        @media (max-width: 480px) {
+          .form-title { font-size: 1.1rem; }
+          .form-icon { font-size: 1.1rem; }
+          .form-description { font-size: 0.9rem; }
+          .files-table th, .files-table td { font-size: 0.85rem; }
+        }
+        @media (max-width: 360px) {
+          .form-title { font-size: 1rem; }
+          .form-description { font-size: 0.85rem; }
+          .files-table th, .files-table td { font-size: 0.8rem; }
         }
         .delete-btn {
           background: linear-gradient(135deg, #ff6b6b, #dc3545) !important;

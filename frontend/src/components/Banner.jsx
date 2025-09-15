@@ -6,6 +6,7 @@ import {
   FaClipboardCheck,
   FaGraduationCap,
 } from "react-icons/fa";
+import { useTheme } from "../contexts/ThemeContext";
 import PresentationImg from "../assets/illustrations/presentation-6-30.png";
 import CustomerServiceImg from "../assets/illustrations/customer-service-1-33.png";
 import OfficeWorkImg from "../assets/illustrations/office-work-81.png";
@@ -62,15 +63,16 @@ const slides = [
 ];
 
 const stats = [
-  { icon: <FaUsers />, label: "مؤسسات تحت نظارت", value: "۲۰۰+" },
-  { icon: <FaClipboardCheck />, label: "ارزیابی‌های انجام‌شده", value: "۵۰۰+" },
-  { icon: <FaGraduationCap />, label: "فارغ‌التحصیلان موفق", value: "۱۵۰۰+" },
-  { icon: <FaCheckCircle />, label: "رضایت آموزشی", value: "۹۵٪" },
+  { icon: <FaUsers />, label: "مؤسسات تحت نظارت", value: "۳۶۰+" },
+  { icon: <FaClipboardCheck />, label: "ارزیابی‌های انجام‌شده", value: "۰+" },
+  { icon: <FaGraduationCap />, label: "فارغ‌التحصیلان موفق", value: "۰+" },
+  { icon: <FaCheckCircle />, label: "رضایت آموزشی", value: "۶۵٪" },
 ];
 
 const slideDuration = 7000;
 
 export default function Banner() {
+  const { theme } = useTheme();
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const typedRef = useRef(null);
@@ -145,6 +147,7 @@ export default function Banner() {
         className="banner"
         dir="rtl"
         aria-label="بنر ریاست تضمین کیفیت"
+        data-theme={theme}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -325,6 +328,8 @@ export default function Banner() {
           flex-wrap: wrap;
           justify-content: center;
           position: relative;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         /* Text block */
@@ -507,6 +512,10 @@ export default function Banner() {
           backdrop-filter: none;
           border: none;
           box-shadow: none;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .banner__image-container {
@@ -533,6 +542,8 @@ export default function Banner() {
           left: 50%;
           width: 100%;
           height: 100%;
+          max-width: 100%;
+          max-height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -651,20 +662,51 @@ export default function Banner() {
         }
 
         /* Responsive */
+        @media (max-width: 1400px) {
+          .banner {
+            padding: 2.5rem 1rem 7rem;
+          }
+          .banner__content {
+            gap: 1.5rem;
+          }
+          .banner__title {
+            font-size: 2.8rem;
+          }
+          .banner__typed {
+            font-size: 1.6rem;
+          }
+          .banner__image-wrapper {
+            height: 320px;
+          }
+        }
+
         @media (max-width: 1024px) {
+          .banner {
+            padding: 2rem 1rem 6rem;
+          }
           .banner__content {
             flex-direction: column-reverse;
-            padding: 0 1rem;
-          }
-          .banner__text,
-          .banner__image-wrapper {
-            max-width: 100%;
-            flex: none;
+            gap: 2rem;
             text-align: center;
-            min-width: auto;
           }
           .banner__text {
-            margin-top: 2rem;
+            flex: none;
+            max-width: 100%;
+            min-width: auto;
+          }
+          .banner__image-wrapper {
+            flex: none;
+            max-width: 100%;
+            min-width: auto;
+            height: 280px;
+            width: 100%;
+          }
+          .banner__title {
+            font-size: 2.5rem;
+          }
+          .banner__typed {
+            font-size: 1.5rem;
+            min-height: 60px;
           }
           .banner__list-item {
             justify-content: center;
@@ -672,12 +714,18 @@ export default function Banner() {
           .banner__buttons {
             justify-content: center;
           }
-          .banner__stat-label {
-            min-width: auto;
+          .banner__stats {
+            gap: 2rem;
           }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+          .banner {
+            padding: 1.5rem 0.75rem 5rem;
+          }
+          .banner__content {
+            gap: 1.5rem;
+          }
           .banner__title {
             font-size: 2.2rem;
           }
@@ -687,34 +735,112 @@ export default function Banner() {
           }
           .banner__description {
             font-size: 1rem;
-            max-width: 100%;
-          }
-          .banner__buttons {
-            gap: 0.6rem;
-          }
-          .btn {
-            min-width: 120px;
-            font-size: 1rem;
-            padding: 0.6rem 1.2rem;
           }
           .banner__image-wrapper {
-            height: 250px;
-            border-radius: 10px;
+            height: 240px;
+            max-width: 90%;
           }
           .banner__image {
-            width: 85%;
-            height: 85%;
+            width: 90%;
+            height: 90%;
           }
           .banner__stats {
-            font-size: 0.85rem;
-            gap: 1.5rem;
-            padding: 1rem;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
           }
-          .banner__stat-icon {
-            font-size: 1.3rem;
+          .banner__stat {
+            min-width: auto;
+            flex-direction: column;
+            text-align: center;
+            gap: 0.3rem;
           }
           .banner__stat-label {
             min-width: auto;
+            text-align: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .banner {
+            padding: 1rem 0.5rem 4rem;
+          }
+          .banner__content {
+            gap: 1rem;
+          }
+          .banner__title {
+            font-size: 1.8rem;
+            line-height: 1.2;
+          }
+          .banner__typed {
+            font-size: 1.1rem;
+            min-height: 40px;
+          }
+          .banner__description {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+          }
+          .banner__list {
+            margin-bottom: 1.5rem;
+          }
+          .banner__list-item {
+            font-size: 0.95rem;
+            margin-bottom: 0.6rem;
+          }
+          .banner__buttons {
+            gap: 0.5rem;
+            flex-direction: column;
+            align-items: center;
+          }
+          .btn {
+            min-width: 200px;
+            font-size: 0.9rem;
+            padding: 0.7rem 1.5rem;
+          }
+          .banner__image-wrapper {
+            display: none;
+          }
+          .banner__stats {
+            font-size: 0.8rem;
+            gap: 0.8rem;
+            padding: 0.8rem;
+          }
+          .banner__stat-icon {
+            font-size: 1.2rem;
+          }
+        }
+
+        @media (max-width: 320px) {
+          .banner {
+            padding: 0.75rem 0.25rem 3rem;
+          }
+          .banner__title {
+            font-size: 1.5rem;
+          }
+          .banner__typed {
+            font-size: 1rem;
+            min-height: 35px;
+          }
+          .banner__description {
+            font-size: 0.85rem;
+          }
+          .banner__list-item {
+            font-size: 0.9rem;
+          }
+          .btn {
+            min-width: 180px;
+            font-size: 0.85rem;
+            padding: 0.6rem 1.2rem;
+          }
+          .banner__image-wrapper {
+            display: none;
+          }
+          .banner__stats {
+            font-size: 0.75rem;
+            gap: 0.6rem;
+          }
+          .banner__stat-icon {
+            font-size: 1rem;
           }
         }
 
@@ -823,6 +949,8 @@ export default function Banner() {
           left: 50%;
           width: 100%;
           height: 100%;
+          max-width: 100%;
+          max-height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -837,6 +965,18 @@ export default function Banner() {
         .banner__image svg {
           width: 100%;
           height: 100%;
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 0 20px rgba(13, 202, 240, 0.3));
+        }
+
+        .banner__image img {
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
           filter: drop-shadow(0 0 20px rgba(13, 202, 240, 0.3));
         }
 

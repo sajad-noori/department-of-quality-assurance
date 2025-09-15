@@ -268,7 +268,7 @@ const Departments = ({ onStepSubmit }) => {
         <fieldset className="mb-3 border rounded p-2 form-section">
           <legend className="float-none w-auto px-2 mb-2 small">فورم درج رشته ها</legend>
           <div className="row g-3">
-            <div className="col-4">
+            <div className="col-12 col-md-4">
               <input
                 type="text"
                 name="name"
@@ -282,7 +282,7 @@ const Departments = ({ onStepSubmit }) => {
                 disabled={isSubmitting}
               />
             </div>
-            <div className="col-md-4">
+            <div className="col-12 col-md-4">
               <input
                 type="number"
                 name="newEnrollments"
@@ -298,7 +298,7 @@ const Departments = ({ onStepSubmit }) => {
                 disabled={isSubmitting}
               />
             </div>
-            <div className="col-md-4">
+            <div className="col-12 col-md-4">
               <select
                 name="totalStudents"
                 value={formData.totalStudents}
@@ -315,7 +315,7 @@ const Departments = ({ onStepSubmit }) => {
                 <option value="پنج ساله" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>پنج ساله</option>
               </select>
             </div>
-            <div className="col-md-4">
+            <div className="col-12 col-md-4">
               <select 
                 name="graduationCycles"
                 value={formData.graduationCycles}
@@ -331,7 +331,7 @@ const Departments = ({ onStepSubmit }) => {
                 <option value="غیر فعال" style={theme === 'light' ? { color: '#222' } : { color: 'black' }}>غیر فعال</option>
               </select>
             </div>
-            <div className="col-md-4">
+            <div className="col-12 col-md-4">
               <input
                 type="number"
                 name="establishmentYear"
@@ -346,7 +346,7 @@ const Departments = ({ onStepSubmit }) => {
                 disabled={isSubmitting}
               />
             </div>
-            <div className="col-md-4">
+            <div className="col-12 col-md-4">
               <input
                 type="number"
                 name="numberOfStudents"
@@ -368,6 +368,7 @@ const Departments = ({ onStepSubmit }) => {
                 onClick={handleAddEntry}
                 disabled={isSubmitting}
                 startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+                className="add-btn"
               >
                 {isSubmitting ? 'در حال افزودن...' : 'افزودن'}
               </StyledButton>
@@ -437,7 +438,7 @@ const Departments = ({ onStepSubmit }) => {
         .departments-form.glass-bg {
           background: rgba(255,255,255,0.05);
           border-radius: 20px;
-          padding: 2rem;
+          padding: clamp(1rem, 3.5vw, 2rem);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255,255,255,0.1);
           box-shadow: 0 20px 40px rgba(0,0,0,0.3);
@@ -454,7 +455,7 @@ const Departments = ({ onStepSubmit }) => {
           margin-bottom: 2rem;
         }
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1rem, 1.8vw + 0.2rem, 1.3rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -464,11 +465,11 @@ const Departments = ({ onStepSubmit }) => {
           gap: 0.5rem;
         }
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.1rem, 2.2vw, 1.6rem);
         }
         .form-description {
           color: #a9e5ff;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           line-height: 1.6;
           max-width: 800px;
           margin: 0 auto;
@@ -520,7 +521,7 @@ const Departments = ({ onStepSubmit }) => {
         .form-section {
           background: rgba(13,202,240,0.05);
           border-radius: 16px;
-          padding: 1.5rem;
+          padding: 1.25rem;
           border: 1px solid rgba(13,202,240,0.1);
           margin-bottom: 1.5rem;
         }
@@ -543,7 +544,7 @@ const Departments = ({ onStepSubmit }) => {
           margin-bottom: 1.5rem;
         }
         .section-title {
-          font-size: 1.3rem;
+          font-size: clamp(1rem, 1.6vw + 0.3rem, 1.3rem);
           font-weight: 600;
           color: #0dcaf0;
           margin: 0;
@@ -552,7 +553,7 @@ const Departments = ({ onStepSubmit }) => {
           gap: 0.5rem;
         }
         .section-icon {
-          font-size: 1.4rem;
+          font-size: clamp(1.05rem, 1.6vw + 0.2rem, 1.2rem);
         }
         .file-count {
           font-size: 0.9rem;
@@ -599,17 +600,35 @@ const Departments = ({ onStepSubmit }) => {
           }
         }
         @media (max-width: 768px) {
-          .departments-form.glass-bg {
-            padding: 1rem;
-          }
-          .form-title {
-            font-size: 1.5rem;
-          }
+          .departments-form.glass-bg { padding: clamp(0.75rem, 2.5vw, 1rem); border-radius: 12px; }
+          .form-title { font-size: 1.05rem; }
+          .form-description { font-size: 0.9rem; }
+          .form-section { padding: clamp(0.75rem, 2.5vw, 1rem); }
+          .departments-form.glass-bg .form-control { font-size: 0.9rem; padding: 0.5rem 0.75rem; }
+          .add-btn { font-size: 0.9rem; padding: 0.5rem 0.9rem; }
           .files-table th,
           .files-table td {
-            padding: 0.75rem 0.5rem;
-            font-size: 0.9rem;
+            padding: 0.6rem 0.4rem;
+            font-size: 0.8rem;
           }
+        }
+
+        /* Extra-small devices */
+        @media (max-width: 480px) {
+          .form-title { font-size: 1rem; }
+          .form-icon { font-size: 1rem; }
+          .form-description { font-size: 0.85rem; }
+          .departments-form.glass-bg .form-control { font-size: 0.85rem; padding: 0.45rem 0.7rem; }
+          .add-btn { font-size: 0.85rem; padding: 0.45rem 0.8rem; }
+          .files-table th, .files-table td { font-size: 0.8rem; }
+        }
+
+        @media (max-width: 360px) {
+          .form-title { font-size: 0.95rem; }
+          .form-description { font-size: 0.8rem; }
+          .departments-form.glass-bg .form-control { font-size: 0.82rem; padding: 0.4rem 0.65rem; }
+          .add-btn { font-size: 0.8rem; padding: 0.4rem 0.7rem; }
+          .files-table th, .files-table td { font-size: 0.78rem; }
         }
         ${theme === 'light' ? `
         .departments-form.glass-bg {

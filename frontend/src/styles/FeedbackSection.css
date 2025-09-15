@@ -12,7 +12,8 @@
   background: var(--dark-bg);
   color: #f8fafc;
   min-height: 100vh;
-  padding: 4rem 1rem;
+  /* Fluid padding for better scaling */
+  padding: clamp(1.25rem, 4vw, 4rem) clamp(0.75rem, 3vw, 1rem);
   direction: rtl;
   display: flex;
   flex-direction: column;
@@ -85,7 +86,7 @@
 }
 
 .mascot-emoji {
-  font-size: 3rem;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 3rem);
   display: block;
   margin-bottom: 1rem;
   animation: wave 2s ease-in-out infinite;
@@ -98,7 +99,8 @@
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  /* Responsive heading size */
+  font-size: clamp(1.6rem, 4.5vw + 0.5rem, 3.5rem);
   font-weight: 800;
   background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-cyan), var(--primary-cyan));
   background-size: 200% 200%;
@@ -111,7 +113,7 @@
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: clamp(0.9rem, 1.2vw + 0.2rem, 1.25rem);
   color: #94a3b8;
   font-weight: 400;
   line-height: 1.6;
@@ -131,7 +133,7 @@
 .feedback-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: clamp(1rem, 3vw, 3rem);
   align-items: start;
 }
 
@@ -142,7 +144,7 @@
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  padding: 2.5rem;
+  padding: clamp(1rem, 3.5vw, 2.5rem);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   transition: all 0.3s ease;
   animation: fadeInUp 0.8s ease-out 0.2s both;
@@ -162,7 +164,7 @@
 }
 
 .card-title {
-  font-size: 1.75rem;
+  font-size: clamp(1.1rem, 2.2vw + 0.2rem, 1.6rem);
   font-weight: 700;
   color: var(--primary-cyan);
   margin-bottom: 0.75rem;
@@ -170,7 +172,7 @@
 }
 
 .card-subtitle {
-  font-size: 0.95rem;
+  font-size: clamp(0.8rem, 1vw + 0.1rem, 0.95rem);
   color: #94a3b8;
   font-weight: 400;
   line-height: 1.6;
@@ -229,7 +231,7 @@
 
 .contact-label {
   display: block;
-  font-size: 0.8rem;
+  font-size: clamp(0.7rem, 0.6vw + 0.2rem, 0.85rem);
   font-weight: 600;
   color: #94a3b8;
   text-transform: uppercase;
@@ -255,7 +257,7 @@
 .phone-number-container .contact-link,
 .contact-link[href^="tel:"],
 .contact-link[href^="mailto:"] {
-  font-size: 0.97rem;
+  font-size: clamp(0.85rem, 1vw + 0.1rem, 1rem);
   font-weight: 400;
   letter-spacing: 0.01em;
   color: #e0e7ef;
@@ -278,7 +280,7 @@
 }
 
 .contact-link[href*="maps.google.com"] {
-  font-size: 0.92rem;
+  font-size: clamp(0.82rem, 0.9vw + 0.1rem, 0.95rem);
   line-height: 1.6;
   color: #e0e7ef;
   padding: 0.4rem 0.6rem;
@@ -421,7 +423,7 @@
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   color: #f8fafc;
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 1vw + 0.1rem, 1rem);
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
@@ -444,7 +446,7 @@
   top: 1rem;
   right: 1.25rem;
   color: #94a3b8;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 0.9vw + 0.1rem, 1rem);
   font-weight: 500;
   transition: all 0.3s ease;
   pointer-events: none;
@@ -507,8 +509,8 @@
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 1rem 2rem;
-  font-size: 1rem;
+  padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1rem, 4vw, 2rem);
+  font-size: clamp(0.9rem, 1vw + 0.1rem, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -696,11 +698,11 @@
   }
   
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
   
   .hero-subtitle {
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
   
   .feedback-grid {
@@ -718,22 +720,18 @@
   }
   
   .card-title {
-    font-size: 1.75rem;
+    font-size: 1.35rem;
   }
 }
 
 @media (max-width: 480px) {
-  .hero-title {
-    font-size: 2rem;
-  }
+  .hero-title { font-size: 1.3rem; }
   
-  .mascot-emoji {
-    font-size: 2.5rem;
-  }
+  .mascot-emoji { font-size: 1.8rem; }
   
   .contact-card,
   .form-card {
-    padding: 1.25rem;
+    padding: 0.9rem;
   }
   
   .contact-item {
@@ -749,6 +747,40 @@
     width: 20px;
     height: 20px;
   }
+
+  /* Make all texts slightly smaller for better fit on small screens */
+  .card-title { font-size: 1.05rem; }
+  .card-subtitle { font-size: 0.8rem; }
+  .contact-label { font-size: 0.7rem; }
+  .phone-number-container .contact-link,
+  .contact-link[href^="tel:"],
+  .contact-link[href^="mailto:"] { font-size: 0.8rem; }
+  .contact-link[href*="maps.google.com"] { font-size: 0.78rem; }
+  .floating-input, .floating-textarea { font-size: 0.85rem; }
+  .floating-label { font-size: 0.8rem; }
+  .submit-button { font-size: 0.85rem; }
+  .notification-message { font-size: 0.85rem; }
+  .error-message { font-size: 0.8rem; }
+  .character-count { font-size: 0.7rem; }
+}
+
+@media (max-width: 360px) {
+  .hero-title { font-size: 1.15rem; }
+  .mascot-emoji { font-size: 1.6rem; }
+  .contact-card, .form-card { padding: 0.8rem; }
+  .card-title { font-size: 1rem; }
+  .card-subtitle { font-size: 0.75rem; }
+  .contact-label { font-size: 0.68rem; }
+  .phone-number-container .contact-link,
+  .contact-link[href^="tel:"],
+  .contact-link[href^="mailto:"] { font-size: 0.78rem; }
+  .contact-link[href*="maps.google.com"] { font-size: 0.76rem; }
+  .floating-input, .floating-textarea { font-size: 0.82rem; }
+  .floating-label { font-size: 0.78rem; }
+  .submit-button { font-size: 0.82rem; }
+  .notification-message { font-size: 0.8rem; }
+  .error-message { font-size: 0.78rem; }
+  .character-count { font-size: 0.68rem; }
 }
 
 /* Accessibility */

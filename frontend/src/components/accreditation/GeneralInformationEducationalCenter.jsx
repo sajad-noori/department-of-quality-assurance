@@ -467,7 +467,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         .educational-center-form {
           background: rgba(255, 255, 255, 0.05);
           border-radius: 20px;
-          padding: 2rem;
+          padding: clamp(1rem, 3.5vw, 2rem);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -480,7 +480,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         }
 
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.1rem, 2.2vw + 0.3rem, 1.6rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -491,7 +491,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         }
 
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.1rem, 2.2vw, 1.6rem);
         }
 
         .existing-data-badge {
@@ -606,7 +606,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         }
 
         .form-label {
-          font-size: 0.95rem;
+          font-size: clamp(0.8rem, 1vw + 0.1rem, 0.95rem);
           font-weight: 600;
           color: #a9e5ff;
           display: flex;
@@ -631,7 +631,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
           border: 2px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           color: #f0f0f0;
-          font-size: 0.95rem;
+          font-size: clamp(0.85rem, 0.9vw + 0.1rem, 0.95rem);
           transition: all 0.3s ease;
           backdrop-filter: blur(10px);
         }
@@ -715,7 +715,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         }
 
         .section-title {
-          font-size: 1.2rem;
+          font-size: clamp(1rem, 1.6vw + 0.2rem, 1.2rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -725,7 +725,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         }
 
         .section-icon {
-          font-size: 1.3rem;
+          font-size: clamp(1rem, 1.4vw + 0.2rem, 1.2rem);
         }
 
         .address-grid,
@@ -744,8 +744,8 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
 
         .submit-button {
           position: relative;
-          padding: 1rem 2.5rem;
-          font-size: 1.1rem;
+          padding: clamp(0.8rem, 2.5vw, 1rem) clamp(1.25rem, 4vw, 2.5rem);
+          font-size: clamp(0.95rem, 1vw + 0.1rem, 1.05rem);
           font-weight: 700;
           background: linear-gradient(135deg, #0dcaf0, #00b5d7);
           color: #030305;
@@ -833,11 +833,11 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
 
         @media (max-width: 768px) {
           .educational-center-form {
-            padding: 1.5rem;
+            padding: clamp(1rem, 3vw, 1.5rem);
           }
 
           .form-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
           }
 
           .address-grid,
@@ -847,8 +847,8 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
           }
 
           .submit-button {
-            padding: 0.9rem 2rem;
-            font-size: 1rem;
+            padding: 0.85rem 1.4rem;
+            font-size: 0.95rem;
           }
 
           .changes-notification {
@@ -864,6 +864,27 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         .form-select:focus, .form-select:active, .form-select option, .form-select optgroup {
           background: #111 !important;
           color: #f0f0f0;
+        }
+
+        /* Extra-small devices */
+        @media (max-width: 480px) {
+          .educational-center-form { padding: 0 !important; margin: 0 !important; }
+          .form-title { font-size: 1.1rem; }
+          .form-icon { font-size: 1.1rem; }
+          .form-label { font-size: 0.85rem; }
+          .section-title { font-size: 1rem; }
+          .section-icon { font-size: 1rem; }
+          .form-input, .form-select { font-size: 0.85rem; }
+          .submit-button { font-size: 0.9rem; padding: 0.8rem 1.2rem; }
+        }
+
+        @media (max-width: 360px) {
+          .educational-center-form { padding: 0 !important; margin: 0 !important; }
+          .form-title { font-size: 1rem; }
+          .form-label { font-size: 0.8rem; }
+          .section-title { font-size: 0.95rem; }
+          .form-input, .form-select { font-size: 0.82rem; }
+          .submit-button { font-size: 0.85rem; padding: 0.75rem 1rem; }
         }
       `}</style>
       {/* Light mode styles for GeneralInformationEducationalCenter */}

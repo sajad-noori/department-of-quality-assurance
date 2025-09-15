@@ -440,9 +440,13 @@ function Step3({ onStepSubmit }) {
   return (
     <>
       <label className="form-label-center"> {steps[2]}</label>
-      <div className="d-flex">
-        <NumberOfStudents onStepSubmit={handleStep3Submit} />
-        <Laylia />
+      <div className="d-flex flex-column flex-lg-row gap-3 w-100">
+        <div className="flex-fill w-100">
+          <NumberOfStudents onStepSubmit={handleStep3Submit} />
+        </div>
+        <div className="flex-fill w-100">
+          <Laylia />
+        </div>
       </div>
     </>
   );
@@ -917,6 +921,39 @@ function Step4({ onStepSubmit, user }) {
         .form-input:focus ~ .input-border {
           width: 100%;
         }
+
+        /* Step8 mobile adjustments */
+        @media (max-width: 576px) {
+          /* Force the Step8 button to be much smaller on small screens */
+          .stakeholder-form .submit-section .submit-button {
+            padding: 0.35rem 0.6rem !important;
+            font-size: 0.75rem !important;
+            min-width: 100px !important;
+            line-height: 1.1 !important;
+          }
+          .stakeholder-form { padding: 1rem; border-radius: 12px; }
+          .form-title { font-size: 1.1rem; }
+          .form-icon { font-size: 1.2rem; }
+          .form-description { font-size: 0.9rem; margin-bottom: 0.75rem; }
+          .form-section { padding: 1rem; }
+          .form-label { font-size: 0.85rem; }
+          .form-input { font-size: 0.9rem; padding: 0.6rem 0.8rem; min-height: 140px; }
+          .character-count { font-size: 0.8rem; }
+          .tips-title { font-size: 1rem; }
+          .tips-list { padding-right: 1rem; }
+          .submit-button { min-width: 130px; padding: 0.45rem 0.8rem; font-size: 0.82rem; box-shadow: 0 4px 12px rgba(13, 202, 240, 0.25); }
+          .submit-button .button-icon { font-size: 0.95rem; }
+          .entries-badge { font-size: 0.8rem; padding: 0.35rem 0.6rem; }
+          .submit-hint { display: none; }
+        }
+
+        @media (max-width: 360px) {
+          .form-title { font-size: 1rem; }
+          .form-icon { font-size: 1.1rem; }
+          .form-input { min-height: 120px; }
+          .submit-button { min-width: 110px; font-size: 0.78rem; padding: 0.4rem 0.7rem; box-shadow: 0 3px 10px rgba(13, 202, 240, 0.2); }
+          .submit-button .button-icon { font-size: 0.9rem; }
+        }
         .submit-section {
           display: flex;
           justify-content: center;
@@ -924,8 +961,8 @@ function Step4({ onStepSubmit, user }) {
         }
         .submit-button {
           position: relative;
-          padding: 1rem 2.5rem;
-          font-size: 1.1rem;
+          padding: 0.8rem 1.75rem;
+          font-size: 1rem;
           font-weight: 700;
           background: linear-gradient(135deg, #0dcaf0, #00b5d7);
           color: #030305;
@@ -934,7 +971,7 @@ function Step4({ onStepSubmit, user }) {
           cursor: pointer;
           transition: all 0.3s ease;
           overflow: hidden;
-          min-width: 200px;
+          min-width: 180px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1002,6 +1039,49 @@ function Step4({ onStepSubmit, user }) {
         
         .form-container {
           user-select: text !important;
+        }
+        
+        /* Step4 mobile adjustments */
+        @media (max-width: 576px) {
+          .vision-mission-form {
+            padding: 1rem;
+            border-radius: 12px;
+          }
+          .form-header {
+            margin-bottom: 1rem;
+          }
+          .form-title {
+            font-size: 1.2rem;
+          }
+          .form-icon {
+            font-size: 1.4rem;
+          }
+          .entries-badge {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.8rem;
+          }
+          .form-section {
+            padding: 1rem;
+          }
+          .form-label {
+            font-size: 0.85rem;
+          }
+          .form-input {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+          }
+          .submit-button {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.95rem;
+            min-width: 150px;
+          }
+          .success-notification,
+          .error-notification {
+            padding: 0.75rem;
+          }
+          .notification-content {
+            font-size: 0.85rem;
+          }
         }
         ${
           theme === "light"
@@ -1523,7 +1603,7 @@ function Step8({ onStepSubmit, user }) {
                 </>
               )}
             </button>
-            <div className="submit-hint">
+            <div className="submit-hint d-none d-sm-block">
               برای ذخیره سریع، از کلیدهای <kbd>Ctrl + Enter</kbd> استفاده کنید
             </div>
           </div>
@@ -1554,7 +1634,7 @@ function Step8({ onStepSubmit, user }) {
         }
         
         .form-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.1rem, 1.8vw + 0.4rem, 1.4rem);
           font-weight: 700;
           color: #0dcaf0;
           margin-bottom: 1rem;
@@ -1565,7 +1645,7 @@ function Step8({ onStepSubmit, user }) {
         }
         
         .form-icon {
-          font-size: 2rem;
+          font-size: clamp(1.2rem, 2vw + 0.4rem, 1.6rem);
         }
         
         .form-description {
@@ -2404,16 +2484,22 @@ export default function MultiStepForm10() {
           onClick={handleSidebarToggle}
           sx={{
             borderRadius: "32px 0 0 32px",
-            px: 3,
-            py: 1,
+            px: { xs: 1.25, sm: 2, md: 3 },
+            py: { xs: 0.5, sm: 0.75, md: 1 },
             fontWeight: 700,
+            fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
             color: "#030305",
             background: "#0dcaf0",
             borderColor: "#0dcaf0",
             boxShadow: "0 4px 15px rgba(13,202,240,0.18)",
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: { xs: 0.5, sm: 1 },
+            minHeight: { xs: 32, sm: 36, md: 40 },
+            whiteSpace: "nowrap",
+            "& .MuiSvgIcon-root": {
+              fontSize: { xs: 18, sm: 22, md: 24 },
+            },
             transition: "background 0.2s, color 0.2s",
             "&:hover": {
               background: "#00b5d7",
@@ -2445,7 +2531,7 @@ export default function MultiStepForm10() {
             <div className="progress-bar-bg">
               <div
                 className="progress-bar-fill"
-                style={{ width: `${progressPercent}%`, right: 0, left: "auto" }}
+                style={{ "--progress": `${progressPercent}%` }}
               />
             </div>
 
@@ -2455,8 +2541,7 @@ export default function MultiStepForm10() {
                 const isActive = currentStep === stepNum;
                 const isCompleted = currentStep > stepNum;
                 const isSubmitted = stepSubmissionStatus[stepNum];
-                const canNavigate =
-                  stepNum === 1 || stepSubmissionStatus[stepNum - 1];
+                const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
 
                 return (
                   <li
@@ -2526,7 +2611,8 @@ export default function MultiStepForm10() {
           min-height: 100vh;
           background: #121212;
           position: relative;
-          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: auto;
         }
 
         .main-content {
@@ -2534,6 +2620,9 @@ export default function MultiStepForm10() {
           padding: 2rem;
           min-height: 100vh;
           transition: margin-right 0.3s ease;
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         * {
@@ -2556,6 +2645,17 @@ export default function MultiStepForm10() {
           display: flex;
           flex-direction: column;
           user-select: none;
+        }
+
+        /* Ensure step content never overflows horizontally */
+        .form {
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+
+        .form * {
+          max-width: 100%;
         }
 
         .title {
@@ -2590,6 +2690,8 @@ export default function MultiStepForm10() {
           background: linear-gradient(90deg, #0dcaf0, #00b5d7);
           border-radius: 14px;
           box-shadow: none;
+          /* Horizontal progress uses width */
+          width: var(--progress);
           transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -2696,6 +2798,76 @@ export default function MultiStepForm10() {
           font-size: 14px;
           user-select: none;
         }   
+        
+        /* Vertical progress layout for small screens */
+        @media (max-width: 576px) {
+          /* Remove outer horizontal paddings so step fills screen width */
+          .main-content { padding-right: 0 !important; padding-left: 0 !important; }
+          .form { padding-right: 0 !important; padding-left: 0 !important; }
+          /* Tighten title margins on mobile */
+          .title { font-size: 1.2rem; margin-right: 0 !important; margin-left: 0 !important; }
+          /* Ensure progress takes full width without side gaps */
+          .progress-wrapper { margin-right: 0 !important; margin-left: 0 !important; }
+          .progress-bar-bg { margin-right: 0 !important; margin-left: 0 !important; }
+          /* Step 10: Review container should not add side padding */
+          .review-submit-container { padding-right: 0 !important; padding-left: 0 !important; }
+          .review-card { margin-right: 0 !important; margin-left: 0 !important; }
+          .progress-wrapper {
+            display: grid;
+            grid-template-columns: 12px 1fr;
+            align-items: start;
+            gap: 12px;
+          }
+          .progress-bar-bg {
+            width: 12px;
+            height: auto;
+            min-height: 280px;
+          }
+          .progress-bar-fill {
+            /* Switch to vertical growth: bottom to top */
+            width: 100%;
+            left: 0;
+            right: auto;
+            top: auto;
+            bottom: 0;
+            /* Vertical progress uses height */
+            height: var(--progress);
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .steps-list {
+            margin-top: 0;
+            padding: 0 0 0 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .step-item {
+            flex-direction: row;
+            align-items: center;
+            text-align: right;
+            min-width: 0;
+          }
+          .step-circle {
+            margin-bottom: 0;
+            margin-left: 8px;
+          }
+          .step-label {
+            font-size: 13px;
+          }
+          /* Avoid any nested flex rows from forcing horizontal scroll */
+          .row {
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+          }
+          [class*="col-"] {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+          }
+          .form {
+            overflow-x: hidden;
+          }
+        }
         /* Buttons container */
         .buttons {
           width: 100%;
