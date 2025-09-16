@@ -647,7 +647,9 @@ export default function MenuWithUtilityBar() {
           {menuItems.map((item, idx) => (
             <li
               key={idx}
-              className={styles.menuItem}
+              className={`${styles.menuItem} ${
+                item.label === "زون" ? styles.hideOnMobile : ""
+              }`}
               data-open={dropdownOpen === idx ? "true" : "false"}
             >
               {item.label === "اخبار و اطلاعات" ? (

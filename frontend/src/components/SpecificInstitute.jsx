@@ -10,6 +10,20 @@ const SpecificInstitute = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
+
+  // Add responsive state for window width
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Add window resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [center, setCenter] = useState(null);
   const [personnel, setPersonnel] = useState(null);
   const [students, setStudents] = useState([]);
@@ -579,7 +593,7 @@ const SpecificInstitute = () => {
       style={{
         background: themeColors.background,
         minHeight: "100vh",
-        padding: "30px 20px",
+        padding: windowWidth <= 768 ? "15px 10px" : "30px 20px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -592,7 +606,7 @@ const SpecificInstitute = () => {
           maxWidth: "1200px",
           marginBottom: "20px",
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: windowWidth <= 768 ? "center" : "flex-end",
         }}
       >
         <Button
@@ -627,7 +641,7 @@ const SpecificInstitute = () => {
           <h1
             style={{
               color: themeColors.text,
-              fontSize: "2rem",
+              fontSize: windowWidth <= 768 ? "1.5rem" : "2rem",
               fontWeight: "bold",
               margin: "0",
               textAlign: "center",
@@ -639,12 +653,13 @@ const SpecificInstitute = () => {
 
         {/* Three Stages */}
         <div
+          className="three-stages-container"
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: "20px",
+            gap: windowWidth <= 768 ? "10px" : "20px",
             flexWrap: "wrap",
-            marginBottom: "40px",
+            marginBottom: windowWidth <= 768 ? "20px" : "40px",
             width: "100%",
             maxWidth: "1200px",
           }}
@@ -652,13 +667,14 @@ const SpecificInstitute = () => {
           <div
             style={{
               background: themeColors.cardBg,
-              padding: "20px",
+              padding: windowWidth <= 768 ? "10px 15px" : "20px",
               borderRadius: "8px",
               border: `1px solid ${themeColors.primary}`,
               cursor: "pointer",
               transition: "all 0.2s ease",
-              minWidth: "150px",
+              minWidth: windowWidth <= 768 ? "80px" : "150px",
               textAlign: "center",
+              flex: windowWidth <= 768 ? "1" : "none",
             }}
             onMouseOver={(e) => {
               e.target.style.transform = "translateY(-2px)";
@@ -673,7 +689,7 @@ const SpecificInstitute = () => {
               style={{
                 color: themeColors.primary,
                 margin: "0",
-                fontSize: "1.2rem",
+                fontSize: window.innerWidth <= 768 ? "0.9rem" : "1.2rem",
                 fontWeight: "500",
               }}
             >
@@ -705,7 +721,7 @@ const SpecificInstitute = () => {
               style={{
                 color: themeColors.primary,
                 margin: "0",
-                fontSize: "1.2rem",
+                fontSize: window.innerWidth <= 768 ? "0.9rem" : "1.2rem",
                 fontWeight: "500",
               }}
             >
@@ -716,13 +732,14 @@ const SpecificInstitute = () => {
           <div
             style={{
               background: theme === "light" ? "#ffffff" : "#1e1e1e",
-              padding: "20px",
+              padding: windowWidth <= 768 ? "10px 15px" : "20px",
               borderRadius: "8px",
               border: `1px solid ${themeColors.primary}`,
               cursor: "pointer",
               transition: "all 0.2s ease",
-              minWidth: "150px",
+              minWidth: windowWidth <= 768 ? "80px" : "150px",
               textAlign: "center",
+              flex: windowWidth <= 768 ? "1" : "none",
             }}
             onMouseOver={(e) => {
               e.target.style.transform = "translateY(-2px)";
@@ -737,7 +754,7 @@ const SpecificInstitute = () => {
               style={{
                 color: themeColors.primary,
                 margin: "0",
-                fontSize: "1.2rem",
+                fontSize: window.innerWidth <= 768 ? "0.9rem" : "1.2rem",
                 fontWeight: "500",
               }}
             >
@@ -751,7 +768,7 @@ const SpecificInstitute = () => {
           className="main-container"
           style={{
             borderRadius: "10px",
-            padding: "25px",
+            padding: windowWidth <= 768 ? "15px" : "25px",
             border: `1px solid ${themeColors.border}`,
             width: "100%",
             maxWidth: "1200px",
@@ -766,9 +783,9 @@ const SpecificInstitute = () => {
                 className="section-title"
                 style={{
                   color: themeColors.primary,
-                  marginBottom: "25px",
+                  marginBottom: window.innerWidth <= 768 ? "15px" : "25px",
                   textAlign: "center",
-                  fontSize: "1.5rem",
+                  fontSize: window.innerWidth <= 768 ? "1.2rem" : "1.5rem",
                 }}
               >
                 معلومات عمومی مرکز آموزشی
@@ -781,14 +798,16 @@ const SpecificInstitute = () => {
                   borderRadius: "8px",
                   border: `1px solid ${themeColors.border}`,
                   width: "100%",
+                  WebkitOverflowScrolling: "touch", // smooth scrolling on mobile
                 }}
               >
                 <table
                   style={{
                     width: "100%",
+                    minWidth: windowWidth <= 768 ? "800px" : "100%", // minimum width for mobile horizontal scroll
                     borderCollapse: "collapse",
                     background: themeColors.cardBg,
-                    fontSize: "0.85rem",
+                    fontSize: windowWidth <= 768 ? "0.7rem" : "0.85rem",
                     color: themeColors.text,
                   }}
                 >
@@ -803,8 +822,10 @@ const SpecificInstitute = () => {
                         style={{
                           background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.primaryDark} 100%)`,
                           color: themeColors.lightText,
-                          padding: "14px 10px",
-                          fontSize: "0.85rem",
+                          padding:
+                            window.innerWidth <= 768 ? "8px 4px" : "14px 10px",
+                          fontSize:
+                            window.innerWidth <= 768 ? "0.7rem" : "0.85rem",
                           border: "none",
                           textAlign: "center",
                           fontWeight: "600",
@@ -1061,9 +1082,9 @@ const SpecificInstitute = () => {
                     >
                       <td
                         style={{
-                          padding: "12px 8px",
+                          padding: windowWidth <= 768 ? "8px 4px" : "12px 8px",
                           color: themeColors.text,
-                          fontSize: "0.8rem",
+                          fontSize: windowWidth <= 768 ? "0.7rem" : "0.8rem",
                           borderRight: `1px solid ${themeColors.border}`,
                           textAlign: "center",
                           fontWeight: "500",
@@ -1254,14 +1275,16 @@ const SpecificInstitute = () => {
 
           {/* Personnel Information */}
           {personnel && (
-            <div style={{ marginTop: "40px" }}>
+            <div
+              style={{ marginTop: window.innerWidth <= 768 ? "20px" : "40px" }}
+            >
               <h3
                 className="section-title"
                 style={{
                   color: themeColors.primary,
-                  marginBottom: "25px",
+                  marginBottom: window.innerWidth <= 768 ? "15px" : "25px",
                   textAlign: "center",
-                  fontSize: "1.5rem",
+                  fontSize: window.innerWidth <= 768 ? "1.2rem" : "1.5rem",
                 }}
               >
                 معلومات کارکنان
@@ -1274,15 +1297,17 @@ const SpecificInstitute = () => {
                   borderRadius: "8px",
                   border: `1px solid ${themeColors.border}`,
                   width: "100%",
+                  WebkitOverflowScrolling: "touch",
                 }}
               >
                 <table
                   className="personnel-table"
                   style={{
                     width: "100%",
+                    minWidth: windowWidth <= 768 ? "700px" : "100%",
                     borderCollapse: "collapse",
                     background: themeColors.cardBg,
-                    fontSize: "0.85rem",
+                    fontSize: windowWidth <= 768 ? "0.7rem" : "0.85rem",
                   }}
                 >
                   <thead>
@@ -1296,8 +1321,10 @@ const SpecificInstitute = () => {
                         style={{
                           background: `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.primaryDark} 100%)`,
                           color: themeColors.lightText,
-                          padding: "14px 10px",
-                          fontSize: "0.85rem",
+                          padding:
+                            window.innerWidth <= 768 ? "8px 4px" : "14px 10px",
+                          fontSize:
+                            window.innerWidth <= 768 ? "0.7rem" : "0.85rem",
                           border: "none",
                           textAlign: "center",
                           fontWeight: "600",
@@ -1828,13 +1855,15 @@ const SpecificInstitute = () => {
 
           {/* Students Information */}
           {students.length > 0 && (
-            <div style={{ marginTop: "40px" }}>
+            <div
+              style={{ marginTop: window.innerWidth <= 768 ? "20px" : "40px" }}
+            >
               <h3
                 style={{
                   color: themeColors.primary,
-                  marginBottom: "25px",
+                  marginBottom: window.innerWidth <= 768 ? "15px" : "25px",
                   textAlign: "center",
-                  fontSize: "1.5rem",
+                  fontSize: window.innerWidth <= 768 ? "1.2rem" : "1.5rem",
                   fontWeight: "600",
                 }}
               >
@@ -4327,8 +4356,83 @@ const SpecificInstitute = () => {
           )}
         </div>
 
-        {/* Theme-aware styling */}
+        {/* Theme-aware styling with mobile responsiveness */}
         <style>{`
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+          .specific-institute-container {
+            padding: 10px 5px !important;
+          }
+          .specific-institute-container .main-container {
+            padding: 15px !important;
+            margin: 0 5px !important;
+          }
+          .specific-institute-container h1 {
+            font-size: 1.5rem !important;
+          }
+          .specific-institute-container h2 {
+            font-size: 0.9rem !important;
+          }
+          .specific-institute-container h3 {
+            font-size: 1.2rem !important;
+            margin-bottom: 15px !important;
+          }
+          .specific-institute-container h4 {
+            font-size: 1rem !important;
+          }
+          .specific-institute-container .table-container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .specific-institute-container table {
+            min-width: 600px !important;
+            font-size: 0.7rem !important;
+          }
+          .specific-institute-container th,
+          .specific-institute-container td {
+            padding: 6px 3px !important;
+            font-size: 0.65rem !important;
+          }
+          .specific-institute-container .personnel-table {
+            min-width: 700px !important;
+          }
+          .specific-institute-container .vision-mission-content,
+          .specific-institute-container .stakeholder-content {
+            padding: 10px !important;
+            font-size: 0.8rem !important;
+          }
+          .specific-institute-container .download-button {
+            padding: 8px 12px !important;
+            font-size: 0.8rem !important;
+          }
+          .specific-institute-container .no-print {
+            justify-content: center !important;
+          }
+          .specific-institute-container .three-stages-container > div {
+            flex: 1 !important;
+            min-width: 80px !important;
+            padding: 10px 8px !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .specific-institute-container table {
+            min-width: 500px !important;
+            font-size: 0.6rem !important;
+          }
+          .specific-institute-container th,
+          .specific-institute-container td {
+            padding: 4px 2px !important;
+            font-size: 0.55rem !important;
+          }
+          .specific-institute-container h1 {
+            font-size: 1.3rem !important;
+          }
+          .specific-institute-container h3 {
+            font-size: 1.1rem !important;
+          }
+        }
+        
         ${
           theme === "light"
             ? `
