@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 import { FaExclamationTriangle } from "react-icons/fa";
 import ProfileSidebar from "./ProfileSidebar";
 import Button from "@mui/material/Button";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
 import GeneralInformationEducationalCenter from "./accreditation/GeneralInformationEducationalCenter";
@@ -2290,6 +2289,16 @@ export default function MultiStepForm10() {
   const [progressLoading, setProgressLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
 
+  // Scroll to top when sidebar is shown
+  useEffect(() => {
+    if (showSidebar) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [showSidebar]);
+
   // Fetch user and initialize progress from database
   useEffect(() => {
     const fetchUser = async () => {
@@ -2447,7 +2456,8 @@ export default function MultiStepForm10() {
   const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
 
   const handleSidebarToggle = () => {
-    setShowSidebar((prev) => !prev);
+    const willShowSidebar = !showSidebar;
+    setShowSidebar(willShowSidebar);
   };
 
   if (userLoading || progressLoading) {
@@ -2464,59 +2474,56 @@ export default function MultiStepForm10() {
   return (
     <div className="page-container">
       {/* Floating sidebar toggle button */}
-      <div
-        style={{
-          position: "fixed",
-          top: "50%",
-          right: 0,
-          transform: "translateY(-50%)",
-          zIndex: 2000,
-          boxShadow: "0 4px 16px rgba(13,202,240,0.10)",
-          borderRadius: "32px 0 0 32px",
-          background: "transparent",
-          padding: 0,
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <Button
-          variant="outlined"
-          onClick={handleSidebarToggle}
-          sx={{
+      {!showSidebar && (
+        <div
+          style={{
+            position: "fixed",
+            top: "50%",
+            right: 0,
+            transform: "translateY(-50%)",
+            zIndex: 2000,
+            boxShadow: "0 4px 16px rgba(13,202,240,0.10)",
             borderRadius: "32px 0 0 32px",
-            px: { xs: 1.25, sm: 2, md: 3 },
-            py: { xs: 0.5, sm: 0.75, md: 1 },
-            fontWeight: 700,
-            fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
-            color: "#030305",
-            background: "#0dcaf0",
-            borderColor: "#0dcaf0",
-            boxShadow: "0 4px 15px rgba(13,202,240,0.18)",
+            background: "transparent",
+            padding: 0,
             display: "flex",
             alignItems: "center",
-            gap: { xs: 0.5, sm: 1 },
-            minHeight: { xs: 32, sm: 36, md: 40 },
-            whiteSpace: "nowrap",
-            "& .MuiSvgIcon-root": {
-              fontSize: { xs: 18, sm: 22, md: 24 },
-            },
-            transition: "background 0.2s, color 0.2s",
-            "&:hover": {
-              background: "#00b5d7",
-              borderColor: "#00b5d7",
-              color: "#030305",
-            },
           }}
         >
-          {showSidebar ? "مخفی کردن پروفایل" : "نمایش پروفایل"}
-          {showSidebar ? (
-            <ChevronRightIcon sx={{ ml: 1 }} />
-          ) : (
-            
+          <Button
+            variant="outlined"
+            onClick={handleSidebarToggle}
+            sx={{
+              borderRadius: "32px 0 0 32px",
+              px: { xs: 1.25, sm: 2, md: 3 },
+              py: { xs: 0.5, sm: 0.75, md: 1 },
+              fontWeight: 700,
+              fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
+              color: "#030305",
+              background: "#0dcaf0",
+              borderColor: "#0dcaf0",
+              boxShadow: "0 4px 15px rgba(13,202,240,0.18)",
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 0.5, sm: 1 },
+              minHeight: { xs: 32, sm: 36, md: 40 },
+              whiteSpace: "nowrap",
+              "& .MuiSvgIcon-root": {
+                fontSize: { xs: 18, sm: 22, md: 24 },
+              },
+              transition: "background 0.2s, color 0.2s",
+              "&:hover": {
+                background: "#00b5d7",
+                borderColor: "#00b5d7",
+                color: "#030305",
+              },
+            }}
+          >
+            نمایش پروفایل
             <ChevronLeftIcon sx={{ ml: 1 }} />
-          )}
-        </Button>
-      </div>
+          </Button>
+        </div>
+      )}
 
       <div
         className="main-content"
@@ -2603,7 +2610,7 @@ export default function MultiStepForm10() {
         </div>
       </div>
 
-      {showSidebar && <ProfileSidebar />}
+      {showSidebar && <ProfileSidebar onClose={() => setShowSidebar(false)} />}
 
       <style>{`
         .page-container {

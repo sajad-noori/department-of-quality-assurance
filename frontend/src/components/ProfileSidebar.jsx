@@ -4,6 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
+import PropTypes from 'prop-types';
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -15,8 +16,9 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import CloseIcon from "@mui/icons-material/Close";
 
-const ProfileSidebar = () => {
+const ProfileSidebar = ({ onClose }) => {
   const [user, setUser] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -185,7 +187,21 @@ const ProfileSidebar = () => {
   if (!user) {
     return (
       <div className="profile-sidebar">
-        <div className="profile-content">
+        <div className="profile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <IconButton 
+            onClick={onClose}
+            size="small"
+            sx={{
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+              marginLeft: '8px',
+              marginRight: '-8px',
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
           <p>Please log in to view your profile</p>
         </div>
       </div>
@@ -195,10 +211,34 @@ const ProfileSidebar = () => {
   return (
     <motion.div
       className="profile-sidebar"
-      initial={{ opacity: 0, x: 50 }}
+      initial={{ opacity: 0, x: '100%' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        height: '100vh',
+        zIndex: 1999,
+        overflowY: 'auto'
+      }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      exit={{ opacity: 0, x: '100%' }}
     >
+      <div className="profile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
+        <h3>پروفایل کاربری</h3>
+        <IconButton 
+          onClick={onClose}
+          size="small"
+          sx={{
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </div>
       <div className="profile-content">
         <motion.div
           className="profile-image-container"
@@ -479,8 +519,11 @@ const ProfileSidebar = () => {
 
       <style>{`
         .profile-sidebar {
-          width: 300px;
-          padding: 3rem 2rem;
+          width: 320px;
+          padding: 2rem 1.5rem;
+          background: #1e1e1e;
+          height: 100%;
+          box-sizing: border-box;
           position: absolute;
           right: 0;
           top: 0;
@@ -833,6 +876,10 @@ const ProfileSidebar = () => {
       `}</style>
     </motion.div>
   );
+};
+
+ProfileSidebar.propTypes = {
+  onClose: PropTypes.func.isRequired
 };
 
 export default ProfileSidebar;
