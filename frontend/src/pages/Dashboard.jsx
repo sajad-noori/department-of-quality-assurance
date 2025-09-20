@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../contexts/ThemeContext';
 
 const resources = [
   { 
@@ -83,6 +84,7 @@ const resources = [
 
 const Card = ({ title, description, route, onClick, icon, color }) => {
   const [hovered, setHovered] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <div
@@ -96,15 +98,22 @@ const Card = ({ title, description, route, onClick, icon, color }) => {
       onMouseLeave={() => setHovered(false)}
       style={{
         ...cardStyle,
+        backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
         borderLeft: `4px solid ${color}`,
-        ...(hovered ? cardHoverStyle : {}),
+        boxShadow: theme === 'dark' ? '0 4px 6px rgba(0, 0, 0, 0.5)' : '0 4px 6px rgba(0, 0, 0, 0.1)',
+        ...(hovered ? {
+          transform: 'translateY(-5px)',
+          boxShadow: theme === 'dark' 
+            ? '0 10px 20px rgba(0, 0, 0, 0.7)' 
+            : '0 10px 20px rgba(0, 0, 0, 0.2)'
+        } : {}),
       }}
     >
       <div style={cardHeader}>
         <span style={{ ...cardIcon, backgroundColor: color }}>{icon}</span>
-        <h3 style={cardTitle}>{title}</h3>
+        <h3 style={{ ...cardTitle, color: theme === 'dark' ? '#ffffff' : '#333333' }}>{title}</h3>
       </div>
-      <p style={cardDescription}>{description}</p>
+      <p style={{ ...cardDescription, color: theme === 'dark' ? '#cccccc' : '#666666' }}>{description}</p>
       <div style={cardArrow}>
         <span style={{ ...arrowStyle, ...(hovered ? arrowHoverStyle : {}) }}>→</span>
       </div>
@@ -128,23 +137,46 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const UserInfo = ({ user, onLogout }) => (
-  <div style={userInfoContainer}>
-    <div style={userAvatar}>
-      <span style={avatarText}>
-        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-      </span>
+const UserInfo = ({ user, onLogout }) => {
+  const { theme } = useTheme();
+  
+  return (
+    <div style={{
+      ...userInfoContainer,
+      backgroundColor: theme === 'dark' ? '#1a1a1a' : '#f8f9fa',
+      border: theme === 'dark' ? '1px solid #333333' : '1px solid #e0e0e0',
+    }}>
+      <div style={{
+        ...userAvatar,
+        backgroundColor: theme === 'dark' ? '#00d4ff' : '#4a6cf7',
+        border: theme === 'dark' ? '2px solid #00d4ff' : '2px solid #4a6cf7',
+      }}>
+        <span style={avatarText}>
+          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+        </span>
+      </div>
+      <div style={userDetails}>
+        <h3 style={{...userName, color: theme === 'dark' ? '#ffffff' : '#333333'}}>
+          {user?.name || 'کاربر'}
+        </h3>
+        <p style={{...userRole, color: theme === 'dark' ? '#cccccc' : '#666666'}}>
+          {user?.role || 'مدیر'}
+        </p>
+      </div>
+      <button 
+        onClick={onLogout} 
+        style={{
+          ...logoutButton,
+          backgroundColor: theme === 'dark' ? '#dc3545' : '#ff6b6b',
+          color: '#ffffff',
+        }}
+      >
+        <span>🚪</span>
+        <span>خروج</span>
+      </button>
     </div>
-    <div style={userDetails}>
-      <h3 style={userName}>{user?.name || 'کاربر'}</h3>
-      <p style={userRole}>{user?.role || 'مدیر'}</p>
-    </div>
-    <button onClick={onLogout} style={logoutButton}>
-      <span>🚪</span>
-      <span>خروج</span>
-    </button>
-  </div>
-);
+  );
+};
 
 UserInfo.propTypes = {
   user: PropTypes.shape({
@@ -164,6 +196,7 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -207,13 +240,27 @@ const Dashboard = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div style={dashboardContainer}>
-      <div style={header}>
+    <div style={{
+      ...dashboardContainer,
+      backgroundColor: theme === 'dark' ? '#0a0a0a' : '#f5f5f5',
+      color: theme === 'dark' ? '#ffffff' : '#333333'
+    }}>
+      <div style={{
+        ...header,
+        background: theme === 'dark' 
+          ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)' 
+          : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        color: theme === 'dark' ? '#ffffff' : '#333333'
+      }}>
         <div style={headerContent}>
-          <h1 style={dashboardTitle}>داشبورد مدیریت</h1>
-          <p style={dashboardSubtitle}>به سیستم مدیریت تضمین کیفیت خوش آمدید</p>
+          <div>
+          <h1 style={{...dashboardTitle, color: theme === 'dark' ? '#ffffff' : '#333333'}}>داشبورد مدیریت</h1>
+          <p style={{...dashboardSubtitle, color: theme === 'dark' ? '#cccccc' : '#666666'}}>به سیستم مدیریت تضمین کیفیت خوش آمدید</p>
         </div>
-        <UserInfo user={user} onLogout={handleLogout} />
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <UserInfo user={user} onLogout={handleLogout} />
+        </div>
       </div>
 
       <div style={searchContainer}>
@@ -226,6 +273,8 @@ const Dashboard = () => {
           onBlur={() => setSearchFocused(false)}
           style={{
             ...searchStyle,
+            backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+            color: theme === 'dark' ? '#ffffff' : '#333333',
             ...(searchFocused ? searchFocusedStyle : {})
           }}
         />
@@ -282,10 +331,10 @@ const Dashboard = () => {
 // Enhanced Styles
 const dashboardContainer = {
   minHeight: '100vh',
-  backgroundColor: '#0a0a0a',
   fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
   direction: 'rtl',
-  color: '#ffffff',
+  transition: 'background-color 0.3s ease, color 0.3s ease',
+  padding: '1rem',
 };
 
 const header = {
@@ -321,21 +370,19 @@ const userInfoContainer = {
   display: 'flex',
   alignItems: 'center',
   gap: '1rem',
-  backgroundColor: '#1a1a1a',
   padding: '1rem',
   borderRadius: '8px',
-  border: '1px solid #333333',
+  transition: 'all 0.3s ease',
 };
 
 const userAvatar = {
   width: '50px',
   height: '50px',
   borderRadius: '50%',
-  backgroundColor: '#00d4ff',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  border: '2px solid #00d4ff',
+  transition: 'all 0.3s ease',
 };
 
 const avatarText = {
@@ -367,26 +414,14 @@ const logoutButton = {
   alignItems: 'center',
   gap: '0.5rem',
   padding: '0.5rem 1rem',
-  backgroundColor: '#dc3545',
-  color: '#ffffff',
   border: 'none',
   borderRadius: '6px',
   cursor: 'pointer',
   fontSize: '0.875rem',
-  transition: 'all 0.2s ease',
+  transition: 'all 0.3s ease',
   fontWeight: '500',
 };
 
-const searchContainer = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '1.5rem',
-  gap: '1rem',
-  flexWrap: 'wrap',
-  padding: '1rem',
-  borderBottom: '1px solid #333333',
-};
 
 const searchWrapper = {
   position: 'relative',
@@ -413,15 +448,13 @@ const searchStyle = {
   fontSize: '0.875rem',
   border: '1px solid #333333',
   borderRadius: '6px',
-  backgroundColor: '#1a1a1a',
-  color: '#ffffff',
   outline: 'none',
-  transition: 'border-color 0.2s ease',
+  transition: 'all 0.3s ease',
 };
 
 const searchFocusedStyle = {
   borderColor: '#00d4ff',
-  boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.1)',
+  boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.2)',
 };
 
 const clearSearchButton = {
@@ -446,6 +479,17 @@ const searchResults = {
   fontSize: '0.9rem',
 };
 
+const searchContainer = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '1.5rem',
+  gap: '1rem',
+  flexWrap: 'wrap',
+  padding: '1rem',
+  borderBottom: '1px solid',
+};
+
 const gridContainer = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -456,13 +500,11 @@ const gridContainer = {
 };
 
 const cardStyle = {
-  backgroundColor: '#1a1a1a',
-  border: '1px solid #333333',
   borderRadius: '8px',
   padding: '1.5rem',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
   cursor: 'pointer',
   transition: 'all 0.3s ease',
+  border: '1px solid #333333',
   position: 'relative',
   overflow: 'hidden',
 };
@@ -492,18 +534,15 @@ const cardIcon = {
 };
 
 const cardTitle = {
-  margin: 0,
-  fontSize: '1.2rem',
-  color: '#ffffff',
+  margin: '0 0 0.5rem 0',
+  fontSize: '1.25rem',
   fontWeight: '600',
-  flex: 1,
 };
 
 const cardDescription = {
-  fontSize: '0.875rem',
-  color: '#cccccc',
+  margin: '0.5rem 0 0 0',
+  fontSize: '0.95rem',
   lineHeight: '1.5',
-  margin: '0 0 1rem 0',
 };
 
 const cardArrow = {

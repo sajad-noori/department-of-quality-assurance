@@ -1,41 +1,50 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 
 const API_URL = '/api/news';
 
-const containerStyle = {
-  backgroundColor: '#0a0a0a',
-  color: '#ffffff',
+const containerStyle = (theme) => ({
+  backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
+  color: theme === 'dark' ? '#eeeeee' : '#333333',
   minHeight: '100vh',
   padding: '1rem',
   fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
   direction: 'rtl',
-};
+  transition: 'background-color 0.3s ease, color 0.3s ease',
+});
 
-const headerStyle = {
-  background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-  color: '#ffffff',
+const headerStyle = (theme) => ({
+  background: theme === 'dark' 
+    ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)' 
+    : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+  color: theme === 'dark' ? '#eeeeee' : '#333333',
   padding: '1.5rem',
   borderRadius: '12px',
   marginBottom: '1.5rem',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-  border: '1px solid #333333',
-};
+  boxShadow: theme === 'dark' 
+    ? '0 4px 20px rgba(0,0,0,0.3)' 
+    : '0 4px 20px rgba(0,0,0,0.05)',
+  border: theme === 'dark' ? '1px solid #333333' : '1px solid #e0e0e0',
+  transition: 'all 0.3s ease',
+});
 
-const titleStyle = {
+const titleStyle = (theme) => ({
   margin: '0 0 0.5rem 0',
   fontSize: '2rem',
   fontWeight: '700',
-  color: '#ffffff',
+  color: theme === 'dark' ? '#ffffff' : '#333333',
   textAlign: 'center',
-};
+  transition: 'color 0.3s ease',
+});
 
-const subtitleStyle = {
+const subtitleStyle = (theme) => ({
   margin: 0,
   fontSize: '0.9rem',
-  color: '#cccccc',
+  color: theme === 'dark' ? '#cccccc' : '#666666',
   textAlign: 'center',
-};
+  transition: 'color 0.3s ease',
+});
 
 const statsContainerStyle = {
   display: 'grid',
@@ -44,27 +53,31 @@ const statsContainerStyle = {
   marginTop: '1rem',
 };
 
-const statItemStyle = {
+const statItemStyle = (theme) => ({
   textAlign: 'center',
   padding: '0.75rem',
   borderRadius: '8px',
-  backgroundColor: '#1a1a1a',
-  border: '1px solid #333333',
-};
+  backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
+  border: theme === 'dark' ? '1px solid #333333' : '1px solid #e0e0e0',
+  transition: 'all 0.3s ease',
+  boxShadow: theme === 'dark' ? 'none' : '0 2px 4px rgba(0,0,0,0.05)',
+});
 
-const statValueStyle = {
+const statValueStyle = (theme) => ({
   fontSize: '1.25rem',
   fontWeight: '600',
-  color: '#00d4ff',
+  color: theme === 'dark' ? '#00d4ff' : '#4a6cf7',
   marginBottom: '0.25rem',
-};
+  transition: 'color 0.3s ease',
+});
 
-const statLabelStyle = {
+const statLabelStyle = (theme) => ({
   fontSize: '0.75rem',
-  color: '#999999',
+  color: theme === 'dark' ? '#999999' : '#666666',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
-};
+  transition: 'color 0.3s ease',
+});
 
 const controlsStyle = {
   display: 'flex',
@@ -75,57 +88,52 @@ const controlsStyle = {
   flexWrap: 'wrap',
 };
 
-const searchInputStyle = {
-  flex: 1,
-  minWidth: '250px',
+const searchInputStyle = (theme) => ({
+  flexGrow: 1,
   padding: '0.5rem 0.75rem',
   fontSize: '0.875rem',
-  border: '1px solid #333333',
+  border: theme === 'dark' ? '1px solid #2d2d2d' : '1px solid #d1d5db',
   borderRadius: '6px',
-  backgroundColor: '#1a1a1a',
-  color: '#ffffff',
+  backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff',
+  color: theme === 'dark' ? '#eeeeee' : '#333333',
   outline: 'none',
-  transition: 'border-color 0.2s ease',
-};
+  transition: 'all 0.3s ease',
+  '&:focus': {
+    borderColor: '#0dcaf0',
+    boxShadow: '0 0 0 2px rgba(13, 202, 240, 0.2)',
+  },
+  '&::placeholder': {
+    color: theme === 'dark' ? '#666666' : '#999999',
+  },
+});
 
-const searchInputFocusStyle = {
+const searchInputFocusStyle = (theme) => ({
   borderColor: '#00d4ff',
-  boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.1)',
-};
+  boxShadow: `0 0 0 2px ${theme === 'dark' ? 'rgba(0, 212, 255, 0.2)' : 'rgba(0, 212, 255, 0.1)'}`,
+  outline: 'none',
+});
 
-const buttonStyle = {
-  backgroundColor: '#00d4ff',
+const buttonStyle = (theme) => ({
+  backgroundColor: theme === 'dark' ? '#0dcaf0' : '#0dcaf0',
   border: 'none',
-  color: '#000000',
+  color: theme === 'dark' ? '#121212' : '#ffffff',
   padding: '0.5rem 1rem',
   borderRadius: '6px',
   cursor: 'pointer',
   fontWeight: '500',
   fontSize: '0.875rem',
-  transition: 'all 0.2s ease',
+  transition: 'all 0.3s ease',
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
   whiteSpace: 'nowrap',
-};
+});
 
-const buttonHoverStyle = {
-  backgroundColor: '#00b8e6',
-  transform: 'translateY(-1px)',
-  boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
-};
-
-const buttonDangerStyle = {
-  ...buttonStyle,
-  backgroundColor: '#dc3545',
+const buttonDangerStyle = (theme) => ({
+  ...buttonStyle(theme),
+  backgroundColor: theme === 'dark' ? '#dc3545' : '#ff6b6b',
   color: '#ffffff',
-};
-
-const buttonDangerHoverStyle = {
-  backgroundColor: '#c82333',
-  transform: 'translateY(-1px)',
-  boxShadow: '0 4px 12px rgba(220, 53, 69, 0.3)',
-};
+});
 
 const newsGridStyle = {
   display: 'grid',
@@ -133,44 +141,52 @@ const newsGridStyle = {
   gap: '1rem',
 };
 
-const newsCardStyle = {
-  backgroundColor: '#1a1a1a',
+const newsCardStyle = (theme) => ({
+  backgroundColor: theme === 'dark' ? '#1e1e1e' : '#ffffff',
   borderRadius: '8px',
   padding: '1rem',
-  border: '1px solid #333333',
-  transition: 'all 0.2s ease',
+  border: theme === 'dark' ? '1px solid #2d2d2d' : '1px solid #e0e0e0',
+  transition: 'all 0.3s ease',
   cursor: 'pointer',
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
   minHeight: '200px',
-};
+  boxShadow: theme === 'dark' ? '0 2px 8px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.05)',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme === 'dark' 
+      ? '0 8px 24px rgba(13, 202, 240, 0.2)' 
+      : '0 8px 24px rgba(0, 0, 0, 0.1)',
+    borderColor: theme === 'dark' ? '#0dcaf0' : '#0dcaf0',
+  },
+});
 
-const newsCardHoverStyle = {
-  borderColor: '#00d4ff',
-  transform: 'translateY(-2px)',
-  boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
-};
-
-const newsTitleStyle = {
+const newsTitleStyle = (theme) => ({
   fontSize: '1rem',
   fontWeight: '600',
-  color: '#ffffff',
+  color: theme === 'dark' ? '#ffffff' : '#333333',
   marginBottom: '0.5rem',
   lineHeight: '1.4',
-};
+  transition: 'color 0.3s ease',
+  '&:hover': {
+    color: theme === 'dark' ? '#0dcaf0' : '#00b5d7',
+  },
+});
 
-const newsDescriptionStyle = {
+const newsDescriptionStyle = (theme) => ({
   fontSize: '0.875rem',
-  color: '#cccccc',
-  marginBottom: '0.75rem',
-  lineHeight: '1.5',
+  color: theme === 'dark' ? '#bbbbbb' : '#555555',
+  marginBottom: '1rem',
+  flexGrow: 1,
+  lineHeight: '1.6',
   display: '-webkit-box',
-  WebkitLineClamp: 2,
+  WebkitLineClamp: 3,
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
-  flex: 1,
-};
+  textOverflow: 'ellipsis',
+  transition: 'color 0.3s ease',
+});
 
 const newsMetaStyle = {
   display: 'flex',
@@ -179,33 +195,39 @@ const newsMetaStyle = {
   marginBottom: '1rem',
 };
 
-const authorStyle = {
+const authorStyle = (theme) => ({
   fontSize: '0.75rem',
-  color: '#00d4ff',
-  backgroundColor: 'rgba(0, 212, 255, 0.1)',
+  color: theme === 'dark' ? '#00d4ff' : '#4a6cf7',
+  backgroundColor: theme === 'dark' 
+    ? 'rgba(0, 212, 255, 0.1)' 
+    : 'rgba(74, 108, 247, 0.1)',
   padding: '0.25rem 0.5rem',
   borderRadius: '4px',
-};
+  transition: 'all 0.3s ease',
+});
 
-const dateStyle = {
+const dateStyle = (theme) => ({
   fontSize: '0.75rem',
-  color: '#666666',
-};
+  color: theme === 'dark' ? '#666666' : '#888888',
+  transition: 'color 0.3s ease',
+});
 
-const cardActionsStyle = {
+const cardActionsStyle = (theme) => ({
   display: 'flex',
   gap: '0.5rem',
   justifyContent: 'flex-end',
   marginTop: 'auto',
   paddingTop: '0.75rem',
-  borderTop: '1px solid #333333',
-};
+  borderTop: theme === 'dark' ? '1px solid #333333' : '1px solid #e0e0e0',
+  transition: 'border-color 0.3s ease',
+});
 
-const emptyStateStyle = {
+const emptyStateStyle = (theme) => ({
   textAlign: 'center',
   padding: '3rem 1rem',
-  color: '#999999',
-};
+  color: theme === 'dark' ? '#999999' : '#666666',
+  transition: 'color 0.3s ease',
+});
 
 const emptyStateIconStyle = {
   fontSize: '3rem',
@@ -213,25 +235,18 @@ const emptyStateIconStyle = {
   opacity: 0.5,
 };
 
-const loadingStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: '3rem',
-  color: '#999999',
-};
-
-const spinnerStyle = {
+const spinnerStyle = (theme) => ({
   width: '40px',
   height: '40px',
-  border: '3px solid #333333',
-  borderTop: '3px solid #00d4ff',
+  border: `3px solid ${theme === 'dark' ? '#333333' : '#e0e0e0'}`,
+  borderTop: `3px solid ${theme === 'dark' ? '#00d4ff' : '#4a6cf7'}`,
   borderRadius: '50%',
   animation: 'spin 1s linear infinite',
   marginRight: '1rem',
-};
+});
 
 const NewsList = () => {
+  const { theme } = useTheme();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -272,22 +287,46 @@ const NewsList = () => {
     }
   };
 
-  const handleButtonHover = (e, isDanger = false) => {
-    const style = isDanger ? buttonDangerHoverStyle : buttonHoverStyle;
-    Object.assign(e.currentTarget.style, style);
+  const handleButtonHover = (e, isDanger = false, theme) => {
+    e.currentTarget.style.transform = 'translateY(-2px)';
+    e.currentTarget.style.boxShadow = theme === 'dark' 
+      ? '0 4px 12px rgba(13, 202, 240, 0.3)' 
+      : '0 4px 12px rgba(0, 0, 0, 0.15)';
+    
+    if (isDanger) {
+      e.currentTarget.style.backgroundColor = theme === 'dark' ? '#ff6b81' : '#ff4757';
+    } else {
+      e.currentTarget.style.backgroundColor = theme === 'dark' ? '#00b5d7' : '#00a0b8';
+    }
   };
 
-  const handleButtonLeave = (e, isDanger = false) => {
-    const style = isDanger ? buttonDangerStyle : buttonStyle;
-    Object.assign(e.currentTarget.style, style);
+  const handleButtonLeave = (e, isDanger = false, theme) => {
+    e.currentTarget.style.transform = 'translateY(0)';
+    e.currentTarget.style.boxShadow = theme === 'dark' 
+      ? '0 2px 8px rgba(0, 0, 0, 0.2)' 
+      : '0 2px 8px rgba(0, 0, 0, 0.1)';
+    
+    if (isDanger) {
+      e.currentTarget.style.backgroundColor = theme === 'dark' ? '#dc3545' : '#ff6b6b';
+    } else {
+      e.currentTarget.style.backgroundColor = theme === 'dark' ? '#0dcaf0' : '#0dcaf0';
+    }
   };
 
-  const handleCardHover = (e) => {
-    Object.assign(e.currentTarget.style, newsCardHoverStyle);
+  const handleCardHover = (e, theme) => {
+    e.currentTarget.style.transform = 'translateY(-4px)';
+    e.currentTarget.style.boxShadow = theme === 'dark' 
+      ? '0 8px 24px rgba(13, 202, 240, 0.2)' 
+      : '0 8px 24px rgba(0, 0, 0, 0.1)';
+    e.currentTarget.style.borderColor = theme === 'dark' ? '#0dcaf0' : '#0dcaf0';
   };
 
-  const handleCardLeave = (e) => {
-    Object.assign(e.currentTarget.style, newsCardStyle);
+  const handleCardLeave = (e, theme) => {
+    e.currentTarget.style.transform = 'translateY(0)';
+    e.currentTarget.style.boxShadow = theme === 'dark' 
+      ? '0 2px 8px rgba(0, 0, 0, 0.2)' 
+      : '0 2px 8px rgba(0, 0, 0, 0.05)';
+    e.currentTarget.style.borderColor = theme === 'dark' ? '#2d2d2d' : '#e0e0e0';
   };
 
   const filteredNews = news.filter(item =>
@@ -319,10 +358,13 @@ const NewsList = () => {
 
   if (loading) {
     return (
-      <div style={containerStyle}>
-        <div style={loadingStyle}>
-          <div style={spinnerStyle}></div>
-          <span>در حال بارگذاری...</span>
+      <div style={containerStyle(theme)}>
+        <div style={headerStyle(theme)}>
+          <h1 style={titleStyle(theme)}>در حال بارگذاری...</h1>
+          <p style={subtitleStyle(theme)}>لطفاً صبر کنید</p>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <div style={spinnerStyle(theme)}></div>
         </div>
       </div>
     );
@@ -330,14 +372,19 @@ const NewsList = () => {
 
   if (error) {
     return (
-      <div style={containerStyle}>
-        <div style={emptyStateStyle}>
+      <div style={containerStyle(theme)}>
+        <div style={emptyStateStyle(theme)}>
           <div style={emptyStateIconStyle}>⚠️</div>
-          <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>خطا</h3>
+          <h3 style={{ 
+            color: theme === 'dark' ? '#dc3545' : '#ff6b6b', 
+            marginBottom: '1rem' 
+          }}>
+            خطا
+          </h3>
           <p style={{ marginBottom: '1.5rem' }}>{error}</p>
           <button
             onClick={fetchNews}
-            style={buttonStyle}
+            style={buttonStyle(theme)}
             onMouseEnter={(e) => handleButtonHover(e)}
             onMouseLeave={(e) => handleButtonLeave(e)}
           >
@@ -350,23 +397,23 @@ const NewsList = () => {
   }
 
   return (
-    <div style={containerStyle}>
-      <div style={headerStyle}>
-        <h1 style={titleStyle}>مدیریت اخبار</h1>
-        <p style={subtitleStyle}>کنترل و مدیریت اخبار سیستم</p>
+    <div style={containerStyle(theme)}>
+      <div style={headerStyle(theme)}>
+        <h1 style={titleStyle(theme)}>مدیریت اخبار</h1>
+        <p style={subtitleStyle(theme)}>کنترل و مدیریت اخبار سیستم</p>
         
         <div style={statsContainerStyle}>
-          <div style={statItemStyle}>
-            <div style={statValueStyle}>{stats.total}</div>
-            <div style={statLabelStyle}>کل اخبار</div>
+          <div style={statItemStyle(theme)}>
+            <div style={statValueStyle(theme)}>{stats.total}</div>
+            <div style={statLabelStyle(theme)}>کل اخبار</div>
           </div>
-          <div style={statItemStyle}>
-            <div style={statValueStyle}>{stats.withImages}</div>
-            <div style={statLabelStyle}>با تصویر</div>
+          <div style={statItemStyle(theme)}>
+            <div style={statValueStyle(theme)}>{stats.withImages}</div>
+            <div style={statLabelStyle(theme)}>با تصویر</div>
           </div>
-          <div style={statItemStyle}>
-            <div style={statValueStyle}>{stats.recent}</div>
-            <div style={statLabelStyle}>اخیر</div>
+          <div style={statItemStyle(theme)}>
+            <div style={statValueStyle(theme)}>{stats.recent}</div>
+            <div style={statLabelStyle(theme)}>اخیر</div>
           </div>
         </div>
       </div>
@@ -380,16 +427,16 @@ const NewsList = () => {
           onFocus={() => setSearchFocused(true)}
           onBlur={() => setSearchFocused(false)}
           style={{
-            ...searchInputStyle,
-            ...(searchFocused ? searchInputFocusStyle : {})
+            ...searchInputStyle(theme),
+            ...(searchFocused ? searchInputFocusStyle(theme) : {})
           }}
         />
         
         <button
           onClick={() => navigate('/news/create')}
-          style={buttonStyle}
-          onMouseEnter={(e) => handleButtonHover(e)}
-          onMouseLeave={(e) => handleButtonLeave(e)}
+          style={buttonStyle(theme)}
+          onMouseEnter={(e) => handleButtonHover(e, false, theme)}
+          onMouseLeave={(e) => handleButtonLeave(e, false, theme)}
         >
           <span>➕</span>
           <span>خبر جدید</span>
@@ -401,67 +448,69 @@ const NewsList = () => {
           {filteredNews.map((item) => (
             <div
               key={item.id}
-              style={newsCardStyle}
-              onMouseEnter={handleCardHover}
-              onMouseLeave={handleCardLeave}
+              style={newsCardStyle(theme)}
+              onMouseEnter={(e) => handleCardHover(e, theme)}
+              onMouseLeave={(e) => handleCardLeave(e, theme)}
+              onClick={() => navigate(`/news/edit/${item.id}`)}
             >
-              <h3 style={newsTitleStyle}>{item.title}</h3>
-              <p style={newsDescriptionStyle}>{item.description}</p>
-              
+              <h3 style={newsTitleStyle(theme)}>{item.title}</h3>
+              <p style={newsDescriptionStyle(theme)}>{item.description}</p>
               <div style={newsMetaStyle}>
-                <span style={authorStyle}>{item.author}</span>
-                <span style={dateStyle}>{formatDate(item.created_at || item.updated_at)}</span>
+                <span style={authorStyle(theme)}>{item.author || 'ناشناس'}</span>
+                <span style={dateStyle(theme)}>{formatDate(item.created_at || item.updated_at)}</span>
               </div>
-              
-              <div style={cardActionsStyle}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/news/edit/${item.id}`);
-                  }}
-                  style={buttonStyle}
-                  onMouseEnter={(e) => handleButtonHover(e)}
-                  onMouseLeave={(e) => handleButtonLeave(e)}
-                >
-                  <span>✏️</span>
-                  <span>ویرایش</span>
-                </button>
+              <div style={cardActionsStyle(theme)}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(item.id);
                   }}
-                  style={buttonDangerStyle}
-                  onMouseEnter={(e) => handleButtonHover(e, true)}
-                  onMouseLeave={(e) => handleButtonLeave(e, true)}
+                  style={buttonDangerStyle(theme)}
+                  onMouseEnter={(e) => handleButtonHover(e, true, theme)}
+                  onMouseLeave={(e) => handleButtonLeave(e, true, theme)}
                 >
                   <span>🗑️</span>
                   <span>حذف</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/news/edit/${item.id}`);
+                  }}
+                  style={buttonStyle(theme)}
+                  onMouseEnter={(e) => handleButtonHover(e, false, theme)}
+                  onMouseLeave={(e) => handleButtonLeave(e, false, theme)}
+                >
+                  <span>✏️</span>
+                  <span>ویرایش</span>
                 </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div style={emptyStateStyle}>
+        <div style={emptyStateStyle(theme)}>
           <div style={emptyStateIconStyle}>📰</div>
-          <h3 style={{ color: '#ffffff', marginBottom: '0.5rem' }}>
-            {searchTerm ? 'هیچ خبری یافت نشد' : 'هیچ خبری وجود ندارد'}
+          <h3 style={{ 
+            marginBottom: '1rem',
+            color: theme === 'dark' ? '#ffffff' : '#333333'
+          }}>
+            خبری یافت نشد
           </h3>
-          <p style={{ marginBottom: '1.5rem', color: '#999999' }}>
-            {searchTerm 
-              ? `هیچ خبری با عبارت "${searchTerm}" یافت نشد`
-              : 'هنوز هیچ خبری در سیستم ثبت نشده است'
-            }
+          <p style={{ 
+            marginBottom: '1.5rem',
+            color: theme === 'dark' ? '#cccccc' : '#666666'
+          }}>
+            {searchTerm ? 'نتیجه‌ای برای جستجوی شما یافت نشد.' : 'هنوز خبری ثبت نشده است.'}
           </p>
           <button
             onClick={() => navigate('/news/create')}
-            style={buttonStyle}
-            onMouseEnter={(e) => handleButtonHover(e)}
-            onMouseLeave={(e) => handleButtonLeave(e)}
+            style={buttonStyle(theme)}
+            onMouseEnter={(e) => handleButtonHover(e, false, theme)}
+            onMouseLeave={(e) => handleButtonLeave(e, false, theme)}
           >
-            <span>➕</span>
-            <span>افزودن اولین خبر</span>
+            <span>📝</span>
+            <span>ایجاد خبر جدید</span>
           </button>
         </div>
       )}

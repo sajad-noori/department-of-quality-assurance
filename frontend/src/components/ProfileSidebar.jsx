@@ -17,6 +17,8 @@ import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close";
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 const ProfileSidebar = ({ onClose }) => {
   const [user, setUser] = useState(null);
@@ -39,6 +41,9 @@ const ProfileSidebar = ({ onClose }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     // Sync activeStage with the current route
@@ -217,7 +222,7 @@ const ProfileSidebar = ({ onClose }) => {
         top: 0,
         right: 0,
         height: '100vh',
-        zIndex: 1999,
+        zIndex: 1300, // Lower z-index for sidebar
         overflowY: 'auto'
       }}
       animate={{ opacity: 1, x: 0 }}
@@ -316,7 +321,20 @@ const ProfileSidebar = ({ onClose }) => {
         >
           ویرایش پروفایل
         </Button>
-        <Dialog open={editOpen} onClose={handleEditClose} className="edit-dialog">
+        <Dialog 
+          open={editOpen} 
+          onClose={handleEditClose} 
+          className="edit-dialog"
+          sx={{
+            zIndex: 1400, // Higher z-index than sidebar
+            '& .MuiDialog-paper': {
+              margin: isMobile ? '16px' : '32px',
+              width: isMobile ? 'calc(100% - 32px)' : 'auto',
+              maxWidth: isMobile ? 'none' : '500px',
+              maxHeight: isMobile ? 'calc(100% - 64px)' : 'calc(100% - 64px)'
+            }
+          }}
+        >
           <DialogTitle sx={{ textAlign: "right", fontWeight: 700, position: 'relative' }}>
             <IconButton 
               aria-label="close"
@@ -558,6 +576,8 @@ const ProfileSidebar = ({ onClose }) => {
         }
 
         .edit-dialog {
+          z-index: 1400 !important; /* Higher than sidebar z-index */
+          
           & .MuiDialog-container {
             backdrop-filter: blur(4px);
             background-color: rgba(0, 0, 0, 0.5);
