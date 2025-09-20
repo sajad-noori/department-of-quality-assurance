@@ -230,7 +230,7 @@ const ProfileSidebar = ({ onClose }) => {
           onClick={onClose}
           size="small"
           sx={{
-            color: 'white',
+            color: '#00d4ff',
             '&:hover': {
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
             },
@@ -316,9 +316,22 @@ const ProfileSidebar = ({ onClose }) => {
         >
           ویرایش پروفایل
         </Button>
-        <Dialog open={editOpen} onClose={handleEditClose}>
-          <DialogTitle sx={{ textAlign: "right", fontWeight: 700 }}>
-            ویرایش پروفایل
+        <Dialog open={editOpen} onClose={handleEditClose} className="edit-dialog">
+          <DialogTitle sx={{ textAlign: "right", fontWeight: 700, position: 'relative' }}>
+            <IconButton 
+              aria-label="close"
+              onClick={handleEditClose}
+              size="small"
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: 8,
+                color:'#00d4ff',
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+            <span style={{ paddingRight: '24px' }}>ویرایش پروفایل</span>
           </DialogTitle>
           <DialogContent>
             {editError && (
@@ -519,19 +532,130 @@ const ProfileSidebar = ({ onClose }) => {
 
       <style>{`
         .profile-sidebar {
-          width: 320px;
-          padding: 2rem 1.5rem;
+          width: 100%;
+          max-width: 320px;
+          padding: 1.5rem 1rem;
           background: #1e1e1e;
           height: 100%;
           box-sizing: border-box;
-          position: absolute;
+          position: fixed;
           right: 0;
           top: 0;
           height: 100vh;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
           backdrop-filter: blur(10px);
           transition: all 0.3s ease;
           background: rgba(255, 255, 255, 0.05);
           border-left: 1px solid rgba(0, 212, 255, 0.1);
+          z-index: 1300;
+          
+          @media (max-width: 600px) {
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0.75rem;
+          }
+        }
+
+        .edit-dialog {
+          & .MuiDialog-container {
+            backdrop-filter: blur(4px);
+            background-color: rgba(0, 0, 0, 0.5);
+          }
+          
+          & .MuiDialog-paper {
+            margin: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: calc(100% - 32px);
+            border-radius: 12px;
+            background: var(--background-paper);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            
+            @media (max-width: 900px) {
+              max-width: 80%;
+            }
+            
+            @media (max-width: 600px) {
+              margin: 8px;
+              max-width: calc(100% - 16px);
+              max-height: calc(100% - 16px);
+              border-radius: 8px;
+            }
+          }
+          
+          & .MuiDialogTitle-root {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--divider);
+            background: var(--background-default);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            
+            @media (max-width: 600px) {
+              padding: 16px 20px;
+              font-size: 1.1rem;
+            }
+          }
+          
+          & .MuiDialogContent-root {
+            padding: 20px 24px;
+            color: var(--text-secondary);
+            
+            @media (max-width: 600px) {
+              padding: 16px 20px;
+            }
+            
+            & .MuiTextField-root {
+              margin-bottom: 16px;
+              
+              &:last-child {
+                margin-bottom: 0;
+              }
+              
+              @media (max-width: 600px) {
+                margin-bottom: 12px;
+              }
+            }
+          }
+          
+          & .MuiDialogActions-root {
+            padding: 16px 24px 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+            
+            @media (max-width: 600px) {
+              padding: 16px 20px 20px;
+              flex-direction: row;
+              justify-content: flex-start;
+              
+              & button {
+                flex: 1;
+                min-width: 120px;
+                margin: 0 !important;
+                
+                &:first-child {
+                  margin-right: 8px !important;
+                }
+              }
+            }
+            
+            @media (max-width: 400px) {
+              flex-direction: column;
+              gap: 8px;
+              
+              & button {
+                width: 100%;
+                margin: 0 !important;
+                
+                &:first-child {
+                  margin-right: 0 !important;
+                }
+              }
+            }
+          }
         }
 
         .profile-content {
@@ -540,18 +664,28 @@ const ProfileSidebar = ({ onClose }) => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding-top: 2rem;
+          padding-top: 1.5rem;
+          
+          @media (max-width: 600px) {
+            padding-top: 1rem;
+          }
         }
 
         .profile-image-container {
           position: relative;
-          width: 120px;
-          height: 120px;
-          margin: 0 auto 2rem;
-          padding: 4px;
+          width: 100px;
+          height: 100px;
+          margin: 0 auto 1.5rem;
+          padding: 3px;
           background: linear-gradient(145deg, #0dcaf0, #00b5d7);
           border-radius: 50%;
           box-shadow: 0 4px 12px rgba(13, 202, 240, 0.3);
+          
+          @media (max-width: 600px) {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 1.25rem;
+          }
         }
 
         .profile-image {
@@ -689,6 +823,32 @@ const ProfileSidebar = ({ onClose }) => {
           margin-top: 2rem;
           width: 100%;
           padding: 0 1.5rem;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          padding: 0.8rem 1.25rem;
+          margin: 0.4rem 0;
+          color: #d1d8f0;
+          text-decoration: none;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+          font-size: 0.95rem;
+          font-weight: 500;
+          position: relative;
+          overflow: hidden;
+          min-height: 48px;
+          
+          @media (max-width: 600px) {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            margin: 0.35rem 0;
+          }
+          
+          @media (max-width: 400px) {
+            padding: 0.7rem 0.8rem;
+          }
         }
 
         .logout-button {

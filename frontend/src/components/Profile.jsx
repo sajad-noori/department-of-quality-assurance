@@ -35,10 +35,12 @@ const steps = [
 ];
 
 function RestrictedAccessAlert() {
+  const { theme } = useTheme();
+  
   return (
     <>
       <div className="restricted-access-container">
-        <div className="restricted-access-card">
+        <div className={`restricted-access-card ${theme}-theme`}>
           <div className="restricted-icon-wrapper">
             <FaExclamationTriangle className="restricted-icon" />
           </div>
@@ -66,14 +68,26 @@ function RestrictedAccessAlert() {
         }
 
         .restricted-access-card {
-          background: #1d1d1d;
-          border: 1px solid rgba(255, 193, 7, 0.3);
           border-radius: 20px;
           padding: 2.5rem;
           width: 100%;
           text-align: center;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .restricted-access-card.dark-theme {
+          background: #1d1d1d;
+          border: 1px solid rgba(255, 193, 7, 0.3);
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
           color: #eee;
+        }
+
+        .restricted-access-card.light-theme {
+          background: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+          color: #333;
         }
 
         .restricted-icon-wrapper {
@@ -102,35 +116,61 @@ function RestrictedAccessAlert() {
         }
 
         .restricted-description {
-          font-size: 1.05rem;
+          font-size: 1.1rem;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.85);
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .dark-theme .restricted-description {
+          color: #ccc;
+        }
+
+        .light-theme .restricted-description {
+          color: #555;
         }
 
         .restricted-contact-info {
-          padding: 1.5rem;
-          border-radius: 12px;
-          background: rgba(13, 202, 240, 0.08);
-          border: 1px solid rgba(13, 202, 240, 0.15);
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
         }
-        
+
+        .dark-theme .restricted-contact-info {
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light-theme .restricted-contact-info {
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
         .restricted-contact-info p {
-          color: #a9e5ff;
           margin-bottom: 0.5rem;
         }
 
-        .restricted-phone-number {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #0dcaf0;
-          text-decoration: none;
-          transition: color 0.3s ease, text-shadow 0.3s ease;
+        .dark-theme .restricted-contact-info p {
+          color: #aaa;
         }
-        
+
+        .light-theme .restricted-contact-info p {
+          color: #666;
+        }
+
+        .restricted-phone-number {
+          display: inline-block;
+          background: rgba(255, 193, 7, 0.1);
+          color: #ffc107;
+          padding: 0.5rem 1.5rem;
+          border-radius: 50px;
+          text-decoration: none;
+          font-weight: 600;
+          margin-top: 0.5rem;
+          transition: all 0.3s ease;
+          border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
         .restricted-phone-number:hover {
-          color: #fff;
-          text-shadow: 0 0 10px #0dcaf0;
+          background: rgba(255, 193, 7, 0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(255, 193, 7, 0.1);
         }
       `}</style>
     </>
