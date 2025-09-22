@@ -1,9 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaSpinner, FaArrowLeft } from 'react-icons/fa';
-import axios from 'axios';
-import '../styles/AuthForm.css';
-import { useTheme } from '../contexts/ThemeContext';
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaEnvelope,
+  FaLock,
+  FaUser,
+  FaSpinner,
+  FaArrowLeft,
+} from "react-icons/fa";
+import axios from "axios";
+import "../styles/AuthForm.css";
+import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 // Helper function to validate email
 function validateEmail(email) {
@@ -13,13 +22,13 @@ function validateEmail(email) {
 // Decode JWT payload (base64 decode)
 function parseJwt(token) {
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
     );
     return JSON.parse(jsonPayload);
   } catch {
@@ -29,7 +38,7 @@ function parseJwt(token) {
 
 // Check if user is logged in by validating stored token and extracting user info
 function isLoggedIn() {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (!token) return null;
   const user = parseJwt(token);
   if (!user) return null;
@@ -40,45 +49,76 @@ function isLoggedIn() {
 // ✅ LOGIN COMPONENT
 export function Login() {
   const { theme } = useTheme();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const redirectPath = searchParams.get('redirect') || '/';
+  const redirectPath = searchParams.get("redirect") || "/";
 
   // ✅ Redirect if already logged in
   useEffect(() => {
     const user = isLoggedIn();
     if (user) {
-      navigate(user.role === 'admin' ? '/dashboard' : redirectPath, { replace: true });
+      navigate(user.role === "admin" ? "/dashboard" : redirectPath, {
+        replace: true,
+      });
     }
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
-    if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
+    if (!validateEmail(email)) return setError("ایمیل معتبر نیست");
+    if (password.length < 6) return setError("رمز عبور باید حداقل ۶ حرف باشد");
 
-    setError('');
+    setError("");
     setIsLoading(true);
-    
+
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/auth/login',
+        "http://localhost:5000/api/auth/login",
         { email, password },
         { withCredentials: true } // ✅ send cookie
       );
 
       const { user } = res.data;
-      navigate(user.role === 'admin' ? '/dashboard' : redirectPath);
+      // Attempt to retrieve the full user object (including profileImage)
+      // from the server-side `/api/auth/me` endpoint. Some login responses
+      // don't include all fields, so fetching `/me` ensures we have the
+      // complete data to update AuthContext and make Menu show the image
+      // immediately without a page refresh.
+      try {
+        let fullUser = user;
+        try {
+          const meRes = await axios.get("http://localhost:5000/api/auth/me", {
+            withCredentials: true,
+          });
+          if (meRes.data && meRes.data.user) {
+            fullUser = meRes.data.user;
+          }
+        } catch (err) {
+          // ignore: fallback to user returned by login
+        }
+
+        try {
+          if (fullUser) login(fullUser);
+        } catch (err) {
+          // ignore if login not available for any reason
+        }
+
+        navigate(fullUser?.role === "admin" ? "/dashboard" : redirectPath);
+      } catch (err) {
+        // fallback navigation
+        navigate(user?.role === "admin" ? "/dashboard" : redirectPath);
+      }
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.response?.data?.message || 'خطا در ورود');
+      console.error("Login error:", err);
+      setError(err.response?.data?.message || "خطا در ورود");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +127,9 @@ export function Login() {
   return (
     <div className="auth-container">
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .auth-container {
           background: #f7fcfd;
           color: #222;
@@ -156,7 +198,9 @@ export function Login() {
         .spinner {
           color: #0dcaf0;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
       <div className="auth-card">
         <div className="auth-header">
@@ -200,7 +244,7 @@ export function Login() {
             <div className="password-input-container">
               <input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 className="form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -213,15 +257,15 @@ export function Login() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
-                title={showPassword ? 'مخفی کردن رمز' : 'نمایش رمز'}
+                title={showPassword ? "مخفی کردن رمز" : "نمایش رمز"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button login-button"
             disabled={isLoading}
           >
@@ -231,7 +275,7 @@ export function Login() {
                 در حال ورود...
               </>
             ) : (
-              'ورود'
+              "ورود"
             )}
           </button>
 
@@ -240,17 +284,17 @@ export function Login() {
               <button
                 type="button"
                 className="auth-link forgot-password-link"
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => navigate("/forgot-password")}
                 disabled={isLoading}
               >
                 رمز عبور خود را فراموش کرده اید؟
               </button>
               <p className="auth-link-text">
-                حساب ندارید؟{' '}
+                حساب ندارید؟{" "}
                 <button
                   type="button"
                   className="auth-link"
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate("/register")}
                   disabled={isLoading}
                 >
                   ثبت‌نام
@@ -267,39 +311,39 @@ export function Login() {
 // ✅ FORGOT PASSWORD COMPONENT
 export function ForgotPassword() {
   const { theme } = useTheme();
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateEmail(email)) return setError('ایمیل معتبر نیست');
+    if (!validateEmail(email)) return setError("ایمیل معتبر نیست");
 
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setIsLoading(true);
-    
+
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/auth/forgot-password',
+        "http://localhost:5000/api/auth/forgot-password",
         { email },
         { withCredentials: true }
       );
 
-      setSuccess('کد بازنشانی رمز عبور به ایمیل شما ارسال شد.');
+      setSuccess("کد بازنشانی رمز عبور به ایمیل شما ارسال شد.");
       // Store email for verification step
-      localStorage.setItem('resetEmail', email);
+      localStorage.setItem("resetEmail", email);
       setTimeout(() => {
-        navigate('/verify-reset-code');
+        navigate("/verify-reset-code");
       }, 2000);
     } catch (err) {
-      console.error('Forgot password error:', err);
+      console.error("Forgot password error:", err);
       if (err.response?.status === 404) {
-        setError('کاربری با این ایمیل یافت نشد.');
+        setError("کاربری با این ایمیل یافت نشد.");
       } else {
-        setError(err.response?.data?.message || 'خطا در ارسال کد بازنشانی');
+        setError(err.response?.data?.message || "خطا در ارسال کد بازنشانی");
       }
     } finally {
       setIsLoading(false);
@@ -309,7 +353,9 @@ export function ForgotPassword() {
   return (
     <div className="auth-container">
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .auth-container {
           background: #f7fcfd;
           color: #222;
@@ -378,7 +424,9 @@ export function ForgotPassword() {
         .spinner {
           color: #0dcaf0;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
       <div className="auth-card">
         <div className="auth-header">
@@ -386,7 +434,9 @@ export function ForgotPassword() {
             <div className="logo-icon">🔑</div>
           </div>
           <h2 className="auth-title">فراموشی رمز عبور</h2>
-          <p className="auth-subtitle">ایمیل خود را وارد کنید تا کد بازنشانی ارسال شود</p>
+          <p className="auth-subtitle">
+            ایمیل خود را وارد کنید تا کد بازنشانی ارسال شود
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -421,8 +471,8 @@ export function ForgotPassword() {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button forgot-password-button"
             disabled={isLoading}
           >
@@ -432,7 +482,7 @@ export function ForgotPassword() {
                 در حال ارسال...
               </>
             ) : (
-              'ارسال کد بازنشانی'
+              "ارسال کد بازنشانی"
             )}
           </button>
 
@@ -440,7 +490,7 @@ export function ForgotPassword() {
             <button
               type="button"
               className="auth-link back-to-login"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate("/login")}
               disabled={isLoading}
             >
               <FaArrowLeft className="back-icon" />
@@ -456,16 +506,16 @@ export function ForgotPassword() {
 // ✅ VERIFY RESET CODE COMPONENT
 export function VerifyResetCode() {
   const { theme } = useTheme();
-  const [code, setCode] = useState('');
-  const [error, setError] = useState('');
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const resetEmail = localStorage.getItem('resetEmail');
+    const resetEmail = localStorage.getItem("resetEmail");
     if (!resetEmail) {
-      navigate('/forgot-password');
+      navigate("/forgot-password");
       return;
     }
     setEmail(resetEmail);
@@ -473,27 +523,27 @@ export function VerifyResetCode() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (code.length !== 6) return setError('کد باید ۶ رقم باشد');
+    if (code.length !== 6) return setError("کد باید ۶ رقم باشد");
 
-    setError('');
+    setError("");
     setIsLoading(true);
-    
+
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/auth/verify-reset-code',
+        "http://localhost:5000/api/auth/verify-reset-code",
         { email, code },
         { withCredentials: true }
       );
 
       // Store verification token for password reset
-      localStorage.setItem('resetToken', res.data.token);
-      navigate('/reset-password');
+      localStorage.setItem("resetToken", res.data.token);
+      navigate("/reset-password");
     } catch (err) {
-      console.error('Verify reset code error:', err);
+      console.error("Verify reset code error:", err);
       if (err.response?.status === 400) {
-        setError('کد نامعتبر یا منقضی شده است.');
+        setError("کد نامعتبر یا منقضی شده است.");
       } else {
-        setError(err.response?.data?.message || 'خطا در تایید کد');
+        setError(err.response?.data?.message || "خطا در تایید کد");
       }
     } finally {
       setIsLoading(false);
@@ -501,18 +551,18 @@ export function VerifyResetCode() {
   };
 
   const handleResendCode = async () => {
-    setError('');
+    setError("");
     setIsLoading(true);
-    
+
     try {
       await axios.post(
-        'http://localhost:5000/api/auth/forgot-password',
+        "http://localhost:5000/api/auth/forgot-password",
         { email },
         { withCredentials: true }
       );
-      setError('کد جدید ارسال شد.');
+      setError("کد جدید ارسال شد.");
     } catch (err) {
-      setError(err.response?.data?.message || 'خطا در ارسال کد جدید');
+      setError(err.response?.data?.message || "خطا در ارسال کد جدید");
     } finally {
       setIsLoading(false);
     }
@@ -525,7 +575,9 @@ export function VerifyResetCode() {
   return (
     <div className="auth-container">
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .auth-container {
           background: #f7fcfd;
           color: #222;
@@ -594,7 +646,9 @@ export function VerifyResetCode() {
         .spinner {
           color: #0dcaf0;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
       <div className="auth-card">
         <div className="auth-header">
@@ -602,7 +656,9 @@ export function VerifyResetCode() {
             <div className="logo-icon">🔐</div>
           </div>
           <h2 className="auth-title">تایید کد بازنشانی</h2>
-          <p className="auth-subtitle">کد ۶ رقمی ارسال شده به {email} را وارد کنید</p>
+          <p className="auth-subtitle">
+            کد ۶ رقمی ارسال شده به {email} را وارد کنید
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -623,17 +679,23 @@ export function VerifyResetCode() {
               type="text"
               className="form-input"
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={(e) =>
+                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
               placeholder="123456"
               maxLength={6}
               required
               disabled={isLoading}
-              style={{ textAlign: 'center', letterSpacing: '0.5rem', fontSize: '1.2rem' }}
+              style={{
+                textAlign: "center",
+                letterSpacing: "0.5rem",
+                fontSize: "1.2rem",
+              }}
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button verify-code-button"
             disabled={isLoading}
           >
@@ -643,7 +705,7 @@ export function VerifyResetCode() {
                 در حال تایید...
               </>
             ) : (
-              'تایید کد'
+              "تایید کد"
             )}
           </button>
 
@@ -661,8 +723,8 @@ export function VerifyResetCode() {
                 type="button"
                 className="auth-link back-to-login"
                 onClick={() => {
-                  localStorage.removeItem('resetEmail');
-                  navigate('/login');
+                  localStorage.removeItem("resetEmail");
+                  navigate("/login");
                 }}
                 disabled={isLoading}
               >
@@ -680,56 +742,57 @@ export function VerifyResetCode() {
 // ✅ RESET PASSWORD COMPONENT
 export function ResetPassword() {
   const { theme } = useTheme();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const resetToken = localStorage.getItem('resetToken');
+    const resetToken = localStorage.getItem("resetToken");
     if (!resetToken) {
-      navigate('/forgot-password');
+      navigate("/forgot-password");
     }
   }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password.length < 6) return setError('رمز عبور باید حداقل ۶ حرف باشد');
-    if (password !== confirmPassword) return setError('رمز عبور با تکرار آن مطابقت ندارد');
+    if (password.length < 6) return setError("رمز عبور باید حداقل ۶ حرف باشد");
+    if (password !== confirmPassword)
+      return setError("رمز عبور با تکرار آن مطابقت ندارد");
 
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setIsLoading(true);
-    
+
     try {
-      const resetToken = localStorage.getItem('resetToken');
+      const resetToken = localStorage.getItem("resetToken");
       const res = await axios.post(
-        'http://localhost:5000/api/auth/reset-password',
+        "http://localhost:5000/api/auth/reset-password",
         { token: resetToken, password },
         { withCredentials: true }
       );
 
-      setSuccess('رمز عبور شما با موفقیت تغییر یافت.');
-      
+      setSuccess("رمز عبور شما با موفقیت تغییر یافت.");
+
       // Clean up stored data
-      localStorage.removeItem('resetToken');
-      localStorage.removeItem('resetEmail');
-      
+      localStorage.removeItem("resetToken");
+      localStorage.removeItem("resetEmail");
+
       setTimeout(() => {
-        navigate('/login');
+        navigate("/login");
       }, 2000);
     } catch (err) {
-      console.error('Reset password error:', err);
+      console.error("Reset password error:", err);
       if (err.response?.status === 400) {
-        setError('توکن نامعتبر یا منقضی شده است.');
+        setError("توکن نامعتبر یا منقضی شده است.");
         // Clean up invalid token
-        localStorage.removeItem('resetToken');
-        localStorage.removeItem('resetEmail');
+        localStorage.removeItem("resetToken");
+        localStorage.removeItem("resetEmail");
       } else {
-        setError(err.response?.data?.message || 'خطا در بازنشانی رمز عبور');
+        setError(err.response?.data?.message || "خطا در بازنشانی رمز عبور");
       }
     } finally {
       setIsLoading(false);
@@ -739,7 +802,9 @@ export function ResetPassword() {
   return (
     <div className="auth-container">
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .auth-container {
           background: #f7fcfd;
           color: #222;
@@ -808,7 +873,9 @@ export function ResetPassword() {
         .spinner {
           color: #0dcaf0;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
       <div className="auth-card">
         <div className="auth-header">
@@ -842,7 +909,7 @@ export function ResetPassword() {
             <div className="password-input-container">
               <input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 className="form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -855,7 +922,7 @@ export function ResetPassword() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
-                title={showPassword ? 'مخفی کردن رمز' : 'نمایش رمز'}
+                title={showPassword ? "مخفی کردن رمز" : "نمایش رمز"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -869,7 +936,7 @@ export function ResetPassword() {
             </label>
             <input
               id="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               className="form-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -879,8 +946,8 @@ export function ResetPassword() {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button reset-password-button"
             disabled={isLoading}
           >
@@ -890,7 +957,7 @@ export function ResetPassword() {
                 در حال بازنشانی...
               </>
             ) : (
-              'بازنشانی رمز عبور'
+              "بازنشانی رمز عبور"
             )}
           </button>
 
@@ -899,9 +966,9 @@ export function ResetPassword() {
               type="button"
               className="auth-link"
               onClick={() => {
-                localStorage.removeItem('resetToken');
-                localStorage.removeItem('resetEmail');
-                navigate('/login');
+                localStorage.removeItem("resetToken");
+                localStorage.removeItem("resetEmail");
+                navigate("/login");
               }}
               disabled={isLoading}
             >
@@ -917,12 +984,12 @@ export function ResetPassword() {
 // ✅ REGISTER COMPONENT
 export function Register() {
   const { theme } = useTheme();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -930,119 +997,128 @@ export function Register() {
   useEffect(() => {
     const user = isLoggedIn();
     if (user) {
-      navigate(user.role === 'admin' ? '/dashboard' : '/home', { replace: true });
+      navigate(user.role === "admin" ? "/dashboard" : "/home", {
+        replace: true,
+      });
     }
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Registration form submitted');
+    console.log("Registration form submitted");
     setIsLoading(true);
-    setError('');
+    setError("");
 
     // Validate inputs
     if (name.trim().length < 3) {
-      console.log('Name validation failed');
+      console.log("Name validation failed");
       setIsLoading(false);
-      return setError('نام باید حداقل ۳ حرف باشد');
+      return setError("نام باید حداقل ۳ حرف باشد");
     }
     if (!validateEmail(email)) {
-      console.log('Email validation failed');
+      console.log("Email validation failed");
       setIsLoading(false);
-      return setError('ایمیل معتبر نیست');
+      return setError("ایمیل معتبر نیست");
     }
     if (password.length < 6) {
-      console.log('Password validation failed');
+      console.log("Password validation failed");
       setIsLoading(false);
-      return setError('رمز عبور باید حداقل ۶ حرف باشد');
+      return setError("رمز عبور باید حداقل ۶ حرف باشد");
     }
     if (password !== confirmPassword) {
-      console.log('Password confirmation failed');
+      console.log("Password confirmation failed");
       setIsLoading(false);
-      return setError('رمز عبور با تکرار آن مطابقت ندارد');
+      return setError("رمز عبور با تکرار آن مطابقت ندارد");
     }
 
-    console.log('Sending registration request...');
-    
+    console.log("Sending registration request...");
+
     try {
-      console.log('Request payload:', { name, email, password });
-      
+      console.log("Request payload:", { name, email, password });
+
       // Create axios instance with default config
       const axiosInstance = axios.create({
-        baseURL: 'http://localhost:5000',
+        baseURL: "http://localhost:5000",
         timeout: 30000, // Increased to 30 seconds
         withCredentials: true,
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
       // Add request interceptor for logging
-      axiosInstance.interceptors.request.use(request => {
-        console.log('Starting Request:', request);
+      axiosInstance.interceptors.request.use((request) => {
+        console.log("Starting Request:", request);
         return request;
       });
 
       // Add response interceptor for logging
       axiosInstance.interceptors.response.use(
-        response => {
-          console.log('Response:', response);
+        (response) => {
+          console.log("Response:", response);
           return response;
         },
-        error => {
-          console.error('Response Error:', {
+        (error) => {
+          console.error("Response Error:", {
             message: error.message,
             status: error.response?.status,
             data: error.response?.data,
             config: {
               url: error.config?.url,
               method: error.config?.method,
-              headers: error.config?.headers
-            }
+              headers: error.config?.headers,
+            },
           });
           return Promise.reject(error);
         }
       );
 
-      console.log('Making registration request to:', '/api/auth/register');
-      const res = await axiosInstance.post('/api/auth/register', {
+      console.log("Making registration request to:", "/api/auth/register");
+      const res = await axiosInstance.post("/api/auth/register", {
         name,
         email,
-        password
+        password,
       });
-      
-      console.log('Registration response:', res.data);
-      
+
+      console.log("Registration response:", res.data);
+
       if (res.data) {
-        console.log('Registration successful, preparing to redirect...');
+        console.log("Registration successful, preparing to redirect...");
         // Save registration data in localStorage
         const registrationData = {
           name,
           email: res.data.email || email, // Use email from response if available
           timestamp: new Date().toISOString(),
-          status: 'pending_verification'
+          status: "pending_verification",
         };
-        console.log('Saving registration data:', registrationData);
-        localStorage.setItem('registrationData', JSON.stringify(registrationData));
-        localStorage.setItem('pendingVerificationEmail', res.data.email || email);
-        
+        console.log("Saving registration data:", registrationData);
+        localStorage.setItem(
+          "registrationData",
+          JSON.stringify(registrationData)
+        );
+        localStorage.setItem(
+          "pendingVerificationEmail",
+          res.data.email || email
+        );
+
         // Clear any existing auth data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        
-        console.log('Redirecting to verification page...');
-        const verificationUrl = '/verify-code?email=' + encodeURIComponent(res.data.email || email);
-        console.log('Verification URL:', verificationUrl);
-        
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        console.log("Redirecting to verification page...");
+        const verificationUrl =
+          "/verify-code?email=" + encodeURIComponent(res.data.email || email);
+        console.log("Verification URL:", verificationUrl);
+
         // Use replace: true to prevent back navigation to registration
         navigate(verificationUrl, { replace: true });
       } else {
-        console.log('Unexpected response:', res.data);
-        setError('خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.');
+        console.log("Unexpected response:", res.data);
+        setError("خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.");
       }
     } catch (err) {
-      console.error('Registration error details:', {
+      console.error("Registration error details:", {
         message: err.message,
         code: err.code,
         response: err.response?.data,
@@ -1051,36 +1127,42 @@ export function Register() {
         config: {
           url: err.config?.url,
           method: err.config?.method,
-          headers: err.config?.headers
-        }
+          headers: err.config?.headers,
+        },
       });
-      
+
       // Clear any partial registration data on error
-      localStorage.removeItem('registrationData');
-      localStorage.removeItem('pendingVerificationEmail');
-      
-      if (err.code === 'ERR_NETWORK') {
-        setError('خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید.');
-      } else if (err.code === 'ECONNABORTED') {
-        setError('زمان اتصال به سرور به پایان رسید. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.');
+      localStorage.removeItem("registrationData");
+      localStorage.removeItem("pendingVerificationEmail");
+
+      if (err.code === "ERR_NETWORK") {
+        setError(
+          "خطا در اتصال به سرور. لطفاً اتصال اینترنت خود را بررسی کنید."
+        );
+      } else if (err.code === "ECONNABORTED") {
+        setError(
+          "زمان اتصال به سرور به پایان رسید. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید."
+        );
       } else if (err.response?.status === 500) {
         const errorMessage = err.response?.data?.message;
         if (errorMessage) {
           setError(errorMessage);
         } else {
-          setError('خطای سرور. لطفاً بعداً تلاش کنید.');
+          setError("خطای سرور. لطفاً بعداً تلاش کنید.");
         }
       } else if (err.response?.status === 429) {
-        setError('تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.');
+        setError(
+          "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید."
+        );
       } else if (err.response?.status === 400) {
         const errorMessage = err.response?.data?.message;
         if (errorMessage) {
           setError(errorMessage);
         } else {
-          setError('اطلاعات وارد شده نامعتبر است.');
+          setError("اطلاعات وارد شده نامعتبر است.");
         }
       } else {
-        setError(err.response?.data?.message || 'خطا در ثبت‌نام');
+        setError(err.response?.data?.message || "خطا در ثبت‌نام");
       }
     } finally {
       setIsLoading(false);
@@ -1089,18 +1171,18 @@ export function Register() {
 
   // Check for existing registration data on component mount
   useEffect(() => {
-    const registrationData = localStorage.getItem('registrationData');
+    const registrationData = localStorage.getItem("registrationData");
     if (registrationData) {
       try {
         const data = JSON.parse(registrationData);
-        console.log(data)
+        console.log(data);
         // If registration is pending verification, redirect to verification page
-        if (data.status === 'pending_verification') {
-          navigate('/verify-code?email=' + encodeURIComponent(data.email));
+        if (data.status === "pending_verification") {
+          navigate("/verify-code?email=" + encodeURIComponent(data.email));
         }
       } catch (error) {
-        console.error('Error parsing registration data:', error);
-        localStorage.removeItem('registrationData');
+        console.error("Error parsing registration data:", error);
+        localStorage.removeItem("registrationData");
       }
     }
   }, [navigate]);
@@ -1108,7 +1190,9 @@ export function Register() {
   return (
     <div className="auth-container">
       <style>{`
-        ${theme === 'light' ? `
+        ${
+          theme === "light"
+            ? `
         .auth-container {
           background: #f7fcfd;
           color: #222;
@@ -1177,7 +1261,9 @@ export function Register() {
         .spinner {
           color: #0dcaf0;
         }
-        ` : ''}
+        `
+            : ""
+        }
       `}</style>
       <div className="auth-card">
         <div className="auth-header">
@@ -1238,7 +1324,7 @@ export function Register() {
             <div className="password-input-container">
               <input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 className="form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -1251,7 +1337,7 @@ export function Register() {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
-                title={showPassword ? 'مخفی کردن رمز' : 'نمایش رمز'}
+                title={showPassword ? "مخفی کردن رمز" : "نمایش رمز"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
@@ -1265,7 +1351,7 @@ export function Register() {
             </label>
             <input
               id="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               className="form-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -1275,11 +1361,11 @@ export function Register() {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-button register-button"
             disabled={isLoading}
-            onClick={() => console.log('Register button clicked')}
+            onClick={() => console.log("Register button clicked")}
           >
             {isLoading ? (
               <>
@@ -1287,17 +1373,17 @@ export function Register() {
                 در حال ثبت‌نام...
               </>
             ) : (
-              'ثبت‌نام'
+              "ثبت‌نام"
             )}
           </button>
 
           <div className="auth-footer">
             <p className="auth-link-text">
-              حساب دارید؟{' '}
+              حساب دارید؟{" "}
               <button
                 type="button"
                 className="auth-link"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 disabled={isLoading}
               >
                 ورود

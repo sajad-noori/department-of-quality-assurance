@@ -167,6 +167,16 @@ export default function MenuWithUtilityBar() {
   }, []);
 
   useEffect(() => {
+    // If `user` is provided by AuthContext, use it reactively so UI updates
+    // immediately when the authentication state changes (login/logout).
+    if (user && user.id) {
+      setIsLoggedIn(true);
+      setUserName(user.name || "");
+      setProfileImage(user.profileImage || null);
+      return;
+    }
+
+    // Fallback: attempt to fetch auth info on mount if AuthContext is empty.
     const checkAuth = async () => {
       try {
         const res = await axios.get("http://localhost:5000/api/auth/me", {
@@ -194,6 +204,20 @@ export default function MenuWithUtilityBar() {
     };
     checkAuth();
   }, []);
+
+  // Keep component reactive to `user` changes from the AuthContext so
+  // login/logout are reflected immediately without a page reload.
+  useEffect(() => {
+    if (user && user.id) {
+      setIsLoggedIn(true);
+      setUserName(user.name || "");
+      setProfileImage(user.profileImage || null);
+    } else {
+      setIsLoggedIn(false);
+      setUserName("");
+      setProfileImage(null);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!isLoggedIn) return;

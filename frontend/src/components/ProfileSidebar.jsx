@@ -4,7 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -17,8 +17,9 @@ import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CloseIcon from "@mui/icons-material/Close";
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 const ProfileSidebar = ({ onClose }) => {
   const [user, setUser] = useState(null);
@@ -41,9 +42,9 @@ const ProfileSidebar = ({ onClose }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     // Sync activeStage with the current route
@@ -192,17 +193,24 @@ const ProfileSidebar = ({ onClose }) => {
   if (!user) {
     return (
       <div className="profile-sidebar">
-        <div className="profile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <IconButton 
+        <div
+          className="profile-header"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <IconButton
             onClick={onClose}
             size="small"
             sx={{
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
               },
-              marginLeft: '8px',
-              marginRight: '-8px',
+              marginLeft: "8px",
+              marginRight: "-8px",
             }}
           >
             <CloseIcon />
@@ -216,28 +224,36 @@ const ProfileSidebar = ({ onClose }) => {
   return (
     <motion.div
       className="profile-sidebar"
-      initial={{ opacity: 0, x: '100%' }}
+      initial={{ opacity: 0, x: "100%" }}
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         right: 0,
-        height: '100vh',
+        height: "100vh",
         zIndex: 1300, // Lower z-index for sidebar
-        overflowY: 'auto'
+        overflowY: "auto",
       }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      exit={{ opacity: 0, x: '100%' }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      exit={{ opacity: 0, x: "100%" }}
     >
-      <div className="profile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
+      <div
+        className="profile-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "1rem",
+        }}
+      >
         <h3>پروفایل کاربری</h3>
-        <IconButton 
+        <IconButton
           onClick={onClose}
           size="small"
           sx={{
-            color: '#00d4ff',
-            '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            color: "#00d4ff",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
             },
           }}
         >
@@ -285,6 +301,8 @@ const ProfileSidebar = ({ onClose }) => {
                 className={`upload-button ${hover ? "hover" : ""}`}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="Change profile picture"
+                title="Change profile picture"
               >
                 <input
                   type="file"
@@ -292,7 +310,11 @@ const ProfileSidebar = ({ onClose }) => {
                   onChange={handleImageUpload}
                   style={{ display: "none" }}
                 />
-                <i className="fas fa-camera"></i>
+                {/* Material UI camera icon */}
+                <PhotoCamera
+                  sx={{ color: "#ffffff", fontSize: 18 }}
+                  aria-hidden="true"
+                />
               </motion.label>
             </Tooltip>
           )}
@@ -321,35 +343,37 @@ const ProfileSidebar = ({ onClose }) => {
         >
           ویرایش پروفایل
         </Button>
-        <Dialog 
-          open={editOpen} 
-          onClose={handleEditClose} 
+        <Dialog
+          open={editOpen}
+          onClose={handleEditClose}
           className="edit-dialog"
           sx={{
             zIndex: 1400, // Higher z-index than sidebar
-            '& .MuiDialog-paper': {
-              margin: isMobile ? '16px' : '32px',
-              width: isMobile ? 'calc(100% - 32px)' : 'auto',
-              maxWidth: isMobile ? 'none' : '500px',
-              maxHeight: isMobile ? 'calc(100% - 64px)' : 'calc(100% - 64px)'
-            }
+            "& .MuiDialog-paper": {
+              margin: isMobile ? "16px" : "32px",
+              width: isMobile ? "calc(100% - 32px)" : "auto",
+              maxWidth: isMobile ? "none" : "500px",
+              maxHeight: isMobile ? "calc(100% - 64px)" : "calc(100% - 64px)",
+            },
           }}
         >
-          <DialogTitle sx={{ textAlign: "right", fontWeight: 700, position: 'relative' }}>
-            <IconButton 
+          <DialogTitle
+            sx={{ textAlign: "right", fontWeight: 700, position: "relative" }}
+          >
+            <IconButton
               aria-label="close"
               onClick={handleEditClose}
               size="small"
               sx={{
-                position: 'absolute',
+                position: "absolute",
                 left: 8,
                 top: 8,
-                color:'#00d4ff',
+                color: "#00d4ff",
               }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
-            <span style={{ paddingRight: '24px' }}>ویرایش پروفایل</span>
+            <span style={{ paddingRight: "24px" }}>ویرایش پروفایل</span>
           </DialogTitle>
           <DialogContent>
             {editError && (
@@ -1059,7 +1083,7 @@ const ProfileSidebar = ({ onClose }) => {
 };
 
 ProfileSidebar.propTypes = {
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
 
 export default ProfileSidebar;
