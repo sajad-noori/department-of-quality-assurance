@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import styles from "../../styles/Analysis.module.css";
 
 // Lightweight analysis dashboard that doesn't add charting dependencies.
 // It fetches logs and users and computes a set of statistics and small SVG charts.
@@ -64,6 +65,7 @@ const simpleBarChart = ({
   width = 300,
   height = 200,  // Increased height to accommodate numbers at the top
   showLabels = true,
+  color,
 }) => {
   const keys = Object.keys(data).sort();
   if (keys.length === 0) {
@@ -81,7 +83,8 @@ const simpleBarChart = ({
   const barMaxHeight = chartHeight - 10;
   const getBarColor = (action) => {
     const actionKey = action.toLowerCase();
-    return actionColors[actionKey] || actionColors.default;
+    // If a static color is provided, prefer it; otherwise map by action name
+    return color || actionColors[actionKey] || actionColors.default;
   };
 
   return (
@@ -107,6 +110,8 @@ const simpleBarChart = ({
                 height={h}
                 fill={barColor}
               />
+              {/* Accessible tooltip */}
+              <title>{`${k}: ${values[i]}`}</title>
               {showLabels && (
                 <>
                   <text
@@ -168,11 +173,13 @@ const Analysis = ({
   const [timeFrame, setTimeFrame] = useState('day');
   const [visitorTimeFrame, setVisitorTimeFrame] = useState('week');
   const [downloadsTimeFrame, setDownloadsTimeFrame] = useState('week');
+  const [uploadsTimeFrame, setUploadsTimeFrame] = useState('week');
+  const [activityHourTimeFrame, setActivityHourTimeFrame] = useState('week');
   const [customDates, setCustomDates] = useState({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   });
-  const [visitsByUser, setVisitsByUser] = useState({});
+  // visitsByUser is derived from logs + timeframe; no need to store separately
 
   useEffect(() => {
     let mounted = true;
@@ -276,10 +283,10 @@ const Analysis = ({
     return [...logs];
   }, []); // Using parameters directly, no dependencies needed
 
-  // Filter logs based on current time frame
+  // Filter logs based on current time frame (wire to selector)
   const filteredLogs = useMemo(() => {
-    return filterLogsByTimeFrame(logs);
-  }, [filterLogsByTimeFrame, logs]);
+    return filterLogsByTimeFrame(logs, timeFrame, customDates);
+  }, [filterLogsByTimeFrame, logs, timeFrame, customDates]);
 
   // Filter downloads based on selected time frame
   const filteredDownloads = useMemo(() => {
@@ -290,10 +297,6 @@ const Analysis = ({
     
     // Then apply time frame filter
     const filtered = filterLogsByTimeFrame(downloadLogs, downloadsTimeFrame, customDates);
-    
-    // Debug logs (can be removed in production)
-    console.log(`Filtered ${filtered.length} downloads out of ${downloadLogs.length} total downloads`);
-    console.log('Time frame:', downloadsTimeFrame, 'Custom dates:', customDates);
     
     return filtered;
   }, [logs, downloadsTimeFrame, customDates, filterLogsByTimeFrame]);
@@ -314,22 +317,20 @@ const Analysis = ({
     }, {});
   }, [filteredDownloads]);
 
-  // Group visits by user
-  useEffect(() => {
-    const visitLogs = logs.filter(l => l.action === 'visit' && l.user_id);
+  // Group visits by user (derived)
+  const visitsByUser = useMemo(() => {
+    const visitLogs = logs.filter(l => l && l.action === 'visit' && l.user_id);
     const filteredVisitLogs = filterLogsByTimeFrame(visitLogs, visitorTimeFrame, customDates);
-    
     const userMap = {};
     filteredVisitLogs.forEach(log => {
       const userId = log.user_id;
+      const user = users.find(u => u && (u.id === userId)) || { id: userId, name: 'کاربر ناشناس' };
       if (!userMap[userId]) {
-        const user = users.find(u => u.id === userId) || { id: userId, name: 'کاربر ناشناس' };
         userMap[userId] = { ...user, count: 0 };
       }
       userMap[userId].count += 1;
     });
-    
-    setVisitsByUser(userMap);
+    return userMap;
   }, [logs, users, visitorTimeFrame, customDates, filterLogsByTimeFrame]);
 
   // Data computations (always operate on arrays)
@@ -340,9 +341,20 @@ const Analysis = ({
 
   const downloads = filteredDownloads;
 
-  const uploads = filteredLogs.filter(
-    (l) => l && (l.action === "upload" || l.action === "document_upload")
-  );
+  // Filter uploads based on selected time frame
+  const filteredUploads = useMemo(() => {
+    if (!logs || !logs.length) return [];
+    
+    // First filter by action
+    const uploadLogs = logs.filter(l => l && (l.action === 'upload' || l.action === 'document_upload'));
+    
+    // Then apply time frame filter
+    const filtered = filterLogsByTimeFrame(uploadLogs, uploadsTimeFrame, customDates);
+    
+    return filtered;
+  }, [logs, uploadsTimeFrame, customDates, filterLogsByTimeFrame]);
+
+  const uploads = filteredUploads;
   
   // Calculate action counts
   const actionCounts = useMemo(() => {
@@ -355,34 +367,119 @@ const Analysis = ({
   }, [filteredLogs]);
   
   const topAction = Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0] || ['هیچ', 0];
-  const usersList = [...new Set(filteredLogs.map(l => l.user_id).filter(Boolean))];
+  const usersList = [...new Set(filteredLogs.map(l => l && l.user_id).filter(Boolean))];
+  
+  // Extract file/questionnaire names from upload logs
   const uploadsByFile = uploads.reduce((acc, l) => {
-    const file = l.details || l.file_name || "unknown-file";
-    acc[file] = (acc[file] || 0) + 1;
+    let fileName = "فایل ناشناس";
+    
+    if (l.details) {
+      // Parse details to extract file/questionnaire name
+      // Format: "Uploaded questionnaire template: Title (category)" or "Uploaded filled questionnaire: Title (filename)"
+      const templateMatch = l.details.match(/Uploaded questionnaire template:\s*([^(]+)/);
+      const filledMatch = l.details.match(/Uploaded filled questionnaire:\s*([^(]+)/);
+      
+      if (templateMatch && templateMatch[1]) {
+        fileName = templateMatch[1].trim();
+      } else if (filledMatch && filledMatch[1]) {
+        fileName = filledMatch[1].trim();
+      } else {
+        // Fallback: use the whole details if pattern doesn't match
+        fileName = l.details;
+      }
+    } else if (l.file_name) {
+      fileName = l.file_name;
+    }
+    
+    acc[fileName] = (acc[fileName] || 0) + 1;
     return acc;
   }, {});
   const topUploadedFile = Object.entries(uploadsByFile).sort(
     (a, b) => b[1] - a[1]
   )[0] || ["-", 0];
 
-  const roleCounts = usersList.reduce((acc, u) => {
-    const r = (u && u.role) || "user";
-    acc[r] = (acc[r] || 0) + 1;
+  // Build a map of users by id for role lookup
+  const usersById = useMemo(() => {
+    const map = {};
+    ensureArray(users).forEach(u => {
+      if (u && (u.id !== undefined && u.id !== null)) map[u.id] = u;
+    });
+    return map;
+  }, [users]);
+
+  const roleCounts = usersList.reduce((acc, userId) => {
+    const role = usersById[userId]?.role || "user";
+    acc[role] = (acc[role] || 0) + 1;
     return acc;
   }, {});
 
-  // Summary numbers
-  const summary = {
-    totalLogs: logsList.length,
-    totalUsers: usersList.length,
-    totalDownloads: downloads.length,
+  // Helper: robustly extract hour (0-23) from various timestamp formats without timezone conversion
+  // Supports: "YYYY-MM-DD HH:MM:SS", "YYYY-MM-DDTHH:MM:SSZ", ISO strings, Date objects
+  const extractHourFromCreatedAt = (created_at) => {
+    if (!created_at) return null;
+    try {
+      const s = String(created_at);
+      // Prefer splitting by 'T' (ISO) otherwise by space
+      let timePart = '';
+      if (s.includes('T')) {
+        timePart = s.split('T')[1] || '';
+      } else if (s.includes(' ')) {
+        timePart = s.split(' ')[1] || '';
+      } else {
+        // As a last resort, try to match HH:MM:SS anywhere
+        const m = s.match(/(\d{2}):(\d{2}):(\d{2})/);
+        timePart = m ? m[0] : '';
+      }
+      const hh = parseInt(timePart.slice(0, 2), 10);
+      if (Number.isNaN(hh)) return null;
+      return Math.max(0, Math.min(23, hh));
+    } catch {
+      return null;
+    }
+  };
+
+  // Filter logs for activity by hour based on selected time frame and user actions only
+  const filteredActivityLogs = useMemo(() => {
+    if (!logs || !logs.length) return [];
+    const timeFramed = filterLogsByTimeFrame(logs, activityHourTimeFrame, customDates);
+    const userActions = new Set([
+      'login', 'visit', 'download', 'upload', 'document_upload',
+      'comment', 'question', 'logout', 'view'
+    ]);
+    return timeFramed.filter(l => l && userActions.has(l.action));
+  }, [logs, activityHourTimeFrame, customDates, filterLogsByTimeFrame]);
+
+  // Activity by hour analysis (12-hour format, combining AM/PM, properly handling 12 AM/PM)
+  const activityByHour = useMemo(() => {
+    const hourCounts = {};
+    // Initialize all 12-hour slots (1-12)
+    for (let i = 1; i <= 12; i++) {
+      hourCounts[i] = 0;
+    }
+    
+    filteredActivityLogs.forEach(log => {
+      const h = extractHourFromCreatedAt(log?.created_at);
+      if (h !== null) {
+        // Convert 24h to 12h format (1-12)
+        const hour12 = h % 12 || 12; // 0 becomes 12 (midnight), 12 remains 12 (noon)
+        hourCounts[hour12] = (hourCounts[hour12] || 0) + 1;
+      }
+    });
+    
+    return hourCounts;
+  }, [filteredActivityLogs]);
+
+  // Questions and Comments analysis
+  const questionsAndComments = useMemo(() => {
+    const questions = filteredLogs.filter(l => l && l.action === 'question').length;
+    const comments = filteredLogs.filter(l => l && l.action === 'comment').length;
+    return { questions, comments, total: questions + comments };
+  }, [filteredLogs]);
+
+  // Uploads summary
+  const uploadsSummary = {
     totalUploads: uploads.length,
-    mostCommonAction: topAction[0],
-    mostCommonActionCount: topAction[1],
-    topVisitorName: topVisitor[1].name || "-",
-    topVisitorCount: topVisitor[1].count || 0,
-    topUploadedFile: topUploadedFile[0],
-    topUploadedFileCount: topUploadedFile[1],
+    topUploadedFileCount: topUploadedFile?.[1] || 0,
   };
 
   if (loading)
@@ -433,6 +530,7 @@ const Analysis = ({
               <select 
                 value={timeFrame}
                 onChange={(e) => setTimeFrame(e.target.value)}
+                className={styles.select}
                 style={{
                   backgroundColor: 'rgba(30, 30, 30, 0.9)',
                   color: '#f0f0f0',
@@ -454,14 +552,6 @@ const Analysis = ({
                   backgroundPosition: 'right 8px center',
                   backgroundSize: '16px',
                   paddingRight: '28px',
-                  ':hover': {
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    backgroundColor: 'rgba(40, 40, 40, 0.9)'
-                  },
-                  ':focus': {
-                    borderColor: 'rgba(65, 153, 255, 0.5)',
-                    boxShadow: '0 0 0 2px rgba(65, 153, 255, 0.2)'
-                  }
                 }}
               >
                 <option value="day" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>امروز</option>
@@ -489,14 +579,6 @@ const Analysis = ({
                       boxSizing: 'border-box',
                       outline: 'none',
                       transition: 'all 0.2s ease',
-                      ':hover': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        backgroundColor: 'rgba(40, 40, 40, 0.9)'
-                      },
-                      ':focus': {
-                        borderColor: 'rgba(65, 153, 255, 0.5)',
-                        boxShadow: '0 0 0 2px rgba(65, 153, 255, 0.2)'
-                      }
                     }}
                   />
                   <span style={{ 
@@ -526,14 +608,6 @@ const Analysis = ({
                       boxSizing: 'border-box',
                       outline: 'none',
                       transition: 'all 0.2s ease',
-                      ':hover': {
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        backgroundColor: 'rgba(40, 40, 40, 0.9)'
-                      },
-                      ':focus': {
-                        borderColor: 'rgba(65, 153, 255, 0.5)',
-                        boxShadow: '0 0 0 2px rgba(65, 153, 255, 0.2)'
-                      }
                     }}
                   />
                 </div>
@@ -650,21 +724,14 @@ const Analysis = ({
             position: 'relative'
           }}>
             {Object.keys(visitsByUser).length > 0 ? (
-              <div style={{ 
+              <div className={styles.scrollArea} style={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '14px',
                 height: '100%',
                 padding: '4px 4px 12px 0',
                 overflowY: 'auto',
-                scrollbarWidth: 'thin',
-                '::-webkit-scrollbar': {
-                  width: '4px'
-                },
-                '::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '4px'
-                }
+                scrollbarWidth: 'thin'
               }}>
                 {Object.entries(visitsByUser)
                   .sort((a, b) => b[1].count - a[1].count)
@@ -707,7 +774,7 @@ const Analysis = ({
                             flexShrink: 0,
                             boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                           }}>
-                            {user.name.charAt(0).toUpperCase()}
+                            {((user && user.name) ? user.name : 'کاربر').trim().charAt(0).toUpperCase()}
                           </div>
                           <div style={{ 
                             color: '#f0f0f0',
@@ -883,21 +950,14 @@ const Analysis = ({
             position: 'relative'
           }}>
             {downloads.length > 0 ? (
-              <div style={{ 
+              <div className={styles.scrollArea} style={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '14px',
                 height: '100%',
                 padding: '4px 4px 12px 0',
                 overflowY: 'auto',
-                scrollbarWidth: 'thin',
-                '::-webkit-scrollbar': {
-                  width: '4px'
-                },
-                '::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '4px'
-                }
+                scrollbarWidth: 'thin'
               }}>
                 {Object.entries(downloadsByFile)
                   .sort((a, b) => b[1] - a[1])
@@ -1020,70 +1080,627 @@ const Analysis = ({
         </div>
 
         <div style={card}>
-          <h4>آپلودها</h4>
-          <div style={{ marginTop: 8 }}>کل آپلودها: {summary.totalUploads}</div>
-          <div style={{ marginTop: 8 }}>
-            پر آپلودترین فایل: {summary.topUploadedFile} (
-            {summary.topUploadedFileCount})
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '16px',
+            gap: '12px'
+          }}>
+            <h4 style={{ 
+              margin: 0, 
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#f0f0f0'
+            }}>
+              آپلودها
+            </h4>
+            <div style={{
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end'
+            }}>
+              <select
+                value={uploadsTimeFrame}
+                onChange={(e) => setUploadsTimeFrame(e.target.value)}
+                className={styles.select}
+                style={{
+                  backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                  color: '#f0f0f0',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  minWidth: '90px',
+                  height: '28px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2FhYSIgZD0iTTcgMTBsNSA1IDUtNXoiLz48L3N2Zz4=")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 8px center',
+                  backgroundSize: '16px',
+                  paddingRight: '28px',
+                }}
+              >
+                <option value="day" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>امروز</option>
+                <option value="week" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>هفته جاری</option>
+                <option value="month" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>ماه جاری</option>
+                <option value="year" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>امسال</option>
+              </select>
+             
+            </div>
           </div>
-          <div style={{ marginTop: 12 }}>
-            {simpleBarChart({
-              data: uploadsByFile,
-              width: 320,
-              height: 80,
-              color: "#d63384",
+          
+          <div style={{ 
+            height: '240px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            {uploads.length > 0 ? (
+              <div className={styles.scrollArea} style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '14px',
+                height: '100%',
+                padding: '4px 4px 12px 0',
+                overflowY: 'auto',
+                scrollbarWidth: 'thin'
+              }}>
+                {Object.entries(uploadsByFile)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([fileName, count], index) => {
+                    const maxUploads = Math.max(
+                      ...Object.values(uploadsByFile),
+                      1
+                    );
+                    const barWidth = (count / maxUploads) * 100;
+                    const hue = 330 + (index * 15); // Pink/purple gradient
+                    
+                    return (
+                      <div key={fileName} style={{ position: 'relative' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          gap: '10px',
+                          marginBottom: '4px'
+                        }}>
+                          <div style={{ 
+                            color: '#f0f0f0',
+                            fontSize: '13px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: '180px'
+                          }}>
+                            {fileName}
+                          </div>
+                          <div style={{ 
+                            marginRight: 'auto',
+                            color: '#aaa',
+                            fontSize: '12px',
+                            direction: 'ltr',
+                            minWidth: '30px',
+                            textAlign: 'right',
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.5px'
+                          }}>
+                            {count}
+                          </div>
+                        </div>
+                        <div style={{
+                          height: '6px',
+                          backgroundColor: 'rgba(255,255,255,0.05)',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)'
+                        }}>
+                          <div 
+                            style={{
+                              height: '100%',
+                              width: `${barWidth}%`,
+                              background: `linear-gradient(90deg, 
+                                hsla(${hue}, 75%, 55%, 1), 
+                                hsla(${(hue + 20) % 360}, 75%, 65%, 1))`,
+                              borderRadius: '3px',
+                              transition: 'all 0.3s ease',
+                              position: 'relative',
+                              boxShadow: `0 0 12px hsla(${hue}, 75%, 55%, 0.3)`
+                            }}
+                          >
+                            <div style={{
+                              position: 'absolute',
+                              right: '6px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: 'white',
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                              opacity: barWidth > 30 ? 1 : 0,
+                              transition: 'opacity 0.2s ease'
+                            }}>
+                              {count}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div style={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: '#666',
+                fontSize: '14px',
+                gap: '8px',
+                padding: '20px',
+                textAlign: 'center',
+                backgroundColor: 'rgba(255,255,255,0.02)',
+                borderRadius: '8px',
+                border: '1px dashed rgba(255,255,255,0.05)'
+              }}>
+                <div style={{ 
+                  fontSize: '32px',
+                  marginBottom: '8px',
+                  opacity: 0.7
+                }}>
+                  📤
+                </div>
+                <div>
+                  هیچ آپلودی در این بازه زمانی ثبت نشده است
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: '#555',
+                  marginTop: '4px'
+                }}>
+                  بازه زمانی را تغییر دهید یا بعداً مراجعه کنید
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Activity by Hour Card - Full Width */}
+        <div style={{ ...card, gridColumn: '1 / -1' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '16px',
+            gap: '12px'
+          }}>
+            <h4 style={{ 
+              margin: 0, 
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#f0f0f0'
+            }}>
+              فعالیت بر اساس ساعت
+            </h4>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end'
+            }}>
+              <select
+                value={activityHourTimeFrame}
+                onChange={(e) => setActivityHourTimeFrame(e.target.value)}
+                className={styles.select}
+                style={{
+                  backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                  color: '#f0f0f0',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  minWidth: '90px',
+                  height: '28px',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.2s ease',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2FhYSIgZD0iTTcgMTBsNSA1IDUtNXoiLz48L3N2Zz4=")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 8px center',
+                  backgroundSize: '16px',
+                  paddingRight: '28px',
+                }}
+              >
+                <option value="day" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>امروز</option>
+                <option value="week" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>هفته جاری</option>
+                <option value="month" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>ماه جاری</option>
+                <option value="year" style={{ backgroundColor: '#1e1e1e', color: '#f0f0f0' }}>امسال</option>
+              </select>
+              <div style={{
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                color: '#4CAF50',
+                padding: '0 10px',
+                borderRadius: '14px',
+                fontSize: '12px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                height: '28px',
+                whiteSpace: 'nowrap'
+              }}>
+                <span>🕐</span>
+                <span>12 ساعت</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: '12px', height: 'auto' }}>
+            {Object.keys(activityByHour).length > 0 ? (
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <svg 
+                  width="100%"
+                  height="200"
+                  viewBox="0 0 900 200"
+                  style={{ display: 'block' }}
+                >
+                  {Object.entries(activityByHour).map(([hour, count], i) => {
+                    const maxCount = Math.max(...Object.values(activityByHour), 1);
+                    const barHeight = (count / maxCount) * 140;
+                    const barWidth = 65;
+                    const spacing = 75;
+                    const x = i * spacing + 20;
+                    const y = 160 - barHeight;
+                    
+                    // Format hour for display (12 AM, 1, 2, ... 11)
+                    const hourLabel = hour === '0' ? '12 AM' : `${hour}`;
+                    
+                    return (
+                      <g key={hour}>
+                        <rect
+                          x={x}
+                          y={y}
+                          width={barWidth}
+                          height={barHeight}
+                          fill={`hsl(${120 + (i * 10)}, 70%, 50%)`}
+                          rx="4"
+                        />
+                        <title>{`ساعت ${hourLabel}: ${count} فعالیت`}</title>
+                        {count > 0 && barHeight > 20 && (
+                          <text
+                            x={x + barWidth / 2}
+                            y={y + 18}
+                            textAnchor="middle"
+                            fontSize="12"
+                            fontWeight="bold"
+                            fill="#fff"
+                            style={{ textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
+                          >
+                            {count}
+                          </text>
+                        )}
+                        <text
+                          x={x + barWidth / 2}
+                          y="180"
+                          textAnchor="middle"
+                          fontSize="12"
+                          fill="#aaa"
+                          fontWeight="500"
+                        >
+                          {hourLabel}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#888', 
+                  fontSize: '12px',
+                  marginTop: '8px'
+                }}>
+                  ساعت (12 AM - 11 PM)
+                </div>
+              </div>
+            ) : (
+              <div style={{ 
+                height: '200px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: '#888',
+                fontSize: '14px'
+              }}>
+                داده‌ای برای نمایش وجود ندارد
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Questions & Comments Activity Card */}
+        <div style={card}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '16px',
+            gap: '12px'
+          }}>
+            <h4 style={{ 
+              margin: 0, 
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#f0f0f0'
+            }}>
+              سوالات و نظرات
+            </h4>
+            <div style={{
+              backgroundColor: 'rgba(156, 39, 176, 0.1)',
+              color: '#9C27B0',
+              padding: '0 10px',
+              borderRadius: '14px',
+              fontSize: '12px',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              height: '28px',
+              whiteSpace: 'nowrap'
+            }}>
+              <span>💬</span>
+              <span>{questionsAndComments.total} تعامل</span>
+            </div>
+          </div>
+          
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '20px',
+            marginTop: '20px' 
+          }}>
+            {/* Questions */}
+            <div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '8px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '24px' }}>❓</span>
+                  <span style={{ 
+                    color: '#f0f0f0', 
+                    fontSize: '14px',
+                    fontWeight: 500
+                  }}>
+                    سوالات
+                  </span>
+                </div>
+                <span style={{ 
+                  color: '#FFC107', 
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  fontFamily: 'monospace'
+                }}>
+                  {questionsAndComments.questions}
+                </span>
+              </div>
+              <div style={{
+                height: '8px',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: questionsAndComments.total > 0 
+                    ? `${(questionsAndComments.questions / questionsAndComments.total) * 100}%` 
+                    : '0%',
+                  background: 'linear-gradient(90deg, #FFC107, #FFD54F)',
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease',
+                  boxShadow: '0 0 12px rgba(255, 193, 7, 0.3)'
+                }} />
+              </div>
+            </div>
+
+            {/* Comments */}
+            <div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '8px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '24px' }}>💭</span>
+                  <span style={{ 
+                    color: '#f0f0f0', 
+                    fontSize: '14px',
+                    fontWeight: 500
+                  }}>
+                    نظرات
+                  </span>
+                </div>
+                <span style={{ 
+                  color: '#9C27B0', 
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  fontFamily: 'monospace'
+                }}>
+                  {questionsAndComments.comments}
+                </span>
+              </div>
+              <div style={{
+                height: '8px',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: questionsAndComments.total > 0 
+                    ? `${(questionsAndComments.comments / questionsAndComments.total) * 100}%` 
+                    : '0%',
+                  background: 'linear-gradient(90deg, #9C27B0, #BA68C8)',
+                  borderRadius: '4px',
+                  transition: 'width 0.3s ease',
+                  boxShadow: '0 0 12px rgba(156, 39, 176, 0.3)'
+                }} />
+              </div>
+            </div>
+
+            {/* Engagement Summary */}
+            <div style={{
+              marginTop: '12px',
+              padding: '12px',
+              backgroundColor: 'rgba(156, 39, 176, 0.05)',
+              borderRadius: '8px',
+              border: '1px solid rgba(156, 39, 176, 0.2)'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ 
+                  color: '#aaa', 
+                  fontSize: '13px'
+                }}>
+                  میزان تعامل کاربران
+                </span>
+                <span style={{ 
+                  color: '#9C27B0', 
+                  fontSize: '16px',
+                  fontWeight: 700
+                }}>
+                  {questionsAndComments.total > 0 
+                    ? `${((questionsAndComments.total / filteredLogs.length) * 100).toFixed(1)}%` 
+                    : '0%'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={card}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>نوع کاربران</h4>
+            <div style={{
+              backgroundColor: 'rgba(0, 212, 255, 0.1)',
+              color: '#00d4ff',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <span>👥</span>
+              <span>{Object.values(roleCounts).reduce((a, b) => a + b, 0)} کاربر</span>
+            </div>
+          </div>
+          
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {Object.entries(roleCounts).map(([role, count]) => {
+              // Map roles to icons and colors
+              const roleConfig = {
+                admin: { icon: '👑', color: '#ff6b6b' },
+                user: { icon: '👤', color: '#4dabf7' },
+                editor: { icon: '✏️', color: '#69db7c' },
+                guest: { icon: '👋', color: '#ffd43b' },
+                default: { icon: '👥', color: '#adb5bd' }
+              };
+              
+              const config = roleConfig[role.toLowerCase()] || roleConfig.default;
+              const percentage = Math.round((count / Object.values(roleCounts).reduce((a, b) => a + b, 0)) * 100);
+              
+              return (
+                <div 
+                  key={role}
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                    ':hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.2rem' }}>{config.icon}</span>
+                      <span style={{ 
+                        color: '#fff', 
+                        fontWeight: 500,
+                        textTransform: 'capitalize'
+                      }}>
+                        {role}
+                      </span>
+                    </div>
+                    <span style={{ 
+                      color: config.color,
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem'
+                    }}>
+                      {count}
+                    </span>
+                  </div>
+                  <div style={{
+                    height: '6px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '3px',
+                    overflow: 'hidden'
+                  }}>
+                    <div 
+                      style={{
+                        width: `${percentage}%`,
+                        height: '100%',
+                        backgroundColor: config.color,
+                        borderRadius: '3px',
+                        transition: 'width 0.5s ease-out'
+                      }}
+                    />
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    marginTop: '4px',
+                    fontSize: '0.8rem',
+                    color: 'rgba(255, 255, 255, 0.6)'
+                  }}>
+                    {percentage}% از کل کاربران
+                  </div>
+                </div>
+              );
             })}
           </div>
         </div>
 
-        <div style={card}>
-          <h4>نوع کاربران</h4>
-          <div style={{ marginTop: 8 }}>
-            {Object.entries(roleCounts).map(([r, c]) => (
-              <div
-                key={r}
-                style={{ display: "flex", justifyContent: "space-between" }}
-              >
-                <div style={{ color: "#ccc" }}>{r}</div>
-                <div style={{ color: "#00d4ff" }}>{c}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={card}>
-          <h4>جدول نمونه: فعالیت‌های اخیر</h4>
-          <div style={{ marginTop: 8 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ textAlign: "left", color: "#aaa" }}>
-                  <th>تاریخ</th>
-                  <th>کاربر</th>
-                  <th>عملیات</th>
-                  <th>جزئیات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLogs.slice(0, 8).map((l) => (
-                  <tr key={l.id} style={{ borderTop: "1px solid #222" }}>
-                    <td style={{ padding: "6px 4px", color: "#bbb" }}>
-                      {new Date(l.created_at).toLocaleString("fa-IR")}
-                    </td>
-                    <td style={{ padding: "6px 4px", color: "#fff" }}>
-                      {l.user_name || l.user_email || "ناشناس"}
-                    </td>
-                    <td style={{ padding: "6px 4px", color: "#fff" }}>
-                      {l.action}
-                    </td>
-                    <td style={{ padding: "6px 4px", color: "#ccc" }}>
-                      {l.details || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   );

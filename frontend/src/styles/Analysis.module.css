@@ -1,0 +1,30 @@
+.select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.select:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  background-color: rgba(40, 40, 40, 0.9) !important;
+}
+.select:focus {
+  border-color: rgba(65, 153, 255, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(65, 153, 255, 0.2) !important;
+}
+
+.scrollArea {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* Chrome/Edge/Safari */
+.scrollArea::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollArea::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+.scrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}

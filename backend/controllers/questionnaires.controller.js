@@ -2,6 +2,7 @@ const Questionnaire = require("../models/questionnaire.model");
 const path = require("path");
 const FilledQuestionnaire = require("../models/filled_questionnaire.model");
 const { promise } = require("../config/db");
+const userLogModel = require("../models/userLog.model");
 
 class QuestionnairesController {
   // Create a new questionnaire
@@ -32,6 +33,23 @@ class QuestionnairesController {
         file_name,
         file_url,
       });
+
+      // Log the upload action
+      if (req.user) {
+        const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
+        const userAgent = req.headers['user-agent'];
+        const details = `Uploaded questionnaire template: ${title} (${categoryValue})`;
+        
+        userLogModel.createUserLog(
+          req.user.id,
+          'upload',
+          details,
+          ipAddress,
+          userAgent
+        ).catch(err => {
+          console.error('Error logging questionnaire upload:', err);
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -239,6 +257,37 @@ class QuestionnairesController {
         file_name,
         file_url,
       });
+      
+      // Log the filled questionnaire upload
+      const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
+      const userAgent = req.headers['user-agent'];
+      
+      // Get questionnaire title for better logging
+      let questionnaireTitle = 'Unknown';
+      try {
+        const [qRows] = await promise.execute(
+          'SELECT title FROM questionnaires WHERE id = ?',
+          [questionnaire_id]
+        );
+        if (qRows && qRows.length > 0) {
+          questionnaireTitle = qRows[0].title;
+        }
+      } catch (err) {
+        console.error('Error fetching questionnaire title for logging:', err);
+      }
+      
+      const details = `Uploaded filled questionnaire: ${questionnaireTitle} (${file_name})`;
+      
+      userLogModel.createUserLog(
+        user_id,
+        'upload',
+        details,
+        ipAddress,
+        userAgent
+      ).catch(err => {
+        console.error('Error logging filled questionnaire upload:', err);
+      });
+      
       res.status(201).json({
         success: true,
         message: "پرسشنامه با موفقیت ارسال شد",
