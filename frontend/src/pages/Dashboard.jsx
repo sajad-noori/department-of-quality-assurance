@@ -48,6 +48,13 @@ const resources = [
     icon: '📝',
     color: '#607D8B'
   },
+  { 
+    title: 'تحلیل ها', 
+    description: 'وضعیت ویبسایت را در این جا تحلیل نمایید.', 
+    route: '/dashboard/analysis',
+    icon: '📈',
+    color: '#607D8B'
+  },
   // { title: 'رهنمود ارزیابی برنامه های آموزشی', description: 'ارزیابی محتوای آموزشی بر اساس معیارهای کیفیت.', route: '/guidelines/program-eval' },
   // { title: 'رهنمود ارزیابی استادان و مربیان', description: 'نحوه ارزیابی عملکرد استادان و مربیان.', route: '/guidelines/teachers-eval' },
   // { title: 'رهنمود گزارش خود ارزیابی', description: 'راهنمایی برای تهیه گزارش‌های خود ارزیابی.', route: '/guidelines/self-assessment' },

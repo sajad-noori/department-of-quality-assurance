@@ -46,6 +46,7 @@ import NewsCommentsPage from "./pages/NewsCommentsPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AfghanistanMap from "./components/AfghanistanMap";
 import OrganizationalChart from "./components/OrganizationalChart";
+import Analysis from "./components/dashboard/Analysis";
 function App() {
   return (
     <Router>
@@ -172,6 +173,7 @@ function App() {
               }
             />
 
+
             <Route
               path="/checking-questionnaires"
               element={
@@ -208,6 +210,15 @@ function App() {
               }
             />
 
+
+<Route
+              path="dashboard/analysis"
+              element={
+                <AdminRoute>
+                  <Analysis />
+                </AdminRoute>
+              }
+            />
             {/*login and register page*/}
             <Route
               path="/login"

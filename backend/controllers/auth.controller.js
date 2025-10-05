@@ -3,7 +3,6 @@ const crypto = require("crypto");
 const { promise } = require("../config/db");
 const { hashPassword, comparePassword } = require("../utils/hash");
 const { sendVerificationEmail } = require("../utils/sendEmail");
-const redisClient = require("../utils/redisClient");
 const ProfileImage = require("../models/profile_image.model");
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -225,19 +224,26 @@ exports.resendCode = async (req, res) => {
       return res.status(400).json({ message: "ایمیل معتبر نیست" });
     }
 
-    const data = await redisClient.get(`verify:${email}`);
-    if (!data) {
+    // Use in-memory verification store instead of Redis
+    const store = global.verificationStore || new Map();
+    const existing = store.get(email);
+    if (!existing) {
       return res
         .status(400)
         .json({ message: "کاربر یافت نشد یا قبلاً تایید شده است" });
     }
 
-    const parsed = JSON.parse(data);
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    parsed.code = newCode;
+    const updated = { ...existing, code: newCode, timestamp: Date.now() };
+    store.set(email, updated);
+    global.verificationStore = store;
 
-    await redisClient.setEx(`verify:${email}`, 600, JSON.stringify(parsed));
     await sendVerificationEmail(email, newCode);
+
+    // Refresh expiry: clear after 10 minutes
+    setTimeout(() => {
+      store.delete(email);
+    }, 10 * 60 * 1000);
 
     res.json({ message: "کد جدید به ایمیل شما ارسال شد" });
   } catch (error) {

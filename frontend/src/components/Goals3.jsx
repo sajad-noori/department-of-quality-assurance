@@ -2,10 +2,7 @@ import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "../styles/Goals3.css";
-import { useTheme } from "../contexts/ThemeContext";
-
 const Goals3 = () => {
-  const { theme } = useTheme();
 
   useEffect(() => {
     AOS.init({ once: true, duration: 900 });
@@ -60,7 +57,7 @@ const Goals3 = () => {
                     <h2 style={{ textAlign: "center" }}>
                       ستندرد های تضمین کیفیت و اعتبار دهی{" "}
                     </h2>
-                    <figcaption>
+                    <figcaption style={{ direction: "rtl", textAlign: "justify", whiteSpace: "normal", overflow: "visible" }}>
                       ریاست تضمین کیفیت و اعتبار دهی در روشنایی قوانین نافذه
                       امارت اسلامی و قانون اداره تعلیمات تخنیکی و مسلکی ستندرد
                       ها و معیار های تضمین کیفیت را در مطابقت به ستندرد های ملی

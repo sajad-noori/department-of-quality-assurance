@@ -1,35 +1,35 @@
-const redis = require('redis');
+// In-memory fallback replacement for Redis client.
+// Provides a minimal subset of the API used in the app: get, setEx, del.
+// This avoids any external Redis dependency while preserving existing imports.
 
-// Create Redis client with retry strategy
-const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://redis:6379',
-  socket: {
-    reconnectStrategy: (retries) => {
-      if (retries > 10) {
-        console.error('Redis connection failed after 10 retries');
-        return new Error('Redis connection failed');
-      }
-      return Math.min(retries * 100, 3000);
-    }
+const store = new Map();
+
+function setWithTTL(key, value, ttlSeconds) {
+  // Clear any existing timeout for this key
+  const existing = store.get(key);
+  if (existing && existing.timeout) clearTimeout(existing.timeout);
+
+  const timeout = setTimeout(() => {
+    store.delete(key);
+  }, ttlSeconds * 1000);
+
+  store.set(key, { value, timeout });
+}
+
+const client = {
+  // Mimic async Redis API
+  async get(key) {
+    const entry = store.get(key);
+    return entry ? entry.value : null;
+  },
+  async setEx(key, ttlSeconds, value) {
+    setWithTTL(key, value, ttlSeconds);
+    return 'OK';
+  },
+  async del(key) {
+    const existed = store.delete(key);
+    return existed ? 1 : 0;
   }
-});
-
-// Handle connection events
-client.on('connect', () => {
-  console.log('✅ Redis client connected');
-});
-
-client.on('error', (err) => {
-  console.error('Redis client error:', err);
-});
-
-client.on('reconnecting', () => {
-  console.log('Redis client reconnecting...');
-});
-
-// Connect to Redis
-client.connect().catch(err => {
-  console.error('Failed to connect to Redis:', err);
-});
+};
 
 module.exports = client;

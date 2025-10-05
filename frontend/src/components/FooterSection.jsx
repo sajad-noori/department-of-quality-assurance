@@ -138,13 +138,13 @@ const FooterSection = () => {
               در شبکه‌های اجتماعی با ما در ارتباط باشید
             </p>
             <div className="social-icons">
-              <a href="#" className="social-link twitter" aria-label="Twitter">
+              <a href="https://x.com/DQATVETA" className="social-link twitter" aria-label="Twitter">
                 <FaXTwitter />
               </a>
-              <a href="#" className="social-link whatsapp" aria-label="WhatsApp">
+              <a href="https://wa.me/+93778558968" className="social-link whatsapp" aria-label="WhatsApp">
                 <FaWhatsapp />
               </a>
-              <a href="#" className="social-link youtube" aria-label="YouTube">
+              <a href="https://www.youtube.com/@TVETA-t9q" className="social-link youtube" aria-label="YouTube">
                 <FaYoutube />
               </a>
               <a href="#" className="social-link facebook" aria-label="Facebook">
