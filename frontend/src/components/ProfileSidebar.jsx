@@ -21,7 +21,7 @@ import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const ProfileSidebar = ({ onClose }) => {
   const [user, setUser] = useState(null);

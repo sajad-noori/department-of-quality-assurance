@@ -16,7 +16,7 @@ import { FaBell } from "react-icons/fa";
 import { questionnairesAPI } from "../api/questionnaires";
 import { useAuth } from "../contexts/AuthContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const menuItems = [
   // {
   //   label: "معیار ها و رهنمود ها",
@@ -601,7 +601,7 @@ export default function MenuWithUtilityBar() {
             >
               {profileImage ? (
                 <img
-                  src={`http://localhost:3000${profileImage}`}
+                  src={`${API_BASE_URL}${profileImage}`}
                   alt={`پروفایل ${userName}`}
                   style={{
                     width: "32px",

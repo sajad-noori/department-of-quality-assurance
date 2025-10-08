@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const DocumentsPage = () => {
   const { type } = useParams();
   const { theme } = useTheme();

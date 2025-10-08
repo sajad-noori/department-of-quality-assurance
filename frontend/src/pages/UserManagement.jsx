@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // Logs component for viewing user activity
 const UserLogs = ({ userId, userName, onClose }) => {

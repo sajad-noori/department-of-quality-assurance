@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { CircularProgress } from '@mui/material';
 import { useTheme } from "../../contexts/ThemeContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 export default function StaffCountForm({ formData, onChange, onSubmit }) {
   const { theme } = useTheme();

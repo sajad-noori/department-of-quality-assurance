@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
 import PropTypes from 'prop-types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const NumberOfStudents = ({ onStepSubmit }) => {
   const navigate = useNavigate();

@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { Button } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const SpecificInstitute = () => {
   const { userId } = useParams();

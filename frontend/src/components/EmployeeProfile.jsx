@@ -20,7 +20,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const EmployeeProfile = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();

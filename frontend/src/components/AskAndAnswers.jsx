@@ -18,7 +18,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { containsBadWords } from "../utils/badWordsFilter";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const AskAndAnswers = () => {
   const [isExpanded, setIsExpanded] = useState(false);

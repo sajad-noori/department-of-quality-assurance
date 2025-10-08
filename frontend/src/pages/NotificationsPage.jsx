@@ -6,7 +6,7 @@ import { questionnairesAPI } from "../api/questionnaires";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 export default function NotificationsPage() {
   const { theme } = useTheme();

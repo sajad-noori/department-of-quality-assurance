@@ -47,7 +47,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import PropTypes from "prop-types";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const darkTheme = createTheme({
   direction: "rtl",

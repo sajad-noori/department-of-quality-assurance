@@ -5,7 +5,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Profile from './Profile';
 import EmployeeProfile from './EmployeeProfile';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const ProfileRoute = () => {
   const [loading, setLoading] = useState(true);
