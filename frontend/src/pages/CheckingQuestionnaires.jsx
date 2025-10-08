@@ -4,6 +4,8 @@ import { questionnairesAPI } from "../api/questionnaires";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const LoadingSkeleton = ({ theme }) => (
   <div className="row g-3 justify-content-center">
     {[1, 2, 3, 4].map((i) => (
@@ -145,7 +147,7 @@ const CheckingQuestionnaires = () => {
 
   // Get file URL for download
   const getFileUrl = (file_url) =>
-    file_url ? `http://localhost:5000/uploads/${file_url}` : "#";
+    file_url ? `${API_BASE_URL}/uploads/${file_url}` : "#";
 
   return (
     <div

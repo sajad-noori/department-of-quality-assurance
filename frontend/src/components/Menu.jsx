@@ -16,6 +16,7 @@ import { FaBell } from "react-icons/fa";
 import { questionnairesAPI } from "../api/questionnaires";
 import { useAuth } from "../contexts/AuthContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const menuItems = [
   // {
   //   label: "معیار ها و رهنمود ها",
@@ -179,7 +180,7 @@ export default function MenuWithUtilityBar() {
     // Fallback: attempt to fetch auth info on mount if AuthContext is empty.
     const checkAuth = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me", {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         if (res.data?.user) {

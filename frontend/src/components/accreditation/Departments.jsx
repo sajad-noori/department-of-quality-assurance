@@ -11,6 +11,8 @@ import Button from '@mui/material/Button';
 import PropTypes from 'prop-types';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const StyledButton = styled(Button)({
   textTransform: 'none',
   fontWeight: 600,
@@ -56,7 +58,7 @@ const Departments = ({ onStepSubmit }) => {
   const fetchDepartments = async () => {
     if (!user || user.role !== 'institute') return;
     try {
-      const response = await axios.get('http://localhost:5000/api/departments', {
+      const response = await axios.get(`${API_BASE_URL}/api/departments`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +78,7 @@ const Departments = ({ onStepSubmit }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -150,7 +152,7 @@ const Departments = ({ onStepSubmit }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/departments', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/departments`, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +187,7 @@ const Departments = ({ onStepSubmit }) => {
       return;
     }
     try {
-      const response = await axios.delete(`http://localhost:5000/api/departments/${id}`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/departments/${id}`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

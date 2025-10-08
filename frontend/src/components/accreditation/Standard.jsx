@@ -10,6 +10,8 @@ import axios from 'axios';
 import PropTypes from 'prop-types';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
   clipPath: 'inset(50%)',
@@ -54,7 +56,7 @@ function Standard({ value, onChange, onStepSubmit }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -77,7 +79,7 @@ function Standard({ value, onChange, onStepSubmit }) {
 
   const fetchStandards = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/standards', {
+      const response = await axios.get(`${API_BASE_URL}/api/standards`, {
         withCredentials: true
       });
       setUploadedFiles(response.data.map(standard => ({
@@ -175,7 +177,7 @@ function Standard({ value, onChange, onStepSubmit }) {
         formData.append('standardTitle', firstLine);
         formData.append('description', value);
 
-        await axios.post('http://localhost:5000/api/standards', formData, {
+        await axios.post(`${API_BASE_URL}/api/standards`, formData, {
           withCredentials: true,
           headers: {
             'Content-Type': 'multipart/form-data'
@@ -211,7 +213,7 @@ function Standard({ value, onChange, onStepSubmit }) {
     setSuccess(null);
 
     try {
-      await axios.delete(`http://localhost:5000/api/standards/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/standards/${id}`, {
         withCredentials: true
       });
       await fetchStandards();

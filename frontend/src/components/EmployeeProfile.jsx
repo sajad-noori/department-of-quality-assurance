@@ -20,6 +20,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const EmployeeProfile = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -65,7 +66,7 @@ const EmployeeProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/auth/me", {
+        const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(response.data.user);
@@ -91,7 +92,7 @@ const EmployeeProfile = () => {
     try {
       setIsSearching(true);
       const response = await axios.get(
-        `http://localhost:5000/api/educational-centers?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`,
+        `${API_BASE_URL}/api/educational-centers?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`,
         {
           withCredentials: true,
         }
@@ -121,7 +122,7 @@ const EmployeeProfile = () => {
   const fetchStageCounts = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/educational-centers/stats/stages",
+        `${API_BASE_URL}/api/educational-centers/stats/stages`,
         {
           withCredentials: true,
         }
@@ -135,7 +136,7 @@ const EmployeeProfile = () => {
   const fetchUnansweredQuestionsCount = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/questions/admin/unanswered-count",
+        `${API_BASE_URL}/api/questions/admin/unanswered-count`,
         {
           withCredentials: true,
         }
@@ -176,7 +177,7 @@ const EmployeeProfile = () => {
     fetchTotalUncheckedFilledCount();
     // Fetch unanswered news comments count
     axios
-      .get("/api/comments/all-news-comments", { withCredentials: true })
+      .get(`${API_BASE_URL}/api/comments/all-news-comments`, { withCredentials: true })
       .then((res) => {
         setUnansweredNewsComments(countUnansweredComments(res.data));
       })
@@ -214,7 +215,7 @@ const EmployeeProfile = () => {
       stageData[stage] = checked;
 
       await axios.put(
-        `http://localhost:5000/api/educational-centers/${centerId}/stage`,
+        `${API_BASE_URL}/api/educational-centers/${centerId}/stage`,
         stageData,
         {
           withCredentials: true,
@@ -270,7 +271,7 @@ const EmployeeProfile = () => {
       // Update name
       if (editName !== user.name) {
         await axios.put(
-          "http://localhost:5000/api/users/me",
+          `${API_BASE_URL}/api/users/me`,
           { name: editName },
           { withCredentials: true }
         );
@@ -278,7 +279,7 @@ const EmployeeProfile = () => {
       // Update password
       if (currentPassword && newPassword) {
         await axios.put(
-          "http://localhost:5000/api/users/me/password",
+          `${API_BASE_URL}/api/users/me/password`,
           {
             currentPassword,
             newPassword,
@@ -301,7 +302,7 @@ const EmployeeProfile = () => {
     setLoggingOut(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        `${API_BASE_URL}/api/auth/logout`,
         {},
         {
           withCredentials: true,
@@ -322,7 +323,7 @@ const EmployeeProfile = () => {
       formData.append("profileImage", file);
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/upload-profile-image",
+          `${API_BASE_URL}/api/upload-profile-image`,
           formData,
           {
             withCredentials: true,

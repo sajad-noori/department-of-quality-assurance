@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from 'prop-types';
 import { provinces, districts } from '../../data/afghanistan-locations';
 
+
+
 export default function EducationalCenterForm({ formData, onChange, onSubmit, hasExistingData = false }) {
   const [errors, setErrors] = useState({});
   const [availableDistricts, setAvailableDistricts] = useState([]);

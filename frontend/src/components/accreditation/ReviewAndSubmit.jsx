@@ -21,6 +21,8 @@ import { Button } from "@mui/material";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const ReviewAndSubmit = ({ formData }) => {
   const { theme } = useTheme();
   const printRef = useRef();
@@ -185,7 +187,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchPersonnelData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/personnel",
+          `${API_BASE_URL}/api/personnel`,
           {
             withCredentials: true,
             headers: {
@@ -208,7 +210,7 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchStudentData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/students", {
+        const response = await axios.get(`${API_BASE_URL}/api/students`, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -229,7 +231,7 @@ const ReviewAndSubmit = ({ formData }) => {
 
     const fetchLayliaData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/laylia", {
+        const response = await axios.get(`${API_BASE_URL}/api/laylia`, {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -251,7 +253,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchVisionMissionData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/vision-mission",
+          `${API_BASE_URL}/api/vision-mission`,
           {
             withCredentials: true,
             headers: {
@@ -279,7 +281,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchStandardsData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/standards",
+          `${API_BASE_URL}/api/standards`,
           {
             withCredentials: true,
             headers: {
@@ -303,7 +305,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchDepartmentsData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/departments",
+          `${API_BASE_URL}/api/departments`,
           {
             withCredentials: true,
             headers: {
@@ -328,7 +330,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchAcademyFacilities = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/academy-facilities",
+          `${API_BASE_URL}/api/academy-facilities`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },
@@ -349,7 +351,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchClassFacilities = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/class-facilities",
+          `${API_BASE_URL}/api/class-facilities`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },
@@ -370,7 +372,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchPracticalFacilities = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/practical-facilities",
+          `${API_BASE_URL}/api/practical-facilities`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },
@@ -391,7 +393,7 @@ const ReviewAndSubmit = ({ formData }) => {
     const fetchStakeholderInvolvement = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/stakeholder-involvement",
+          `${API_BASE_URL}/api/stakeholder-involvement`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },
@@ -759,7 +761,7 @@ const ReviewAndSubmit = ({ formData }) => {
                         )}
                         <div className="standard-file">
                           <a
-                            href={`http://localhost:5000${standard.file_path}`}
+                            href={`${API_BASE_URL}${standard.file_path}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="file-link"

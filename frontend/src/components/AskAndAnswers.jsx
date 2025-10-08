@@ -18,6 +18,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { containsBadWords } from "../utils/badWordsFilter";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const AskAndAnswers = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,7 +111,7 @@ const AskAndAnswers = () => {
     const checkAuth = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/questions/auth/check",
+          `${API_BASE_URL}/api/questions/auth/check`,
           {
             withCredentials: true,
           }
@@ -131,7 +133,7 @@ const AskAndAnswers = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/questions/faq",
+          `${API_BASE_URL}/api/questions/faq`,
           {
             withCredentials: true,
           }
@@ -158,7 +160,7 @@ const AskAndAnswers = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          "http://localhost:5000/api/questions/user/questions",
+          `${API_BASE_URL}/api/questions/user/questions`,
           {
             withCredentials: true,
           }
@@ -233,7 +235,7 @@ const AskAndAnswers = () => {
       try {
         setSubmitting(true);
         const response = await axios.post(
-          "http://localhost:5000/api/questions/submit",
+          `${API_BASE_URL}/api/questions/submit`,
           {
             question: userQuestion.trim(),
             category: "general",
@@ -259,7 +261,7 @@ const AskAndAnswers = () => {
 
           // Refresh user questions
           const userQuestionsResponse = await axios.get(
-            "http://localhost:5000/api/questions/user/questions",
+            `${API_BASE_URL}/api/questions/user/questions`,
             {
               withCredentials: true,
             }
@@ -289,7 +291,7 @@ const AskAndAnswers = () => {
     try {
       setSubmittingEdit(true);
       const response = await axios.put(
-        `http://localhost:5000/api/questions/user/${questionId}/edit`,
+        `${API_BASE_URL}/api/questions/user/${questionId}/edit`,
         {
           question: editText.trim(),
         },
@@ -305,7 +307,7 @@ const AskAndAnswers = () => {
 
         // Refresh user questions
         const userQuestionsResponse = await axios.get(
-          "http://localhost:5000/api/questions/user/questions",
+          `${API_BASE_URL}/api/questions/user/questions`,
           {
             withCredentials: true,
           }
@@ -332,7 +334,7 @@ const AskAndAnswers = () => {
     try {
       setDeletingQuestion(questionId);
       const response = await axios.delete(
-        `http://localhost:5000/api/questions/user/${questionId}`,
+        `${API_BASE_URL}/api/questions/user/${questionId}`,
         {
           withCredentials: true,
         }
@@ -343,7 +345,7 @@ const AskAndAnswers = () => {
 
         // Refresh user questions
         const userQuestionsResponse = await axios.get(
-          "http://localhost:5000/api/questions/user/questions",
+          `${API_BASE_URL}/api/questions/user/questions`,
           {
             withCredentials: true,
           }

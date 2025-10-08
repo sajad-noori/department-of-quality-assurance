@@ -8,6 +8,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 function getFileIcon(fileName) {
   const ext = fileName.split(".").pop().toLowerCase();
   if (ext === "pdf") return "📄";
@@ -25,7 +27,7 @@ function getFileUrl(filePath) {
     p.startsWith("uploads/") || p.startsWith("/uploads/")
       ? p.replace(/^\/+/, "")
       : `uploads/${p.replace(/^\/+/, "")}`;
-  return `http://localhost:5000/${encodeURI(normalized)}`;
+  return `${API_BASE_URL}/${encodeURI(normalized)}`;
 }
 
 const LoadingSkeleton = ({ theme }) => (
@@ -98,7 +100,7 @@ function Questionnaires() {
     setUploadMessage("");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/questionnaires/filled/${filled.id}`,
+        `${API_BASE_URL}/api/questionnaires/filled/${filled.id}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -125,7 +127,7 @@ function Questionnaires() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    fetch("http://localhost:5000/api/questionnaires", {
+    fetch(`${API_BASE_URL}/api/questionnaires`, {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -179,7 +181,7 @@ function Questionnaires() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    const url = `http://localhost:5000/api/questionnaires${
+    const url = `${API_BASE_URL}/api/questionnaires${
       selectedCategory ? `?category=${selectedCategory}` : ""
     }`;
     fetch(url, { credentials: "include" })
@@ -191,7 +193,7 @@ function Questionnaires() {
           setAllQuestionnaires(all);
           // Fetch filled questionnaires for this user
           try {
-            const filledRes = await fetch("/api/questionnaires/filled/user", {
+            const filledRes = await fetch(`${API_BASE_URL}/api/questionnaires/filled/user`, {
               credentials: "include",
             });
             const filledData = await filledRes.json();

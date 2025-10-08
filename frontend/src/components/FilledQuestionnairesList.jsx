@@ -3,6 +3,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { questionnairesAPI } from "../api/questionnaires";
 import { useTheme } from "../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const FilledQuestionnairesList = () => {
   const { id } = useParams();
   const location = useLocation();
@@ -110,7 +111,7 @@ const FilledQuestionnairesList = () => {
                   </span>
                   <div className="d-flex align-items-center gap-2">
                     <a
-                      href={`http://localhost:5000/uploads/${f.file_url}`}
+                      href={`${API_BASE_URL}/uploads/${f.file_url}`}
                       className="btn btn-info btn-sm"
                       target="_blank"
                       rel="noopener noreferrer"

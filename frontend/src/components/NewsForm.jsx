@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = 'http://localhost:5000';
-
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const containerStyle = {
   backgroundColor: '#0a0a0a',
   color: '#ffffff',

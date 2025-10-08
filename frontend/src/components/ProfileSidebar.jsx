@@ -21,6 +21,8 @@ import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const ProfileSidebar = ({ onClose }) => {
   const [user, setUser] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
@@ -56,7 +58,7 @@ const ProfileSidebar = ({ onClose }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me", {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -84,7 +86,7 @@ const ProfileSidebar = ({ onClose }) => {
 
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/upload-profile-image",
+          `${API_BASE_URL}/api/upload-profile-image`,
           formData,
           {
             withCredentials: true,
@@ -107,7 +109,7 @@ const ProfileSidebar = ({ onClose }) => {
     setLoggingOut(true);
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/logout",
+        `${API_BASE_URL}/api/auth/logout`,
         {},
         {
           withCredentials: true,
@@ -149,7 +151,7 @@ const ProfileSidebar = ({ onClose }) => {
       // Update name
       if (editName !== user.name) {
         await axios.put(
-          "http://localhost:5000/api/users/me",
+          `${API_BASE_URL}/api/users/me`,
           { name: editName },
           { withCredentials: true }
         );
@@ -157,7 +159,7 @@ const ProfileSidebar = ({ onClose }) => {
       // Update password
       if (currentPassword && newPassword) {
         await axios.put(
-          "http://localhost:5000/api/users/me/password",
+          `${API_BASE_URL}/api/users/me/password`,
           {
             currentPassword,
             newPassword,

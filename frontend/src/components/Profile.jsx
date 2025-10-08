@@ -21,6 +21,8 @@ import Documents from "./accreditation/Documents";
 import ReviewAndSubmit from "./accreditation/ReviewAndSubmit";
 import { useTheme } from "../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+
 const steps = [
   "معلومات عمومی مرکز آموزشی",
   "مشخصات پرسونل مرکز آموزشی",
@@ -36,7 +38,7 @@ const steps = [
 
 function RestrictedAccessAlert() {
   const { theme } = useTheme();
-  
+
   return (
     <>
       <div className="restricted-access-container">
@@ -208,7 +210,7 @@ function Step1({ onStepSubmit, user }) {
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/educational-centers/centers",
+          `${API_BASE_URL}/api/educational-centers/centers`,
           {
             withCredentials: true,
             headers: {
@@ -332,7 +334,7 @@ function Step1({ onStepSubmit, user }) {
     }
 
     try {
-      const url = "http://localhost:5000/api/educational-centers/centers";
+      const url = `${API_BASE_URL}/api/educational-centers/centers`;
       const method = hasExistingData ? "PUT" : "POST";
 
       console.log("Making request with method:", method);
@@ -521,16 +523,13 @@ function Step4({ onStepSubmit, user }) {
       }
       setLoading(true);
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/vision-mission",
-          {
-            withCredentials: true,
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          }
-        );
+        const response = await axios.get(`${API_BASE_URL}/api/vision-mission`, {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        });
 
         if (response.data) {
           setFormData({
@@ -596,7 +595,7 @@ function Step4({ onStepSubmit, user }) {
     setSuccess(null);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/vision-mission",
+        `${API_BASE_URL}/api/vision-mission`,
         formData,
         {
           withCredentials: true,
@@ -1379,7 +1378,7 @@ function Step8({ onStepSubmit, user }) {
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/stakeholder-involvement",
+          `${API_BASE_URL}/api/stakeholder-involvement`,
           {
             withCredentials: true,
             headers: {
@@ -1453,7 +1452,7 @@ function Step8({ onStepSubmit, user }) {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/stakeholder-involvement",
+        `${API_BASE_URL}/api/stakeholder-involvement`,
         { description },
         {
           withCredentials: true,
@@ -2210,7 +2209,7 @@ function Step10() {
     const fetchCenterData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/educational-centers/centers",
+          `${API_BASE_URL}/api/educational-centers/centers`,
           {
             withCredentials: true,
             headers: {
@@ -2235,7 +2234,10 @@ function Step10() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "300px" }}
+      >
         <CircularProgress />
       </div>
     );
@@ -2334,7 +2336,7 @@ export default function MultiStepForm10() {
     if (showSidebar) {
       window.scrollTo({
         top: 0,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   }, [showSidebar]);
@@ -2343,7 +2345,7 @@ export default function MultiStepForm10() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me", {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -2369,12 +2371,9 @@ export default function MultiStepForm10() {
   const fetchProgressFromDatabase = async () => {
     try {
       setProgressLoading(true);
-      const response = await axios.get(
-        "http://localhost:5000/api/step-progress",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/step-progress`, {
+        withCredentials: true,
+      });
 
       setCurrentStep(response.data.current_step);
       setStepSubmissionStatus(response.data.step_submission_status);
@@ -2405,7 +2404,7 @@ export default function MultiStepForm10() {
   ) => {
     try {
       await axios.put(
-        "http://localhost:5000/api/step-progress",
+        `${API_BASE_URL}/api/step-progress`,
         {
           current_step: newCurrentStep,
           step_submission_status: newStepSubmissionStatus,
@@ -2427,7 +2426,7 @@ export default function MultiStepForm10() {
     try {
       // Mark step as submitted in database
       await axios.post(
-        "http://localhost:5000/api/step-progress/mark-step",
+        `${API_BASE_URL}/api/step-progress/mark-step`,
         {
           stepNumber: stepNumber,
         },
@@ -2436,7 +2435,6 @@ export default function MultiStepForm10() {
         }
       );
 
-      // Update local state
       setStepSubmissionStatus((prev) => ({
         ...prev,
         [stepNumber]: true,
@@ -2588,7 +2586,8 @@ export default function MultiStepForm10() {
                 const isActive = currentStep === stepNum;
                 const isCompleted = currentStep > stepNum;
                 const isSubmitted = stepSubmissionStatus[stepNum];
-                const canNavigate = stepNum === 1 || stepSubmissionStatus[stepNum - 1];
+                const canNavigate =
+                  stepNum === 1 || stepSubmissionStatus[stepNum - 1];
 
                 return (
                   <li

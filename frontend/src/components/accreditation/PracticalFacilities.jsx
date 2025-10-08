@@ -13,6 +13,8 @@ import Snackbar from '@mui/material/Snackbar';
 import PropTypes from 'prop-types';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const StyledButton = styled(Button)({
   textTransform: 'none',
   fontWeight: 600,
@@ -56,7 +58,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
     if (!user || user.role !== 'institute') return;
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/practical-facilities', {
+      const response = await axios.get(`${API_BASE_URL}/api/practical-facilities`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +78,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -136,7 +138,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/practical-facilities', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/practical-facilities`, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +171,7 @@ const PracticalFacilities = ({ onStepSubmit }) => {
       return;
     }
     try {
-      const response = await axios.delete(`http://localhost:5000/api/practical-facilities/${id}`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/practical-facilities/${id}`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

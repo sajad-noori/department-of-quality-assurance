@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import "../styles/FooterSection.css";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const FooterSection = () => {
   const [visitorStats, setVisitorStats] = useState({
     activeUsers: 0,
@@ -36,13 +37,13 @@ const FooterSection = () => {
     visitRecordedRef.current = true;
 
     // Record the visit, then fetch stats
-    fetch("http://localhost:5000/api/visitors/visit", {
+    fetch(`${API_BASE_URL}/api/visitors/visit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId }),
     })
       .then(res => res.json())
-      .then(() => fetch("http://localhost:5000/api/visitors/visitor-stats"))
+      .then(() => fetch(`${API_BASE_URL}/api/visitors/visitor-stats`))
       .then(res => res.json())
       .then(stats => {
         setVisitorStats(stats);

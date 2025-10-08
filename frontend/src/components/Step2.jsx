@@ -3,6 +3,8 @@ import ProfileSidebar from './ProfileSidebar';
 import axios from 'axios';
 import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Step2 = () => {
   const [loading, setLoading] = useState(true);
   const [stageStatus, setStageStatus] = useState(null);
@@ -11,7 +13,7 @@ const Step2 = () => {
   useEffect(() => {
     const fetchStageStatus = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/stages/status', {
+        const res = await axios.get(`${API_BASE_URL}/api/stages/status`, {
           withCredentials: true,
         });
         if (res.data.success) {

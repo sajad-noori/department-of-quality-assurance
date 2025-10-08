@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const DocumentsPage = () => {
   const { type } = useParams();
   const { theme } = useTheme();
@@ -162,7 +163,7 @@ const DocumentsPage = () => {
 
       // Use the new download endpoint that includes logging
       const response = await axios.get(
-        `http://localhost:5000/api/docs-center-and-uploads/download/${doc.fileName}`,
+        `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
         {
           withCredentials: true,
           responseType: "blob",

@@ -4,6 +4,8 @@ import { FaEnvelope, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import '../styles/AuthForm.css';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const VerifyCode = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ const VerifyCode = () => {
     try {
       console.log('Sending verification request for email:', email);
       const response = await axios.post(
-        'http://localhost:5000/api/auth/verify',
+        `${API_BASE_URL}/api/auth/verify`,
         { email, code },
         { withCredentials: true }
       );
@@ -95,7 +97,7 @@ const VerifyCode = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/auth/resend-code',
+        `${API_BASE_URL}/api/auth/resend-code`,
         { email },
         { withCredentials: true }
       );

@@ -3,6 +3,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function PublicRoute({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,7 +20,7 @@ export default function PublicRoute({ children }) {
 
     const checkAuth = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         if (res.data?.user) {

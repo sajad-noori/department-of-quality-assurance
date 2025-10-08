@@ -15,6 +15,9 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const AnswerToQuestions = () => {
   const { theme } = useTheme();
   const [questions, setQuestions] = useState([]);
@@ -69,7 +72,7 @@ const AnswerToQuestions = () => {
     const checkUserRole = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/questions/auth/check",
+          `${API_BASE_URL}/api/questions/auth/check`,
           {
             withCredentials: true,
           }
@@ -89,7 +92,7 @@ const AnswerToQuestions = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/questions/admin/all?page=${currentPage}&limit=${itemsPerPage}`,
+        `${API_BASE_URL}/api/questions/admin/all?page=${currentPage}&limit=${itemsPerPage}`,
         {
           withCredentials: true,
         }
@@ -139,7 +142,7 @@ const AnswerToQuestions = () => {
     try {
       setSubmittingReply(true);
       const response = await axios.put(
-        `http://localhost:5000/api/questions/admin/${questionId}/reply`,
+        `${API_BASE_URL}/api/questions/admin/${questionId}/reply`,
         {
           answer: replyText.trim(),
           is_faq: true, // Set to true so it appears in FAQ
@@ -189,7 +192,7 @@ const AnswerToQuestions = () => {
     try {
       setSubmittingEdit(true);
       const response = await axios.put(
-        `http://localhost:5000/api/questions/admin/${questionId}/edit`,
+        `${API_BASE_URL}/api/questions/admin/${questionId}/edit`,
         {
           question: editText.trim(),
         },
@@ -226,7 +229,7 @@ const AnswerToQuestions = () => {
     try {
       setDeletingQuestion(questionId);
       const response = await axios.delete(
-        `http://localhost:5000/api/questions/admin/${questionId}`,
+        `${API_BASE_URL}/api/questions/admin/${questionId}`,
         {
           withCredentials: true,
         }
@@ -259,7 +262,7 @@ const AnswerToQuestions = () => {
     try {
       setSubmittingEditReply(true);
       const response = await axios.put(
-        `http://localhost:5000/api/questions/admin/${questionId}/edit-reply`,
+        `${API_BASE_URL}/api/questions/admin/${questionId}/edit-reply`,
         {
           answer: editReplyText.trim(),
         },

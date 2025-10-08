@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 // Logs component for viewing user activity
 const UserLogs = ({ userId, userName, onClose }) => {
   // PropTypes validation
@@ -23,7 +25,7 @@ const UserLogs = ({ userId, userName, onClose }) => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/logs/user/${userId}?page=${currentPage}&limit=10&action=${actionFilter}`,
+        `${API_BASE_URL}/api/logs/user/${userId}?page=${currentPage}&limit=10&action=${actionFilter}`,
         { withCredentials: true }
       );
       setLogs(response.data.data.logs);
@@ -239,7 +241,7 @@ const AllLogsModal = ({ onClose }) => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `http://localhost:5000/api/logs?page=${currentPage}&limit=10&action=${actionFilter}&search=${search}`,
+        `${API_BASE_URL}/api/logs?page=${currentPage}&limit=10&action=${actionFilter}&search=${search}`,
         { withCredentials: true }
       );
       setLogs(response.data.data.logs || response.data.data || response.data.logs || []);
@@ -802,7 +804,7 @@ const UserManagement = () => {
   const fetchUsers = async (retryCount = 0) => {
     try {
       setIsSearching(true);
-      const response = await axios.get(`http://localhost:5000/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`, {
         withCredentials: true
       });
       setUsers(response.data.users);
@@ -856,7 +858,7 @@ const UserManagement = () => {
       setUpdateSuccess(null);
       
       const response = await axios.put(
-        `http://localhost:5000/api/users/${userId}/role`,
+        `${API_BASE_URL}/api/users/${userId}/role`,
         { role: editingUser.role },
         { withCredentials: true }
       );

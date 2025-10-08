@@ -6,6 +6,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { Button } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const SpecificInstitute = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -131,7 +133,7 @@ const SpecificInstitute = () => {
         }
 
         const response = await axios.get(
-          `http://localhost:5000/api/educational-centers/user/${userId}`,
+          `${API_BASE_URL}/api/educational-centers/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -163,7 +165,7 @@ const SpecificInstitute = () => {
       setPersonnelLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/personnel/user/${userId}`,
+          `${API_BASE_URL}/api/personnel/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -189,7 +191,7 @@ const SpecificInstitute = () => {
       setStudentsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/students/user/${userId}`,
+          `${API_BASE_URL}/api/students/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -217,7 +219,7 @@ const SpecificInstitute = () => {
       setLayliaLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/laylia/user/${userId}`,
+          `${API_BASE_URL}/api/laylia/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -245,7 +247,7 @@ const SpecificInstitute = () => {
       setVisionMissionLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/vision-mission/user/${userId}`,
+          `${API_BASE_URL}/api/vision-mission/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -273,7 +275,7 @@ const SpecificInstitute = () => {
       setStandardsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/standards/user/${userId}`,
+          `${API_BASE_URL}/api/standards/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -301,7 +303,7 @@ const SpecificInstitute = () => {
       setDepartmentsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/departments/user/${userId}`,
+          `${API_BASE_URL}/api/departments/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -329,7 +331,7 @@ const SpecificInstitute = () => {
       setAcademyFacilitiesLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/academy-facilities/user/${userId}`,
+          `${API_BASE_URL}/api/academy-facilities/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -357,7 +359,7 @@ const SpecificInstitute = () => {
       setClassFacilitiesLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/class-facilities/user/${userId}`,
+          `${API_BASE_URL}/api/class-facilities/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -385,7 +387,7 @@ const SpecificInstitute = () => {
       setPracticalFacilitiesLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/practical-facilities/user/${userId}`,
+          `${API_BASE_URL}/api/practical-facilities/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -413,7 +415,7 @@ const SpecificInstitute = () => {
       setStakeholderInvolvementLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/stakeholder-involvement/user/${userId}`,
+          `${API_BASE_URL}/api/stakeholder-involvement/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -443,7 +445,7 @@ const SpecificInstitute = () => {
       setProfileDocumentsLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/profile-documents/user/${userId}`,
+          `${API_BASE_URL}/api/profile-documents/user/${userId}`,
           {
             withCredentials: true,
           }
@@ -467,7 +469,7 @@ const SpecificInstitute = () => {
   const handleDownloadFile = async (standardId, fileName) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/standards/download/${standardId}`,
+        `${API_BASE_URL}/api/standards/download/${standardId}`,
         {
           withCredentials: true,
           responseType: "blob", // Important for file downloads
@@ -499,7 +501,7 @@ const SpecificInstitute = () => {
       // Open the download URL in a new window/tab
       // This will automatically include cookies for authentication
       window.open(
-        `http://localhost:5000/api/profile-documents/download/${encodedPath}`,
+        `${API_BASE_URL}/api/profile-documents/download/${encodedPath}`,
         "_blank"
       );
     } catch (error) {

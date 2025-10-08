@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Laylia = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -26,7 +28,7 @@ const Laylia = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -46,7 +48,7 @@ const Laylia = () => {
       if (!user || user.role !== 'institute') return;
 
       try {
-        const response = await axios.get('http://localhost:5000/api/laylia', {
+        const response = await axios.get(`${API_BASE_URL}/api/laylia`, {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
@@ -131,7 +133,7 @@ const Laylia = () => {
       setSubmitting(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:5000/api/laylia', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/laylia`, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +172,7 @@ const Laylia = () => {
       setDeleting(id);
       setError(null);
       
-      const response = await axios.delete(`http://localhost:5000/api/laylia/${id}`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/laylia/${id}`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

@@ -6,6 +6,8 @@ import { questionnairesAPI } from "../api/questionnaires";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function NotificationsPage() {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export default function NotificationsPage() {
           if (qRes.success && Array.isArray(qRes.data)) {
             for (const q of qRes.data) {
               const filledRes = await fetch(
-                `http://localhost:5000/api/questionnaires/${q.id}/filled`,
+                `${API_BASE_URL}/api/questionnaires/${q.id}/filled`,
                 {
                   method: "GET",
                   credentials: "include",
@@ -58,7 +60,7 @@ export default function NotificationsPage() {
         } catch {}
         // 2. Unanswered news comments (detailed)
         try {
-          const res = await axios.get("/api/comments/all-news-comments", {
+          const res = await axios.get(`${API_BASE_URL}/api/comments/all-news-comments`, {
             withCredentials: true,
           });
           const allComments = res.data;
@@ -69,7 +71,7 @@ export default function NotificationsPage() {
         } catch {}
         // 3. Unanswered questions (detailed)
         try {
-          const res = await axios.get("/api/questions/admin/all", {
+          const res = await axios.get(`${API_BASE_URL}/api/questions/admin/all`, {
             withCredentials: true,
           });
           if (res.data.success && Array.isArray(res.data.data.questions)) {
@@ -93,7 +95,7 @@ export default function NotificationsPage() {
       setLoading(true);
       try {
         // Fetch replied questions (unseen answers)
-        const qRes = await axios.get("/api/questions/user/unseen-answers", {
+        const qRes = await axios.get(`${API_BASE_URL}/api/questions/user/unseen-answers`, {
           withCredentials: true,
         });
         if (qRes.data.success && Array.isArray(qRes.data)) {
@@ -120,7 +122,7 @@ export default function NotificationsPage() {
           setQuestionReplies(qRes.data.data);
         }
         // Fetch replied comments
-        const cRes = await axios.get("/api/comments/my/replied", {
+        const cRes = await axios.get(`${API_BASE_URL}/api/comments/my/replied`, {
           withCredentials: true,
         });
         if (
@@ -466,7 +468,7 @@ export default function NotificationsPage() {
                       {item.file_name && (
                         <div>
                           <a
-                            href={`http://localhost:5000/uploads/questionnaires/${item.file_name}`}
+                            href={`${API_BASE_URL}/uploads/questionnaires/${item.file_name}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{

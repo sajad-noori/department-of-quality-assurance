@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import { Navigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import { Navigate } from "react-router-dom";
+import axios from "axios";
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
 export default function RoleBasedRoute({ children, allowedRoles }) {
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function RoleBasedRoute({ children, allowedRoles }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
 
@@ -19,15 +21,15 @@ export default function RoleBasedRoute({ children, allowedRoles }) {
         if (allowedRoles.includes(userRole)) {
           setAuthorized(true);
         } else {
-          setError('You do not have permission to access this page');
+          setError("You do not have permission to access this page");
         }
       } catch (err) {
-        console.error('Auth check failed:', err);
+        console.error("Auth check failed:", err);
         // Only set error if it's an authentication error
         if (err.response?.status === 401 || err.response?.status === 403) {
-          setError('Please log in to access this page');
+          setError("Please log in to access this page");
         } else {
-          setError('An error occurred while checking authentication');
+          setError("An error occurred while checking authentication");
         }
       } finally {
         setLoading(false);
@@ -38,18 +40,22 @@ export default function RoleBasedRoute({ children, allowedRoles }) {
   }, [allowedRoles]);
 
   if (loading) return <div>در حال بارگذاری...</div>;
-  
+
   if (error) {
-    if (error.includes('log in')) {
+    if (error.includes("log in")) {
       return <Navigate to="/login" replace />;
     }
     return <div className="alert alert-danger">{error}</div>;
   }
-  
+
   if (!authorized) {
-    return <div className="alert alert-warning">You do not have permission to access this page</div>;
+    return (
+      <div className="alert alert-warning">
+        You do not have permission to access this page
+      </div>
+    );
   }
-  
+
   return children;
 }
 

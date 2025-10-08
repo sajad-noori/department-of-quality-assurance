@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const containerStyle = {
   backgroundColor: '#0a0a0a',
   color: '#ffffff',
@@ -290,7 +292,7 @@ const LogsDashboard = () => {
         ...filters
       });
 
-      const response = await axios.get(`http://localhost:5000/api/logs?${params}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/logs?${params}`, {
         withCredentials: true
       });
 
@@ -314,7 +316,7 @@ const LogsDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/logs/statistics', {
+      const response = await axios.get(`${API_BASE_URL}/api/logs/statistics`, {
         withCredentials: true
       });
       setStats(response.data.data);
@@ -325,7 +327,7 @@ const LogsDashboard = () => {
 
   const fetchAvailableActions = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/logs/actions', {
+      const response = await axios.get(`${API_BASE_URL}/api/logs/actions`, {
         withCredentials: true
       });
       setAvailableActions(response.data.data);
@@ -369,7 +371,7 @@ const LogsDashboard = () => {
         ...filters
       });
 
-      const response = await axios.get(`http://localhost:5000/api/logs/export?${params}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/logs/export?${params}`, {
         withCredentials: true,
         responseType: 'blob'
       });
@@ -393,7 +395,7 @@ const LogsDashboard = () => {
     }
 
     try {
-      await axios.delete('http://localhost:5000/api/logs/cleanup', {
+      await axios.delete(`${API_BASE_URL}/api/logs/cleanup`, {
         withCredentials: true,
         data: { daysOld: 90 }
       });

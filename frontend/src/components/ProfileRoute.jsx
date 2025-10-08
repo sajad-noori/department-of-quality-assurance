@@ -5,6 +5,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Profile from './Profile';
 import EmployeeProfile from './EmployeeProfile';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const ProfileRoute = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
@@ -13,7 +15,7 @@ const ProfileRoute = () => {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/auth/me', {
+        const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         

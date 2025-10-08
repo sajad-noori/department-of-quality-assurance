@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
 import PropTypes from 'prop-types';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const NumberOfStudents = ({ onStepSubmit }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ const NumberOfStudents = ({ onStepSubmit }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -48,7 +50,7 @@ const NumberOfStudents = ({ onStepSubmit }) => {
 
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/students', {
+        const response = await axios.get(`${API_BASE_URL}/api/students`, {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
@@ -143,7 +145,7 @@ const NumberOfStudents = ({ onStepSubmit }) => {
       setSubmitting(true);
       setError(null);
       
-      const response = await axios.post('http://localhost:5000/api/students', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/students`, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +191,7 @@ const NumberOfStudents = ({ onStepSubmit }) => {
       setDeleting(id);
       setError(null);
       
-      const response = await axios.delete(`http://localhost:5000/api/students/${id}`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/students/${id}`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

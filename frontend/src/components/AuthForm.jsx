@@ -14,6 +14,8 @@ import "../styles/AuthForm.css";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Helper function to validate email
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -81,7 +83,7 @@ export function Login() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${API_BASE_URL}/api/auth/login`,
         { email, password },
         { withCredentials: true } // ✅ send cookie
       );
@@ -95,7 +97,7 @@ export function Login() {
       try {
         let fullUser = user;
         try {
-          const meRes = await axios.get("http://localhost:5000/api/auth/me", {
+          const meRes = await axios.get(`${API_BASE_URL}/api/auth/me`, {
             withCredentials: true,
           });
           if (meRes.data && meRes.data.user) {
@@ -327,7 +329,7 @@ export function ForgotPassword() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
+        `${API_BASE_URL}/api/auth/forgot-password`,
         { email },
         { withCredentials: true }
       );
@@ -530,7 +532,7 @@ export function VerifyResetCode() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/verify-reset-code",
+        `${API_BASE_URL}/api/auth/verify-reset-code`,
         { email, code },
         { withCredentials: true }
       );
@@ -556,7 +558,7 @@ export function VerifyResetCode() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
+        `${API_BASE_URL}/api/auth/forgot-password`,
         { email },
         { withCredentials: true }
       );
@@ -770,7 +772,7 @@ export function ResetPassword() {
     try {
       const resetToken = localStorage.getItem("resetToken");
       const res = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
+        `${API_BASE_URL}/api/auth/reset-password`,
         { token: resetToken, password },
         { withCredentials: true }
       );
@@ -1038,7 +1040,7 @@ export function Register() {
 
       // Create axios instance with default config
       const axiosInstance = axios.create({
-        baseURL: "http://localhost:5000",
+        baseURL: `${API_BASE_URL}`,
         timeout: 30000, // Increased to 30 seconds
         withCredentials: true,
         headers: {

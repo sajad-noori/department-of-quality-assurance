@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import { CircularProgress } from '@mui/material';
 import { useTheme } from "../../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 export default function StaffCountForm({ formData, onChange, onSubmit }) {
   const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -125,7 +127,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
@@ -150,7 +152,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
       if (!user || user.role !== 'institute') return;
 
       try {
-        const response = await axios.get('http://localhost:5000/api/personnel', {
+        const response = await axios.get(`${API_BASE_URL}/api/personnel`, {
           withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
@@ -229,7 +231,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
         sanitizedData[key] = value === '' ? 0 : Number(value) || 0;
       });
 
-      const response = await axios.post('http://localhost:5000/api/personnel', sanitizedData, {
+      const response = await axios.post(`${API_BASE_URL}/api/personnel`, sanitizedData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

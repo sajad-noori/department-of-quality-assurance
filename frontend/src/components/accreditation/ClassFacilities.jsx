@@ -8,6 +8,8 @@ import Button from '@mui/material/Button';
 import PropTypes from 'prop-types';
 import { useTheme } from '../../contexts/ThemeContext';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const StyledButton = styled(Button)({
   textTransform: 'none',
   fontWeight: 600,
@@ -51,7 +53,7 @@ const ClassFacilities = ({ onStepSubmit }) => {
 
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/class-facilities', {
+      const response = await axios.get(`${API_BASE_URL}/api/class-facilities`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +74,7 @@ const ClassFacilities = ({ onStepSubmit }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -136,7 +138,7 @@ const ClassFacilities = ({ onStepSubmit }) => {
     setSuccess(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/class-facilities', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/class-facilities`, formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +174,7 @@ const ClassFacilities = ({ onStepSubmit }) => {
     }
 
     try {
-      const response = await axios.delete(`http://localhost:5000/api/class-facilities/${id}`, {
+      const response = await axios.delete(`${API_BASE_URL}/api/class-facilities/${id}`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',

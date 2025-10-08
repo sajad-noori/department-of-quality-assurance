@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -9,7 +11,7 @@ export function AuthProvider({ children }) {
 
   // Restore user on app load if authenticated
   useEffect(() => {
-    axios.get('http://localhost:5000/api/auth/me', { withCredentials: true })
+    axios.get(`${API_BASE_URL}/api/auth/me`, { withCredentials: true })
       .then(res => {
         if (res.data && res.data.user) {
           setUser(res.data.user);
@@ -29,7 +31,7 @@ export function AuthProvider({ children }) {
     const today = new Date().toISOString().slice(0, 10);
     const lastVisitLogged = localStorage.getItem('lastVisitLogged');
     if (lastVisitLogged === today) return;
-    axios.post('http://localhost:5000/api/logs/visit', {}, { withCredentials: true })
+    axios.post(`${API_BASE_URL}/api/logs/visit`, {}, { withCredentials: true })
       .then(() => {
         localStorage.setItem('lastVisitLogged', today);
       })

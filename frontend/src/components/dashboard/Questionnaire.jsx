@@ -5,6 +5,8 @@ const ACCENT = "#0dcaf0";
 const DARK_BG = "#121212";
 const BTN_TEXT = "#030305";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Questionnaire = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -62,7 +64,7 @@ const Questionnaire = () => {
   useEffect(() => {
     const fetchQuestionnaires = async () => {
       try {
-        const response = await fetch("/api/questionnaires", {
+        const response = await fetch(`${API_BASE_URL}/api/questionnaires`, {
           credentials: "include",
         });
         const data = await response.json();
@@ -92,7 +94,7 @@ const Questionnaire = () => {
       // Use XMLHttpRequest for progress
       await new Promise((resolve, reject) => {
         const xhr = new window.XMLHttpRequest();
-        xhr.open("POST", "/api/questionnaires");
+        xhr.open("POST", `${API_BASE_URL}/api/questionnaires`);
         xhr.withCredentials = true;
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -611,7 +613,7 @@ const Questionnaire = () => {
                 <div style={{ marginBottom: 14 }}>
                   {q.file_url ? (
                     <a
-                      href={`http://localhost:5000/uploads/${q.file_url}`}
+                      href={`${API_BASE_URL}/uploads/${q.file_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

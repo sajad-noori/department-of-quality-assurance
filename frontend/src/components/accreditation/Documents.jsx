@@ -47,6 +47,8 @@ import ErrorIcon from "@mui/icons-material/Error";
 import PropTypes from "prop-types";
 import { useTheme } from "../../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const darkTheme = createTheme({
   direction: "rtl",
   palette: {
@@ -187,7 +189,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Configure axios defaults
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://localhost:5000";
+axios.defaults.baseURL = `${API_BASE_URL}`;
 
 // Add response interceptor to handle auth errors
 axios.interceptors.response.use(
@@ -329,7 +331,7 @@ export default function FileUploadWizard({ onStepChange }) {
 
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me", {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           withCredentials: true,
         });
         setUser(res.data.user);
@@ -689,7 +691,7 @@ export default function FileUploadWizard({ onStepChange }) {
   const getFileUrl = (filePath) => {
     if (!filePath) return "";
     // Convert backslashes to forward slashes and ensure proper URL format
-    return `http://localhost:5000/${filePath.replace(/\\/g, "/")}`;
+    return `${API_BASE_URL}/${filePath.replace(/\\/g, "/")}`;
   };
 
   // Auto-clear success/error messages after 3 seconds, with robust handling
