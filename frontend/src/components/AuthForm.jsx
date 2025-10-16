@@ -40,12 +40,15 @@ function parseJwt(token) {
 
 // Check if user is logged in by validating stored token and extracting user info
 function isLoggedIn() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-  const user = parseJwt(token);
-  if (!user) return null;
-  // Optional: you can check token expiry here if your token has exp field
-  return user;
+  // const token = localStorage.getItem("token");
+  // if (!token) return null;
+  // const user = parseJwt(token);
+  // if (!user) return null;
+  // // Optional: you can check token expiry here if your token has exp field
+  // return user;
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
+
 }
 
 // ✅ LOGIN COMPONENT
@@ -83,12 +86,15 @@ export function Login() {
 
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/api/auth/login`,
+        `/api/auth/login`,
         { email, password },
         { withCredentials: true } // ✅ send cookie
+        
       );
 
       const { user } = res.data;
+
+      localStorage.setItem("user", JSON.stringify(user));
       // Attempt to retrieve the full user object (including profileImage)
       // from the server-side `/api/auth/me` endpoint. Some login responses
       // don't include all fields, so fetching `/me` ensures we have the

@@ -4,6 +4,7 @@ const { promise } = require("../config/db");
 const { hashPassword, comparePassword } = require("../utils/hash");
 const { sendVerificationEmail } = require("../utils/sendEmail");
 const ProfileImage = require("../models/profile_image.model");
+const findUserById = require("../models/user.model").findUserById;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
@@ -168,6 +169,7 @@ exports.verify = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -183,12 +185,17 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "ایمیل یا رمز عبور اشتباه است" });
     }
 
-    const token = generateToken({
+    console.log('it works befor the query is executed');
+    console.log('User info: ', user);
+    const payload = {
       id: user.id,
       name: user.name,
-      email,
-      role: user.role,
-    });
+    };
+
+
+    const token = generateToken(payload);
+
+    console.log('it works after the query is executed');
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -202,12 +209,13 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
+        email: user.email,
         role: user.role,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "خطا در ورود" });
+    res.status(500).json({ message: "خطا 13 در ورود" });
   }
 };
 
@@ -254,7 +262,8 @@ exports.resendCode = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = req.user;
+    const userId = req.user.id;
+    const user = await findUserById(userId);
     if (!user) return res.sendStatus(401);
 
     // Get user's profile image
