@@ -613,7 +613,7 @@ const Questionnaire = () => {
                 <div style={{ marginBottom: 14 }}>
                   {q.file_url ? (
                     <a
-                      href={`${API_BASE_URL}/uploads/${q.file_url}`}
+                      href={`${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/uploads/${q.file_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{

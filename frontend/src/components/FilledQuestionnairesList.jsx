@@ -111,7 +111,7 @@ const FilledQuestionnairesList = () => {
                   </span>
                   <div className="d-flex align-items-center gap-2">
                     <a
-                      href={`${API_BASE_URL}/uploads/${f.file_url}`}
+                      href={`${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/uploads/${f.file_url}`}
                       className="btn btn-info btn-sm"
                       target="_blank"
                       rel="noopener noreferrer"

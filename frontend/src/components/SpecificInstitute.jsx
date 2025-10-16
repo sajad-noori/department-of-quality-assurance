@@ -501,7 +501,7 @@ const SpecificInstitute = () => {
       // Open the download URL in a new window/tab
       // This will automatically include cookies for authentication
       window.open(
-        `${API_BASE_URL}/api/profile-documents/download/${encodedPath}`,
+        `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/api/profile-documents/download/${encodedPath}`,
         "_blank"
       );
     } catch (error) {
