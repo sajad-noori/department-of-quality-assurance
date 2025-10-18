@@ -8,7 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CircularProgress from "@mui/material/CircularProgress";
 import Tooltip from "@mui/material/Tooltip";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
 function getFileIcon(fileName) {
   const ext = fileName.split(".").pop().toLowerCase();
@@ -27,7 +27,7 @@ function getFileUrl(filePath) {
     p.startsWith("uploads/") || p.startsWith("/uploads/")
       ? p.replace(/^\/+/, "")
       : `uploads/${p.replace(/^\/+/, "")}`;
-  return `${API_BASE_URL}/${encodeURI(normalized)}`;
+  return `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/${encodeURI(normalized)}`;
 }
 
 const LoadingSkeleton = ({ theme }) => (
@@ -193,9 +193,12 @@ function Questionnaires() {
           setAllQuestionnaires(all);
           // Fetch filled questionnaires for this user
           try {
-            const filledRes = await fetch(`${API_BASE_URL}/api/questionnaires/filled/user`, {
-              credentials: "include",
-            });
+            const filledRes = await fetch(
+              `${API_BASE_URL}/api/questionnaires/filled/user`,
+              {
+                credentials: "include",
+              }
+            );
             const filledData = await filledRes.json();
             if (filledData.success && Array.isArray(filledData.data)) {
               const uploadedMap = {};

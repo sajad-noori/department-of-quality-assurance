@@ -147,7 +147,7 @@ const CheckingQuestionnaires = () => {
 
   // Get file URL for download
   const getFileUrl = (file_url) =>
-    file_url ? `${API_BASE_URL}/uploads/${file_url}` : "#";
+    file_url ? `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/uploads/${file_url}` : "#";
 
   return (
     <div
