@@ -185,7 +185,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "ایمیل یا رمز عبور اشتباه است" });
     }
 
-<<<<<<< HEAD
     console.log('it works befor the query is executed');
     console.log('User info: ', user);
     const payload = {
@@ -197,21 +196,6 @@ exports.login = async (req, res) => {
     const token = generateToken(payload);
 
     console.log('it works after the query is executed');
-=======
-let token;
-try {
-  token = generateToken({
-    id: user.id,
-    name: user.name,
-    email,
-    role: user.role,
-  });
-  console.log('Token generated successfully');
-} catch (error) {
-  console.error('Error generating token:', error);
-  return res.status(500).json({ message: "خطا در ایجاد توکن" });
-}
->>>>>>> 8784aeea90b166b243409714d546f5224b4dd0ac
 
 res.cookie("token", token, {
   httpOnly: true,
