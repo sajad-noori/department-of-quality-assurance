@@ -178,3 +178,34 @@ exports.updateMyPassword = async (req, res) => {
     res.status(500).json({ message: "خطا در بروزرسانی رمز عبور" });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  const connection = await promise.getConnection();
+  try {
+    const { userId } = req.params;
+
+    await connection.beginTransaction();
+
+    // Delete related rows from laylia (and any other known tables)
+    await connection.execute("DELETE FROM laylia WHERE userId = ?", [userId]);
+
+    // Delete the user
+    const [result] = await connection.execute("DELETE FROM users WHERE id = ?", [
+      userId,
+    ]);
+
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: "کاربر یافت نشد" });
+    }
+
+    await connection.commit();
+    res.json({ message: "کاربر و تمام داده‌های مرتبط با موفقیت حذف شدند" });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "خطا در حذف کاربر" });
+  } finally {
+    connection.release();
+  }
+};

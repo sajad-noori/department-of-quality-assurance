@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -16,20 +16,20 @@ const DocumentsPage = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [isMobile, setIsMobile] = useState(false);
 
-  const categoryTranslations = {
+  const categoryTranslations = useMemo(() => ({
     guideline: "رهنمودها",
     form: "فرم‌ها",
     "legal-doc": "اسناد تقنینی",
     "check-list": "چک لیست ها",
     standards: "استندرد ها",
-  };
+  }), []);
 
   // Map URL parameters to database category values
-  const categoryMapping = {
+  const categoryMapping = useMemo(() => ({
     guideline: "guideline",
     form: "form",
     "legal-doc": "legal",
-  };
+  }), []);
 
   // Category colors for badges (dark theme)
   const categoryColors = {
@@ -90,7 +90,7 @@ const DocumentsPage = () => {
     };
 
     fetchDocuments();
-  }, [type]);
+  }, [type, categoryMapping, categoryTranslations]);
 
   useEffect(() => {
     let results = documents.filter(
@@ -170,12 +170,16 @@ const DocumentsPage = () => {
         }
       );
 
+      // Preserve extension from fileName while using readable name
+      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
+      const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
+
       // Create blob and download
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = doc.name || doc.fileName;
+      link.download = displayName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

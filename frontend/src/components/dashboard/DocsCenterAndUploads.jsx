@@ -337,12 +337,6 @@ const pageButtonStyle = {
   transition: "all 0.2s ease",
 };
 
-const activePageButtonStyle = {
-  ...pageButtonStyle,
-  backgroundColor: "#00d4ff",
-  color: "#000000",
-  borderColor: "#00d4ff",
-};
 
 const disabledPageButtonStyle = {
   ...pageButtonStyle,
@@ -356,6 +350,36 @@ const pageInfoStyle = {
   margin: "0 1rem",
 };
 
+const progressContainerStyle = {
+  marginTop: "1rem",
+  backgroundColor: "#1a1a1a",
+  borderRadius: "6px",
+  padding: "0.75rem",
+  border: "1px solid #333333",
+};
+
+const progressBarStyle = {
+  width: "100%",
+  height: "8px",
+  backgroundColor: "#333333",
+  borderRadius: "4px",
+  overflow: "hidden",
+};
+
+const progressFillStyle = (percent) => ({
+  width: `${percent}%`,
+  height: "100%",
+  backgroundColor: "#00d4ff",
+  transition: "width 0.3s ease",
+});
+
+const progressTextStyle = {
+  marginTop: "0.5rem",
+  fontSize: "0.75rem",
+  color: "#cccccc",
+  textAlign: "center",
+};
+
 export default function GuidelinesDashboard() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -364,6 +388,7 @@ export default function GuidelinesDashboard() {
   const [successMsg, setSuccessMsg] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -408,6 +433,7 @@ export default function GuidelinesDashboard() {
     setError("");
     setSuccessMsg("");
     setLoading(true);
+    setUploadProgress(0);
 
     try {
       const data = new FormData();
@@ -417,15 +443,23 @@ export default function GuidelinesDashboard() {
       data.append("video_link", formData.video_link);
       if (formData.file) data.append("file", formData.file);
 
+      const config = {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: formData.file
+          ? (progressEvent) => {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
+              setUploadProgress(percent);
+            }
+          : undefined,
+      };
+
       if (formData.id) {
-        await axios.put(`/api/docs-center-and-uploads/${formData.id}`, data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.put(`/api/docs-center-and-uploads/${formData.id}`, data, config);
         setSuccessMsg("فایل با موفقیت بروزرسانی شد!");
       } else {
-        await axios.post("/api/docs-center-and-uploads", data, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post("/api/docs-center-and-uploads", data, config);
         setSuccessMsg("فایل با موفقیت ارسال شد!");
       }
 
@@ -437,12 +471,15 @@ export default function GuidelinesDashboard() {
         file: null,
         video_link: "",
       });
+      setUploadProgress(0);
       await fetchFiles();
     } catch (err) {
-      setError("خطا در ارسال/بروزرسانی فایل، دوباره تلاش کنید.");
+      const msg = err.response?.data?.error || err.message || "خطا در ارسال/بروزرسانی فایل، دوباره تلاش کنید.";
+      setError(msg);
       console.error(err);
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -622,7 +659,7 @@ export default function GuidelinesDashboard() {
 
           <div style={formGroupStyle}>
             <label htmlFor="file" style={labelStyle}>
-              انتخاب فایل (Word, Excel, PDF)
+              انتخاب فایل (Word, Excel, PDF) — تا ۱۰۰ مگابایت
             </label>
             <input
               type="file"
@@ -737,6 +774,17 @@ export default function GuidelinesDashboard() {
               </button>
             )}
           </div>
+
+          {loading && uploadProgress > 0 && (
+            <div style={progressContainerStyle}>
+              <div style={progressBarStyle}>
+                <div style={progressFillStyle(uploadProgress)}></div>
+              </div>
+              <div style={progressTextStyle}>
+                در حال ارسال: {uploadProgress}%
+              </div>
+            </div>
+          )}
         </form>
       </div>
 

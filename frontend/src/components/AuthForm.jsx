@@ -48,7 +48,6 @@ function isLoggedIn() {
   // return user;
   const user = localStorage.getItem("user");
   return user ? JSON.parse(user) : null;
-
 }
 
 // ✅ LOGIN COMPONENT
@@ -64,17 +63,20 @@ export function Login() {
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
-  const redirectPath = searchParams.get("redirect") || "/";
+  const redirectPath = searchParams.get("redirect") || "/profile";
 
   // ✅ Redirect if already logged in
   useEffect(() => {
     const user = isLoggedIn();
     if (user) {
-      navigate(user.role === "admin" ? "/dashboard" : redirectPath, {
-        replace: true,
-      });
+      // Don't redirect if we're already on the login page (prevents loops)
+      if (location.pathname !== "/login") {
+        navigate(user.role === "admin" ? "/dashboard" : redirectPath, {
+          replace: true,
+        });
+      }
     }
-  }, []);
+  }, [location.pathname]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,45 +90,37 @@ export function Login() {
       const res = await axios.post(
         `/api/auth/login`,
         { email, password },
-        { withCredentials: true } // ✅ send cookie
-        
+        {
+          withCredentials: true, // ✅ send cookie
+          timeout: 10000, // 10 second timeout
+        }
       );
 
       const { user } = res.data;
 
+      // Store user in localStorage
       localStorage.setItem("user", JSON.stringify(user));
-      // Attempt to retrieve the full user object (including profileImage)
-      // from the server-side `/api/auth/me` endpoint. Some login responses
-      // don't include all fields, so fetching `/me` ensures we have the
-      // complete data to update AuthContext and make Menu show the image
-      // immediately without a page refresh.
+
+      // Update AuthContext
       try {
-        let fullUser = user;
-        try {
-          const meRes = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-            withCredentials: true,
-          });
-          if (meRes.data && meRes.data.user) {
-            fullUser = meRes.data.user;
-          }
-        } catch (err) {
-          // ignore: fallback to user returned by login
-        }
-
-        try {
-          if (fullUser) login(fullUser);
-        } catch (err) {
-          // ignore if login not available for any reason
-        }
-
-        navigate(fullUser?.role === "admin" ? "/dashboard" : redirectPath);
+        if (user) login(user);
       } catch (err) {
-        // fallback navigation
-        navigate(user?.role === "admin" ? "/dashboard" : redirectPath);
+        console.error("Error updating auth context:", err);
       }
+
+      // Navigate based on user role
+      navigate(user?.role === "admin" ? "/dashboard" : redirectPath, {
+        replace: true,
+      });
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.response?.data?.message || "خطا در ورود");
+      if (err.response?.status === 429) {
+        setError(
+          "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید."
+        );
+      } else {
+        setError(err.response?.data?.message || "خطا در ورود");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -60,34 +60,36 @@ app.use(globalLimiter);
 app.use(compression());
 
 // CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    // Remove port from origin for comparison
-    const originWithoutPort = origin.replace(/:\d+$/, '');
-    
-    const allowedOrigins = [
-      'http://localhost',
-      'http://qa.tveta.edu.af',
-      'https://qa.tveta.edu.af',
-      'http://ca.tveta.edu.af',
-      'https://ca.tveta.edu.af'
-    ];
-    
-    if (allowedOrigins.includes(originWithoutPort)) {
-      // Return the exact origin that was requested (without modifying it)
-      callback(null, origin);
-    } else {
-      console.log('❌ CORS blocked for origin:', origin);
-      callback(new Error('Not allowed by CORS'), false);
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
 
+      // Remove port from origin for comparison
+      const originWithoutPort = origin.replace(/:\d+$/, "");
+
+      const allowedOrigins = [
+        "http://localhost",
+        "http://qa.tveta.edu.af",
+        "https://qa.tveta.edu.af",
+        "http://ca.tveta.edu.af",
+        "https://ca.tveta.edu.af",
+        "http://localhost:5000/",
+      ];
+
+      if (allowedOrigins.includes(originWithoutPort)) {
+        // Return the exact origin that was requested (without modifying it)
+        callback(null, origin);
+      } else {
+        console.log("❌ CORS blocked for origin:", origin);
+        callback(new Error("Not allowed by CORS"), false);
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
 // Middleware
 // Increase body parser size slightly for API JSON payloads; uploads still handled by multer

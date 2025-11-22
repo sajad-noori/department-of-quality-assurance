@@ -6,6 +6,7 @@ const {
   updateUserRole,
   updateMe,
   updateMyPassword,
+  deleteUser,
 } = require("../controllers/users.controller");
 const { authenticate, checkRole } = require("../middleware/auth.middleware");
 const { authLimiter } = require("../middleware/rateLimiter");
@@ -25,6 +26,12 @@ router.put(
   "/:userId/role",
   [authenticate, checkRole("admin"), authLimiter],
   updateUserRole
+);
+
+router.delete(
+  "/:userId",
+  [authenticate, checkRole("admin"), authLimiter],
+  deleteUser
 );
 
 // Protected route - update own name

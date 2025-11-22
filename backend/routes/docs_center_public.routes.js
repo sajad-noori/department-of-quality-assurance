@@ -55,7 +55,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB limit
     files: 1, // Only allow one file at a time
   },
 });
@@ -69,7 +69,7 @@ function multerErrorHandler(err, req, res, next) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res
         .status(400)
-        .json({ error: "حجم فایل نباید بیشتر از ۱۰ مگابایت باشد." });
+        .json({ error: "حجم فایل نباید بیشتر از ۱۰۰ مگابایت باشد." });
     }
     // You can add other multer error checks here if needed
     return res.status(500).json({ error: "خطایی در آپلود فایل رخ داد." });
@@ -113,26 +113,46 @@ router.get(
         return res.status(404).json({ message: "فایل یافت نشد" });
       }
 
-      // Get file info for logging
+      // Get file info for logging and proper download name
       const [results] = await promise.execute(
-        "SELECT name, category FROM docs_center_and_uploads WHERE fileName = ?",
+        "SELECT name, category, fileName FROM docs_center_and_uploads WHERE fileName = ?",
         [filename]
       );
 
-      const documentName = results.length > 0 ? results[0].name : filename;
-      const category = results.length > 0 ? results[0].category : "unknown";
+      if (results.length === 0) {
+        return res.status(404).json({ message: "فایل یافت نشد" });
+      }
+
+      const documentName = results[0].name;
+      const category = results[0].category;
+      const originalExt = path.extname(documentName) || path.extname(filename);
+      const safeName = `${documentName}${originalExt}`;
 
       // Set the filename for the logging middleware
       req.params.filename = filename;
-      req.documentInfo = { name: documentName, category: category };
+      req.documentInfo = { name: documentName, category };
 
-      // Send the file
-      res.download(filePath, filename, (err) => {
-        if (err) {
-          console.error("Error downloading file:", err);
-          return res.status(500).json({ message: "خطا در دانلود فایل" });
-        }
-      });
+      // Detect MIME type
+      const ext = path.extname(filename).toLowerCase();
+      const mimeTypes = {
+        ".pdf": "application/pdf",
+        ".doc": "application/msword",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xls": "application/vnd.ms-excel",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      };
+      const mimeType = mimeTypes[ext] || "application/octet-stream";
+
+      // Set headers to force proper download
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${encodeURIComponent(safeName)}"`
+      );
+
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
     } catch (error) {
       console.error("Error in download route:", error);
       res.status(500).json({ message: "خطا در دانلود فایل" });

@@ -147,8 +147,13 @@ exports.verify = async (req, res) => {
     // Clean up verification data
     global.verificationStore.delete(email);
 
-    // Generate token
-    const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, {
+    // Generate token (include basic role information for authorization middleware)
+    const tokenPayload = {
+      id: result.insertId,
+      name: verificationData.name,
+      role: "user",
+    };
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
@@ -169,7 +174,6 @@ exports.verify = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -184,27 +188,21 @@ exports.login = async (req, res) => {
     if (!user || !(await comparePassword(password, user.password))) {
       return res.status(401).json({ message: "ایمیل یا رمز عبور اشتباه است" });
     }
-
-    console.log('it works befor the query is executed');
-    console.log('User info: ', user);
     const payload = {
       id: user.id,
       name: user.name,
+      role: user.role,
     };
-
 
     const token = generateToken(payload);
 
-    console.log('it works after the query is executed');
-
-res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "Lax",  // Changed from "Strict" to "Lax"
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  path: "/",  // Explicitly set path
-  domain: process.env.FRONTEND_DOMAIN || undefined // Add your frontend domain in production
-});
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
+    });
 
     res.status(200).json({
       message: "ورود موفقیت‌آمیز",

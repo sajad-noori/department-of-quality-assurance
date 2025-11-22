@@ -47,7 +47,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import PropTypes from "prop-types";
 import { useTheme } from "../../contexts/ThemeContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
 const darkTheme = createTheme({
   direction: "rtl",
@@ -196,6 +196,12 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error("Axios error:", error.response?.data || error.message);
+    // Handle rate limiting errors
+    if (error.response?.status === 429) {
+      console.warn(
+        "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید."
+      );
+    }
     return Promise.reject(error);
   }
 );
@@ -378,6 +384,7 @@ export default function FileUploadWizard({ onStepChange }) {
           console.log(`Fetching documents for type: ${type}`);
           const response = await axios.get("/api/profile-documents", {
             params: { type },
+            timeout: 10000, // 10 second timeout
           });
 
           console.log(`Response for type ${type}:`, {
@@ -403,6 +410,16 @@ export default function FileUploadWizard({ onStepChange }) {
             response: err.response?.data,
             status: err.response?.status,
           });
+
+          // Handle rate limiting
+          if (err.response?.status === 429) {
+            showSnackbar(
+              "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.",
+              "error"
+            );
+            break; // Stop further requests to prevent more rate limiting
+          }
+
           // Continue with other types even if one fails
           continue;
         }
@@ -427,6 +444,14 @@ export default function FileUploadWizard({ onStepChange }) {
         console.log("Authentication error, redirecting to login");
         showSnackbar("لطفا وارد حساب کاربری خود شوید", "error");
         navigate("/login");
+      } else if (err.response?.status === 429) {
+        setError(
+          "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید."
+        );
+        showSnackbar(
+          "تعداد درخواست‌های شما بیش از حد مجاز است. لطفاً کمی صبر کنید.",
+          "error"
+        );
       } else {
         setError("خطا در دریافت اسناد");
         showSnackbar(

@@ -879,6 +879,31 @@ const UserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('آیا از حذف این کاربر اطمینان دارید؟ این عمل قابل بازگشت نیست.')) {
+      return;
+    }
+
+    try {
+      setUpdateError(null);
+      setUpdateSuccess(null);
+
+      await axios.delete(`${API_BASE_URL}/api/users/${userId}`, {
+        withCredentials: true,
+      });
+
+      setUsers((prev) => prev.filter((user) => user.id !== userId));
+
+      setUpdateSuccess('کاربر با موفقیت حذف شد');
+      setTimeout(() => {
+        setUpdateSuccess(null);
+      }, 3000);
+    } catch (err) {
+      setUpdateError(err.response?.data?.message || 'خطا در حذف کاربر');
+      console.error('Error deleting user:', err);
+    }
+  };
+
   const handleButtonHover = (e, type = 'primary') => {
     let style;
     switch (type) {
@@ -1071,7 +1096,7 @@ const UserManagement = () => {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr 
+                  <tr
                     key={user.id}
                     style={{ transition: 'background-color 0.2s ease' }}
                   >
@@ -1094,7 +1119,7 @@ const UserManagement = () => {
                         </select>
                       ) : (
                         <span style={getRoleBadgeStyle(user.role)}>
-                          {roles.find(r => r.value === user.role)?.label || user.role}
+                          {roles.find((r) => r.value === user.role)?.label || user.role}
                         </span>
                       )}
                     </td>
@@ -1121,15 +1146,26 @@ const UserManagement = () => {
                           </button>
                         </div>
                       ) : (
-                        <button
-                          style={buttonStyle}
-                          onMouseEnter={(e) => handleButtonHover(e)}
-                          onMouseLeave={(e) => handleButtonLeave(e)}
-                          onClick={() => setEditingUser({ id: user.id, role: user.role })}
-                        >
-                          <span>✏️</span>
-                          <span>ویرایش نقش</span>
-                        </button>
+                        <div style={buttonGroupStyle}>
+                          <button
+                            style={buttonStyle}
+                            onMouseEnter={(e) => handleButtonHover(e)}
+                            onMouseLeave={(e) => handleButtonLeave(e)}
+                            onClick={() => setEditingUser({ id: user.id, role: user.role })}
+                          >
+                            <span>✏️</span>
+                            <span>ویرایش نقش</span>
+                          </button>
+                          <button
+                            style={buttonSecondaryStyle}
+                            onMouseEnter={(e) => handleButtonHover(e, 'secondary')}
+                            onMouseLeave={(e) => handleButtonLeave(e, 'secondary')}
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <span>🗑️</span>
+                            <span>حذف کاربر</span>
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td style={tableCellStyle}>
