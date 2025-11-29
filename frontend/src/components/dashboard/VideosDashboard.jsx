@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 const API_BASE = `${API_BASE_URL}/api/media`;
 const VIDEOS_PER_PAGE = 6;
 
@@ -621,10 +620,6 @@ function VideoUploadDashboard() {
       `${API_BASE}/video${editingVideoId ? `/${editingVideoId}` : ""}`
     );
     xhr.withCredentials = true;
-    const token = localStorage.getItem("token");
-    if (token) {
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    }
     xhr.send(formData);
   };
 
@@ -633,11 +628,9 @@ function VideoUploadDashboard() {
       return;
 
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/video/${id}`, {
         method: "DELETE",
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("خطا در حذف ویدیو");
       alert("حذف با موفقیت انجام شد!");

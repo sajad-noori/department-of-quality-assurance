@@ -229,7 +229,14 @@ function App() {
               }
             />
 
-            <Route path="/register" element={<Register />} />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <Register />
+                </PublicRoute>
+              }
+            />
 
             {/* ✅ Forgot Password and Reset Password Routes */}
             <Route

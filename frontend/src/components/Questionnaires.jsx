@@ -27,7 +27,9 @@ function getFileUrl(filePath) {
     p.startsWith("uploads/") || p.startsWith("/uploads/")
       ? p.replace(/^\/+/, "")
       : `uploads/${p.replace(/^\/+/, "")}`;
-  return `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/${encodeURI(normalized)}`;
+  return `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/${encodeURI(
+    normalized
+  )}`;
 }
 
 const LoadingSkeleton = ({ theme }) => (
@@ -74,7 +76,6 @@ function Questionnaires() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [questionnaires, setQuestionnaires] = useState([]);
-  const [allQuestionnaires, setAllQuestionnaires] = useState([]);
   const fileInputs = useRef({});
   const [uploading, setUploading] = useState({});
   const [uploadMessage, setUploadMessage] = useState("");
@@ -123,50 +124,6 @@ function Questionnaires() {
     setDeleting((prev) => ({ ...prev, [questionnaireId]: false }));
   };
 
-  // Fetch questionnaires from backend
-  useEffect(() => {
-    setLoading(true);
-    setError("");
-    fetch(`${API_BASE_URL}/api/questionnaires`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then(async (data) => {
-        if (data.success) {
-          // Filter by selected category if provided
-          const all = data.data || [];
-          const filteredByCategory = all.filter(
-            (item) => (item.category || "form") === selectedCategory
-          );
-          setQuestionnaires(filteredByCategory);
-          // Fetch filled questionnaires for this user
-          try {
-            const filledRes = await fetch("/api/questionnaires/filled/user", {
-              credentials: "include",
-            });
-            const filledData = await filledRes.json();
-            if (filledData.success && Array.isArray(filledData.data)) {
-              // Build uploaded state: { [questionnaire_id]: filledQuestionnaireObject }
-              const uploadedMap = {};
-              filledData.data.forEach((fq) => {
-                uploadedMap[fq.questionnaire_id] = fq;
-              });
-              setUploaded(uploadedMap);
-            }
-          } catch (err) {
-            // Ignore error, just don't set uploaded
-          }
-        } else {
-          setError(data.message || "خطا در دریافت پرسشنامه‌ها");
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("خطا در ارتباط با سرور");
-        setLoading(false);
-      });
-  }, []);
-
   // Keep URL in sync with search
   useEffect(() => {
     // Preserve category when updating search query
@@ -175,7 +132,7 @@ function Questionnaires() {
     if (selectedCategory) params.set("category", selectedCategory);
     const qs = params.toString();
     navigate(qs ? `?${qs}` : "", { replace: true });
-  }, [search, navigate]);
+  }, [search, navigate, selectedCategory]);
 
   // Fetch questionnaires for the selected category (reactive)
   useEffect(() => {
@@ -190,7 +147,6 @@ function Questionnaires() {
         if (data.success) {
           const all = data.data || [];
           setQuestionnaires(all);
-          setAllQuestionnaires(all);
           // Fetch filled questionnaires for this user
           try {
             const filledRes = await fetch(

@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const QuestionnairesController = require("../controllers/questionnaires.controller");
-const { verifyToken } = require("../middleware/verifyToken");
-const { checkRole } = require("../middleware/auth.middleware");
+const { authenticate, checkRole } = require("../middleware/auth.middleware");
 const { questionnaireLimiter } = require("../middleware/rateLimiter");
 const multer = require("multer");
 const path = require("path");
@@ -44,7 +43,7 @@ const upload = multer({
 // POST /api/questionnaires (admin only)
 router.post(
   "/",
-  verifyToken,
+  authenticate,
   checkRole("admin"),
   upload.single("file"),
   QuestionnairesController.createQuestionnaire
@@ -56,7 +55,7 @@ router.get("/", QuestionnairesController.getAllQuestionnaires);
 // DELETE /api/questionnaires/:id (admin only)
 router.delete(
   "/:id",
-  verifyToken,
+  authenticate,
   checkRole("admin"),
   QuestionnairesController.deleteQuestionnaire
 );
@@ -64,7 +63,7 @@ router.delete(
 // PUT /api/questionnaires/:id (admin only)
 router.put(
   "/:id",
-  verifyToken,
+  authenticate,
   checkRole("admin"),
   upload.single("file"),
   QuestionnairesController.updateQuestionnaire
@@ -73,7 +72,7 @@ router.put(
 // POST /api/questionnaires/filled (user uploads filled questionnaire)
 router.post(
   "/filled",
-  verifyToken,
+  authenticate,
   uploadFilledQuestionnaire.single("file"),
   QuestionnairesController.uploadFilledQuestionnaire
 );
@@ -81,7 +80,7 @@ router.post(
 // GET /api/questionnaires/:id/filled (get all filled questionnaires for a questionnaire)
 router.get(
   "/:id/filled",
-  verifyToken,
+  authenticate,
   checkRole("employee"),
   QuestionnairesController.getFilledQuestionnaires
 );
@@ -89,14 +88,14 @@ router.get(
 // GET /api/questionnaires/filled/user (get all filled questionnaires for the current user)
 router.get(
   "/filled/user",
-  verifyToken,
+  authenticate,
   QuestionnairesController.getFilledQuestionnairesForUser
 );
 
 // PATCH /api/questionnaires/filled/:id/check (mark a filled questionnaire as checked)
 router.patch(
   "/filled/:id/check",
-  verifyToken,
+  authenticate,
   checkRole("employee"),
   QuestionnairesController.checkFilledQuestionnaire
 );
@@ -105,7 +104,7 @@ router.patch(
 router.get(
   "/:id/filled/unchecked-count",
   questionnaireLimiter,
-  verifyToken,
+  authenticate,
   checkRole("employee"),
   QuestionnairesController.getUncheckedFilledCount
 );
@@ -114,7 +113,7 @@ router.get(
 router.get(
   "/filled/total-unchecked-count",
   questionnaireLimiter,
-  verifyToken,
+  authenticate,
   checkRole("employee"),
   QuestionnairesController.getTotalUncheckedFilledCount
 );

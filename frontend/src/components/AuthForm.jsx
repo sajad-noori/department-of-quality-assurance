@@ -14,46 +14,17 @@ import "../styles/AuthForm.css";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
 // Helper function to validate email
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Decode JWT payload (base64 decode)
-function parseJwt(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
-// Check if user is logged in by validating stored token and extracting user info
-function isLoggedIn() {
-  // const token = localStorage.getItem("token");
-  // if (!token) return null;
-  // const user = parseJwt(token);
-  // if (!user) return null;
-  // // Optional: you can check token expiry here if your token has exp field
-  // return user;
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
-}
-
 // ✅ LOGIN COMPONENT
 export function Login() {
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const { user, login, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -65,10 +36,9 @@ export function Login() {
   const searchParams = new URLSearchParams(location.search);
   const redirectPath = searchParams.get("redirect") || "/profile";
 
-  // ✅ Redirect if already logged in
+  // ✅ Redirect if already logged in (use AuthContext instead of localStorage)
   useEffect(() => {
-    const user = isLoggedIn();
-    if (user) {
+    if (!loading && user) {
       // Don't redirect if we're already on the login page (prevents loops)
       if (location.pathname !== "/login") {
         navigate(user.role === "admin" ? "/dashboard" : redirectPath, {
@@ -76,7 +46,7 @@ export function Login() {
         });
       }
     }
-  }, [location.pathname]);
+  }, [user, loading, location.pathname, navigate, redirectPath]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,7 +58,7 @@ export function Login() {
 
     try {
       const res = await axios.post(
-        `/api/auth/login`,
+        `${API_BASE_URL}/api/auth/login`,
         { email, password },
         {
           withCredentials: true, // ✅ send cookie
@@ -98,10 +68,7 @@ export function Login() {
 
       const { user } = res.data;
 
-      // Store user in localStorage
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Update AuthContext
+      // Update AuthContext (this will handle user state)
       try {
         if (user) login(user);
       } catch (err) {
@@ -328,7 +295,7 @@ export function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(
+      await axios.post(
         `${API_BASE_URL}/api/auth/forgot-password`,
         { email },
         { withCredentials: true }
@@ -771,7 +738,7 @@ export function ResetPassword() {
 
     try {
       const resetToken = localStorage.getItem("resetToken");
-      const res = await axios.post(
+      await axios.post(
         `${API_BASE_URL}/api/auth/reset-password`,
         { token: resetToken, password },
         { withCredentials: true }
@@ -986,6 +953,7 @@ export function ResetPassword() {
 // ✅ REGISTER COMPONENT
 export function Register() {
   const { theme } = useTheme();
+  const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -995,15 +963,14 @@ export function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Redirect if already logged in
+  // ✅ Redirect if already logged in (use AuthContext instead of isLoggedIn)
   useEffect(() => {
-    const user = isLoggedIn();
-    if (user) {
-      navigate(user.role === "admin" ? "/dashboard" : "/home", {
+    if (!loading && user) {
+      navigate(user.role === "admin" ? "/dashboard" : "/profile", {
         replace: true,
       });
     }
-  }, []);
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

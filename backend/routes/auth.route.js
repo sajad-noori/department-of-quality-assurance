@@ -8,13 +8,13 @@ const { logLogin } = require("../middleware/logging.middleware");
 // Rate limiting configuration
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // 5 attempts per window
+  max: 5, // 5 attempts per window
   message: { message: "Too many attempts, please try again later." },
 });
 
 const verifyLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 300, // 3 attempts per hour
+  max: 3, // 3 attempts per hour
   message: {
     message: "Too many verification attempts, please try again later.",
   },
@@ -22,7 +22,7 @@ const verifyLimiter = rateLimit({
 
 const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 500, // 5 attempts per hour
+  max: 5, // 5 attempts per hour
   message: {
     message: "Too many password reset requests, please try again later.",
   },
@@ -30,7 +30,7 @@ const forgotPasswordLimiter = rateLimit({
 
 const resetPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 100, // 10 attempts per hour
+  max: 10, // 10 attempts per hour
   message: {
     message: "Too many password reset attempts, please try again later.",
   },
@@ -38,7 +38,7 @@ const resetPasswordLimiter = rateLimit({
 
 const verifyResetCodeLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 100, // 10 attempts per 10 minutes
+  max: 10, // 10 attempts per 10 minutes
   message: {
     message: "Too many code verification attempts, please try again later.",
   },

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const QuestionsController = require("../controllers/questions.controller");
 const { logQuestion } = require("../middleware/logging.middleware");
-const { verifyToken } = require("../middleware/verifyToken");
+const { authenticate } = require("../middleware/auth.middleware");
 
 // Public routes
 router.get("/auth/check", QuestionsController.checkAuth);
@@ -12,69 +12,69 @@ router.get("/search", QuestionsController.searchQuestions);
 // User routes (require authentication)
 router.get(
   "/user/questions",
-  verifyToken,
+  authenticate,
   QuestionsController.getUserQuestions
 );
 router.post(
   "/submit",
-  [verifyToken, logQuestion()],
+  [authenticate, logQuestion()],
   QuestionsController.submitQuestion
 );
 router.put(
   "/user/:questionId/edit",
-  verifyToken,
+  authenticate,
   QuestionsController.editUserQuestion
 );
 router.delete(
   "/user/:questionId",
-  verifyToken,
+  authenticate,
   QuestionsController.deleteUserQuestion
 );
 
 // Get unseen answers to my questions
 router.get(
   "/user/unseen-answers",
-  verifyToken,
+  authenticate,
   QuestionsController.getUnseenAnswersToMyQuestions
 );
 
 // Mark a question's answer as seen
 router.post(
   "/user/mark-answer-seen",
-  verifyToken,
+  authenticate,
   QuestionsController.markAnswerAsSeen
 );
 
 // Admin/Employee routes (require admin or employee role)
-router.get("/admin/all", verifyToken, QuestionsController.getAllQuestions);
+router.get("/admin/all", authenticate, QuestionsController.getAllQuestions);
 router.get(
   "/admin/pending",
-  verifyToken,
+  authenticate,
   QuestionsController.getPendingQuestions
 );
 router.get(
   "/admin/unanswered-count",
-  verifyToken,
+  authenticate,
   QuestionsController.getUnansweredQuestionsCount
 );
 router.put(
   "/admin/:questionId/reply",
-  verifyToken,
+  authenticate,
   QuestionsController.replyToQuestion
 );
 router.put(
   "/admin/:questionId/edit",
-  verifyToken,
+  authenticate,
   QuestionsController.editQuestion
 );
 router.put(
   "/admin/:questionId/edit-reply",
-  verifyToken,
+  authenticate,
   QuestionsController.editReply
 );
 router.delete(
   "/admin/:questionId",
-  verifyToken,
+  authenticate,
   QuestionsController.deleteQuestion
 );
 

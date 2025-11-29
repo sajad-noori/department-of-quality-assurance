@@ -25,7 +25,11 @@ export function AuthProvider({ children }) {
         }
       } catch (err) {
         console.error("Auth check failed:", err);
-        setUser(null);
+        // Only clear user if it's an authentication error (401/403)
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setUser(null);
+        }
+        // For other errors (network, server), keep current state
       } finally {
         setLoading(false);
       }
@@ -45,9 +49,10 @@ export function AuthProvider({ children }) {
         {},
         { withCredentials: true }
       );
+      setUser(null);
     } catch (err) {
       console.error("Logout error:", err);
-    } finally {
+      // Still clear user state even if server logout fails
       setUser(null);
     }
   };

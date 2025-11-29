@@ -158,9 +158,6 @@ const DocumentsPage = () => {
 
   const handleDownload = async (doc) => {
     try {
-      // Track download with logging
-      console.log(`Downloading: ${doc.name}`);
-
       // Use the new download endpoint that includes logging
       const response = await axios.get(
         `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
