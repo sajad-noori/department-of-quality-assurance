@@ -7,13 +7,11 @@ const {
   resetProgress 
 } = require("../controllers/stepProgress.controller");
 const { authenticate, checkRole } = require('../middleware/auth.middleware');
-const { authLimiter } = require('../middleware/rateLimiter');
 
 // Get step progress for the current user
 router.get("/", 
   authenticate, 
   checkRole('institute'), 
-  authLimiter, 
   getStepProgress
 );
 
@@ -21,7 +19,6 @@ router.get("/",
 router.put("/", 
   authenticate, 
   checkRole('institute'), 
-  authLimiter, 
   updateStepProgress
 );
 
@@ -29,7 +26,6 @@ router.put("/",
 router.post("/mark-step", 
   authenticate, 
   checkRole('institute'), 
-  authLimiter, 
   markStepAsSubmitted
 );
 
@@ -37,7 +33,6 @@ router.post("/mark-step",
 router.post("/reset", 
   authenticate, 
   checkRole('institute'), 
-  authLimiter, 
   resetProgress
 );
 

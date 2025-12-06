@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
+const { globalLimiter } = require("./middleware/rateLimiter");
 const compression = require("compression");
 const authRoutes = require("./routes/auth.route");
 const newsRoutes = require("./routes/news.route");
@@ -47,13 +47,7 @@ const app = express();
 app.disable("x-powered-by");
 app.use(helmet());
 
-// Global rate limiter (adjust limits for your environment)
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Global rate limiter
 app.use(globalLimiter);
 
 // Compression for responses

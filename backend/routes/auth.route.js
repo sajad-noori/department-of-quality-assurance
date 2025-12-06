@@ -1,48 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.controller");
-const rateLimit = require("express-rate-limit");
+const {
+  authLimiter,
+  verifyLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+  verifyResetCodeLimiter
+} = require("../middleware/rateLimiter");
 const { authenticate } = require("../middleware/auth.middleware");
 const { logLogin } = require("../middleware/logging.middleware");
-
-// Rate limiting configuration
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  message: { message: "Too many attempts, please try again later." },
-});
-
-const verifyLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 attempts per hour
-  message: {
-    message: "Too many verification attempts, please try again later.",
-  },
-});
-
-const forgotPasswordLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // 5 attempts per hour
-  message: {
-    message: "Too many password reset requests, please try again later.",
-  },
-});
-
-const resetPasswordLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 attempts per hour
-  message: {
-    message: "Too many password reset attempts, please try again later.",
-  },
-});
-
-const verifyResetCodeLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 10, // 10 attempts per 10 minutes
-  message: {
-    message: "Too many code verification attempts, please try again later.",
-  },
-});
 
 // Apply rate limiting to routes
 router.post("/register", authLimiter, authController.register);

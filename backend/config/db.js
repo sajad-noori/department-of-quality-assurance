@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   database: process.env.DATABASE_NAME,
 
   // Connection pool settings
-  connectionLimit: 10, // Maximum number of connections in the pool
+  connectionLimit: 100, // Maximum number of connections in the pool
 
   // SSL configuration for production
   ssl:
