@@ -32,6 +32,27 @@ exports.authLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
+
+// Auth-specific rate limiters
+// exports.authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // 5 attempts per window
+//   message: { message: "Too many attempts, please try again later." },
+//   keyGenerator: getUserKey,
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+
+
+// // Auth-specific rate limiters
+// exports.authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // 5 attempts per window
+//   message: { message: "Too many attempts, please try again later." },
+//   keyGenerator: getUserKey,
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 exports.questionnaireLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 300, // 30 requests per minute
@@ -41,15 +62,7 @@ exports.questionnaireLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Auth-specific rate limiters
-exports.authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  message: { message: "Too many attempts, please try again later." },
-  keyGenerator: getUserKey,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+
 
 exports.verifyLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour

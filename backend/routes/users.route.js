@@ -9,34 +9,33 @@ const {
   deleteUser,
 } = require("../controllers/users.controller");
 const { authenticate, checkRole } = require("../middleware/auth.middleware");
-const { authLimiter } = require("../middleware/rateLimiter");
 
 // Protected route - only admin can access user list
-router.get("/", [authenticate, checkRole("admin"), authLimiter], getUsers);
+router.get("/", [authenticate, checkRole("admin")], getUsers);
 
 // Protected route - employees can view institute users
 router.get(
   "/role/:role",
-  [authenticate, checkRole(["admin", "employee"]), authLimiter],
+  [authenticate, checkRole(["admin", "employee"])],
   getUsersByRole
 );
 
 // Protected route - only admin can update user roles
 router.put(
   "/:userId/role",
-  [authenticate, checkRole("admin"), authLimiter],
+  [authenticate, checkRole("admin")],
   updateUserRole
 );
 
 router.delete(
   "/:userId",
-  [authenticate, checkRole("admin"), authLimiter],
+  [authenticate, checkRole("admin")],
   deleteUser
 );
 
 // Protected route - update own name
-router.put("/me", [authenticate, authLimiter], updateMe);
+router.put("/me", [authenticate], updateMe);
 // Protected route - update own password
-router.put("/me/password", [authenticate, authLimiter], updateMyPassword);
+router.put("/me/password", [authenticate], updateMyPassword);
 
 module.exports = router;

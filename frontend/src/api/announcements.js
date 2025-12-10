@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import axios from 'axios';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 class AnnouncementsAPI {
   static async getAuthHeaders() {
@@ -154,17 +155,11 @@ class AnnouncementsAPI {
   // Get recipients by type
   static async getRecipients(targetAudience = 'all') {
     try {
-      const response = await fetch(`${API_BASE_URL}/announcements/recipients/list?target_audience=${targetAudience}`, {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-        credentials: 'include'
+      const response = await axios.get(`${API_BASE_URL}/api/announcements/recipients/list?target_audience=${targetAudience}`, {
+        withCredentials: true
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Error fetching recipients:', error);
       throw error;
@@ -194,17 +189,11 @@ class AnnouncementsAPI {
   // Get available roles
   static async getAvailableRoles() {
     try {
-      const response = await fetch(`${API_BASE_URL}/announcements/roles/available`, {
-        method: 'GET',
-        headers: await this.getAuthHeaders(),
-        credentials: 'include'
+      const response = await axios.get(`${API_BASE_URL}/api/announcements/roles/available`, {
+        withCredentials: true
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Error fetching available roles:', error);
       throw error;

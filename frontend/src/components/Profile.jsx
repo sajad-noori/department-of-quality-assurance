@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
-import { motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { FaExclamationTriangle } from "react-icons/fa";
 import ProfileSidebar from "./ProfileSidebar";
