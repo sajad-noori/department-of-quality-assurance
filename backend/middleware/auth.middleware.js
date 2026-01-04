@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const findUserById = require("../models/user.model").findUserById;
 
 function extractToken(req) {
   if (req.cookies?.token) {
@@ -34,7 +35,7 @@ exports.authenticate = (req, res, next) => {
 };
 
 exports.checkRole = (roles) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -46,13 +47,30 @@ exports.checkRole = (roles) => {
       roles = [roles];
     }
 
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
+    try {
+      const userFromDb = await findUserById(req.user.id);
+      if (!userFromDb) {
+        return res.status(401).json({
+          success: false,
+          message: "کاربر یافت نشد",
+        });
+      }
+
+      if (!roles.includes(userFromDb.role)) {
+        return res.status(403).json({
+          success: false,
+          message: "شما دسترسی به این بخش را ندارید",
+        });
+      }
+
+      // attach the fresh user object (optional)
+      req.user = { ...req.user, role: userFromDb.role };
+      next();
+    } catch (err) {
+      return res.status(500).json({
         success: false,
-        message: "شما دسترسی به این بخش را ندارید",
+        message: "خطا در بررسی سطح دسترسی",
       });
     }
-
-    next();
   };
 };
