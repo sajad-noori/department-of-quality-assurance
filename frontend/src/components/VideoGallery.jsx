@@ -53,6 +53,7 @@ const VideoGallery = () => {
         setVideos(mapped);
         setCurrentPage(1);
       } catch (error) {
+        // this is the new code
         console.error("Error fetching videos:", error);
       } finally {
         setIsLoading(false);
