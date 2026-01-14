@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-
-const API_URL = '/api/news';
+import axios from 'axios';
 
 const containerStyle = (theme) => ({
   backgroundColor: theme === 'dark' ? '#121212' : '#ffffff',
@@ -262,10 +261,8 @@ const NewsList = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error('Failed to fetch news');
-      const data = await res.json();
-      setNews(data);
+      const res = await axios.get('/api/news');
+      setNews(res.data);
     } catch (error) {
       console.error('Error fetching news:', error);
       setError('خطا در بارگذاری اخبار');
@@ -278,8 +275,7 @@ const NewsList = () => {
     if (!window.confirm('آیا مطمئن هستید که می‌خواهید این خبر را حذف کنید؟')) return;
     
     try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete news');
+      await axios.delete(`/api/news/${id}`);
       await fetchNews();
     } catch (error) {
       console.error('Error deleting news:', error);

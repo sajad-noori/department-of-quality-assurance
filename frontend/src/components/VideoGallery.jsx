@@ -3,6 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaPlay, FaSearch, FaCalendarAlt, FaTag } from "react-icons/fa";
 import { useTheme } from "../contexts/ThemeContext";
 
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+
+
 const ITEMS_PER_PAGE = 12;
 
 // YouTube utility functions
@@ -33,7 +37,7 @@ const VideoGallery = () => {
     const fetchVideos = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch("/api/media/videos");
+        const response = await fetch(`${API_BASE_URL}/api/media/videos`);
         const data = await response.json();
         const filtered = data.filter(
           (video) =>
