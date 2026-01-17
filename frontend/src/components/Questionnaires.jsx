@@ -227,7 +227,7 @@ function Questionnaires() {
     formData.append("file", file);
     formData.append("questionnaire_id", q.id);
     try {
-      const res = await fetch("/api/questionnaires/filled", {
+      const res = await fetch(`${API_BASE_URL}/api/questionnaires/filled`, {
         method: "POST",
         credentials: "include",
         body: formData,
