@@ -164,7 +164,7 @@ const Questionnaire = () => {
       if (file) formData.append("file", file);
       await new Promise((resolve, reject) => {
         const xhr = new window.XMLHttpRequest();
-        xhr.open("PUT", `/api/questionnaires/${editingId}`);
+        xhr.open("PUT", `${API_BASE_URL}/api/questionnaires/${editingId}`);
         xhr.withCredentials = true;
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -224,7 +224,7 @@ const Questionnaire = () => {
     )
       return;
     try {
-      const response = await fetch(`/api/questionnaires/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/questionnaires/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
