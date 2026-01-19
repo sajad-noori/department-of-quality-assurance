@@ -15,6 +15,7 @@ const DocumentsPage = () => {
   const [sortBy, setSortBy] = useState("uploadDate");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isMobile, setIsMobile] = useState(false);
+  const [downloadingDocs, setDownloadingDocs] = useState(new Set());
 
   const categoryTranslations = useMemo(() => ({
     guideline: "رهنمودها",
@@ -158,6 +159,9 @@ const DocumentsPage = () => {
 
   const handleDownload = async (doc) => {
     try {
+      // Add document to downloading set
+      setDownloadingDocs(prev => new Set(prev).add(doc.id));
+      
       // Use the new download endpoint that includes logging
       const response = await axios.get(
         `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
@@ -184,6 +188,13 @@ const DocumentsPage = () => {
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("خطا در دانلود فایل");
+    } finally {
+      // Remove document from downloading set
+      setDownloadingDocs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(doc.id);
+        return newSet;
+      });
     }
   };
 
@@ -469,9 +480,19 @@ const DocumentsPage = () => {
                     <button
                       onClick={() => handleDownload(doc)}
                       className="btn btn-info btn-sm w-100 touch-target"
+                      disabled={downloadingDocs.has(doc.id)}
                     >
-                      <i className="fas fa-download me-1"></i>
-                      دانلود
+                      {downloadingDocs.has(doc.id) ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          در حال دانلود...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-download me-1"></i>
+                          دانلود
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
