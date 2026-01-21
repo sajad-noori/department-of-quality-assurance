@@ -4,7 +4,6 @@ import {
   FaBullseye,
   FaUsers,
   FaHandshake,
-  FaLightbulb,
   FaShieldAlt,
   FaStar,
   FaHandHoldingHeart,
@@ -19,7 +18,7 @@ const sectionsData = [
   {
     icon: <FaShieldAlt />,
     title: "ریاست تضمین کیفیت",
-    desc: "ریاست تضمین کیفیت به عنوان یک بخش حیاتی در اداره تعلیمات تخنیکی و مسلکی فعالیت می‌کند. وظیفه این ریاست تضمین و ارتقاء سطح کیفیت آموزش‌ها، برنامه‌ها و خدمات ارائه شده در مؤسسات TVET می‌باشد. هدف اصلی ما تضمین تطابق آموزش‌ها با معیارهای ملی و بین‌المللی کیفیت است.",
+    desc: "ریاست تضمین کیفیت به عنوان یک بخش حیاتی در اداره تعلیمات تخنیکی و مسلکی فعالیت می‌کند. وظیفه این ریاست تضمین و ارتقاء سطح کیفیت آموزش‌ها، برنامه‌ها و خدمات ارائه شده در مؤسسات TVETA می‌باشد. هدف اصلی ما تضمین تطابق آموزش‌ها با معیارهای ملی و بین‌المللی کیفیت است.",
     img: "/images/quality-assurance.svg",
     imgAlt: "نماد تضمین کیفیت",
     aria: "ریاست تضمین کیفیت",
@@ -67,7 +66,6 @@ const sectionsData = [
 
 export default function AboutUs() {
   const bgRef = useRef(null);
-  const [mouse, setMouse] = React.useState({ x: 0.5, y: 0.5 });
   const smoothMouse = useRef({ x: 0.5, y: 0.5 });
   const targetMouse = useRef({ x: 0.5, y: 0.5 });
   const navigate = useNavigate();

@@ -73,6 +73,12 @@ article #_boxes ul li:nth-child(1) {
   --cardAccent: #3f9f47;
 }
 
+
+.centered-heading {
+  text-align: center !important;
+  width: 100%;
+  display: block;
+}
 article #_boxes ul li::after {
   position: absolute;
   width: calc(100% - 50px);
@@ -172,7 +178,7 @@ article #_boxes ul li figure figcaption {
   text-align: justify;
   text-justify: inter-word;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
