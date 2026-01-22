@@ -2,21 +2,15 @@ import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+
 const formatDuration = (seconds) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
 
-const formatUploadTime = (isoString) => {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  return (
-    date.toLocaleDateString() +
-    " " +
-    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
-};
+
 
 const formatUploadDate = (isoString) => {
   if (!isoString) return "";
@@ -64,12 +58,12 @@ const VideoPlayer = () => {
       navigate(-1);
       return;
     }
-  }, [currentVideo?.id, navigate]);
+  }, [currentVideo, navigate]);
 
   useEffect(() => {
     const fetchRecommended = async () => {
       try {
-        const response = await fetch("/api/media/videos");
+        const response = await fetch(`${API_BASE_URL}/api/media/videos`);
         const data = await response.json();
 
         const currentCat = currentVideo.category

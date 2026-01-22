@@ -27,7 +27,6 @@ const VideoGallery = () => {
   const [videos, setVideos] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [hoveredVideo, setHoveredVideo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { type } = useParams();
@@ -610,8 +609,6 @@ const VideoGallery = () => {
                       handleVideoClick(video);
                     }
                   }}
-                  onMouseEnter={() => setHoveredVideo(video.id)}
-                  onMouseLeave={() => setHoveredVideo(null)}
                   style={{
                     animationDelay: `${index * 0.1}s`,
                   }}
