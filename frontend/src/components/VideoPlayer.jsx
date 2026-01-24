@@ -293,11 +293,16 @@ const VideoPlayer = () => {
         }
         .recommended-video-title {
           font-weight: 700;
-          font-size: 1.05rem;
+          font-size: 0.9rem;
           margin-bottom: 0.3rem;
-          white-space: nowrap;
+          white-space: normal;
           overflow: hidden;
           text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          line-height: 1.2;
+          max-height: 2.4em;
         }
         .recommended-video-meta {
           font-size: 0.9rem;

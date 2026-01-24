@@ -18,34 +18,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const menuItems = [
-  // {
-  //   label: "معیار ها و رهنمود ها",
-  //   submenu: [
-  //     "رهنمود ارزیابی موؤسسات TVET",
-  //     "رهنمود ارزیابی برنامههای آموزشی",
-  //     "رهنمود ارزیابی استادان و مربیان",
-  //     "رهنمود گزارش خودارزیابی",
-  //     "رهنمود کارآموزی و آموزش عملی",
-  //     "رهنمود اعتباردهی موؤسسات",
-  //     "پلان استراتیژیک کیفیت",
-  //     "فورمها و چکلیستها",
-  //     "مفاهیم اساسی تضمین کیفیت",
-  //     "معیارهای ملی تضمین کیفیت",
-  //   ],
-  // },
-  // {
-  //   label: "گزارش ها و نشرات",
-  //   submenu: [
-  //     "گزارشهای سالانه کیفیت",
-  //     "گزارشهای ارزیابی موؤسسات",
-  //     "گزارشهای خودارزیابی (Self-Assessment)",
-  //     "نشرات علمی و تخنیکی",
-  //     "بولتنها و خبرنامها",
-  //     "راپورهای بازدید و نظارت",
-  //     "تحلیلها و یافتههای آماری",
-  //     "کتبچهها و بروشورهای آموزشی",
-  //   ],
-  // },
+
   {
     label: "آموزش",
     submenu: [
@@ -94,76 +67,94 @@ export default function MenuWithUtilityBar() {
   const [animating, setAnimating] = useReactState(false);
   const { user } = useAuth();
 
+  // Load Google Translate after page is interactive
   useEffect(() => {
-    // Only initialize once
+    // Only initialize once and after page is fully loaded
     if (translateInitialized.current) {
       return;
     }
 
-    console.log("Setting up Google Translate...");
+    // Wait for page to be fully interactive before loading Google Translate
+    const loadTranslateAfterPageLoad = () => {
+      console.log("Page loaded, setting up Google Translate...");
 
-    // Clear the container element gently
-    const existingElement = document.getElementById("google_translate_element");
-    if (existingElement) {
-      existingElement.innerHTML = "";
-    }
+      // Clear the container element gently
+      const existingElement = document.getElementById("google_translate_element");
+      if (existingElement) {
+        existingElement.innerHTML = "";
+      }
 
-    // Define the initialization function
-    window.googleTranslateElementInit = function () {
-      console.log("Google Translate callback executed");
-      try {
-        if (window.google && window.google.translate) {
-          console.log(
-            "Creating TranslateElement with languages: ar,ar-SA,fa,ps"
-          );
-          new window.google.translate.TranslateElement(
-            {
-              pageLanguage: "fa",
-              includedLanguages: "ar,ar-SA,fa,ps",
-              layout:
-                window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            },
-            "google_translate_element"
-          );
-          console.log("TranslateElement created successfully");
-          translateInitialized.current = true;
+      // Define the initialization function
+      window.googleTranslateElementInit = function () {
+        console.log("Google Translate callback executed");
+        try {
+          if (window.google && window.google.translate) {
+            console.log(
+              "Creating TranslateElement with languages: ar,ar-SA,fa,ps"
+            );
+            new window.google.translate.TranslateElement(
+              {
+                pageLanguage: "fa",
+                includedLanguages: "ar,ar-SA,fa,ps",
+                layout:
+                  window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+              },
+              "google_translate_element"
+            );
+            console.log("TranslateElement created successfully");
+            translateInitialized.current = true;
 
-          // Debug: Check what languages are available after a short delay
-          setTimeout(() => {
-            const selectElement = document.querySelector(".goog-te-combo");
-            if (selectElement) {
-              console.log(
-                "Available languages in dropdown:",
-                selectElement.innerHTML
-              );
-            }
-          }, 1000);
+            // Debug: Check what languages are available after a short delay
+            setTimeout(() => {
+              const selectElement = document.querySelector(".goog-te-combo");
+              if (selectElement) {
+                console.log(
+                  "Available languages in dropdown:",
+                  selectElement.innerHTML
+                );
+              }
+            }, 1000);
+          }
+        } catch (error) {
+          console.error("Error creating TranslateElement:", error);
         }
-      } catch (error) {
-        console.error("Error creating TranslateElement:", error);
+      };
+
+      // Check if Google Translate is already loaded
+      if (window.google && window.google.translate) {
+        console.log("Google Translate already available, calling init directly");
+        window.googleTranslateElementInit();
+        return;
+      }
+
+      // Only add script if it doesn't exist
+      const existingScript = document.querySelector(
+        'script[src*="translate.google.com"]'
+      );
+      if (!existingScript) {
+        const script = document.createElement("script");
+        script.src =
+          "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+        script.async = true;
+        script.onerror = function() {
+          console.warn("Failed to load Google Translate script");
+        };
+        document.head.appendChild(script);
+        console.log("Google Translate script added after page load");
+      } else {
+        console.log("Google Translate script already exists");
       }
     };
 
-    // Check if Google Translate is already loaded
-    if (window.google && window.google.translate) {
-      console.log("Google Translate already available, calling init directly");
-      window.googleTranslateElementInit();
-      return;
-    }
-
-    // Only add script if it doesn't exist
-    const existingScript = document.querySelector(
-      'script[src*="translate.google.com"]'
-    );
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.src =
-        "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-      script.async = true;
-      document.head.appendChild(script);
-      console.log("Google Translate script added");
+    // Load translate after page is fully interactive
+    if (document.readyState === 'complete') {
+      // Page already loaded
+      setTimeout(loadTranslateAfterPageLoad, 1000); // Small delay to ensure page is fully rendered
     } else {
-      console.log("Google Translate script already exists");
+      // Wait for page to complete loading
+      window.addEventListener('load', () => {
+        setTimeout(loadTranslateAfterPageLoad, 1000);
+      });
     }
   }, []);
 
@@ -234,7 +225,7 @@ export default function MenuWithUtilityBar() {
         // 2. Unanswered news comments (only count recent ones from last 2 months)
         let unansweredNewsComments = 0;
         try {
-          const res = await axios.get("/api/comments/all-news-comments", {
+          const res = await axios.get(`${API_BASE_URL}/api/comments/all-news-comments`, {
             withCredentials: true,
           });
           const twoMonthsAgo = new Date();
@@ -255,7 +246,7 @@ export default function MenuWithUtilityBar() {
         // 3. Unanswered questions (only count recent ones from last 2 months)
         let unansweredQuestionsCount = 0;
         try {
-          const res = await axios.get("/api/questions/admin/all", {
+          const res = await axios.get(`${API_BASE_URL}/api/questions/admin/all`, {
             withCredentials: true,
           });
           if (res.data.success && Array.isArray(res.data.data.questions)) {
@@ -284,7 +275,7 @@ export default function MenuWithUtilityBar() {
     async function fetchUserNotifications() {
       try {
         // Fetch replied questions (unseen answers)
-        const qRes = await axios.get("/api/questions/user/unseen-answers", {
+        const qRes = await axios.get(`${API_BASE_URL}/api/questions/user/unseen-answers`, {
           withCredentials: true,
         });
         let questionReplies = [];
@@ -312,7 +303,7 @@ export default function MenuWithUtilityBar() {
           questionReplies = qRes.data.data;
         }
         // Fetch replied comments
-        const cRes = await axios.get("/api/comments/my/replied", {
+        const cRes = await axios.get(`${API_BASE_URL}/api/comments/my/replied`, {
           withCredentials: true,
         });
         let commentReplies = [];
