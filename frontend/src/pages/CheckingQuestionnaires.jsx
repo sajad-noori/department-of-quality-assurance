@@ -1,41 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { questionnairesAPI } from "../api/questionnaires";
-import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
-
-const LoadingSkeleton = ({ theme }) => (
-  <div className="row g-3 justify-content-center">
-    {[1, 2, 3, 4].map((i) => (
-      <div key={i} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <div
-          className={`card h-100 ${
-            theme === "light" ? "light-card" : "dark-card"
-          } skeleton-card`}
-        >
-          <div className="card-body">
-            <div className="d-flex align-items-center mb-3">
-              <div className="skeleton-icon me-3"></div>
-              <div className="flex-grow-1">
-                <div className="skeleton-title mb-2"></div>
-                <div className="skeleton-badge"></div>
-              </div>
-            </div>
-            <div className="skeleton-text mb-3"></div>
-            <div className="skeleton-text-short mb-3"></div>
-            <div className="skeleton-button"></div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-LoadingSkeleton.propTypes = {
-  theme: PropTypes.string.isRequired,
-};
 
 function getFileIcon(fileName) {
   if (!fileName) return "📄";
@@ -228,7 +195,6 @@ const CheckingQuestionnaires = () => {
         {loading && (
           <div className="row justify-content-center">
             <div className="col-12">
-              <LoadingSkeleton theme={theme} />
             </div>
           </div>
         )}

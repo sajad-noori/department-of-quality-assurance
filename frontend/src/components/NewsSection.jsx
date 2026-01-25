@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { FaArrowLeft, FaExclamationTriangle, FaNewspaper, FaSpinner } from "react-icons/fa";
+import { FaArrowLeft, FaExclamationTriangle, FaNewspaper } from "react-icons/fa";
 import "../styles/NewsSection.css";
+import NewsSkeleton from "./skeletons/NewsSkeleton";
 
 // Persian date formatting utility
 const formatPersianDate = (dateString) => {
@@ -18,13 +19,13 @@ const formatPersianDate = (dateString) => {
   return persianDate;
 };
 
-// Convert English numbers to Persian
-const toPersianNumbers = (str) => {
-  if (!str) return '';
-  
-  const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return str.toString().replace(/[0-9]/g, (w) => persianNumbers[w]);
-};
+// Convert English numbers to Persian (unused function removed)
+// const toPersianNumbers = (str) => {
+//   if (!str) return '';
+//   
+//   const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+//   return str.toString().replace(/[0-9]/g, (w) => persianNumbers[w]);
+// };
 
 // Truncate description text with Persian ellipsis
 const truncatePersianText = (text, maxLength = 100) => {
@@ -55,19 +56,6 @@ const NewsSection = () => {
       setLoading(false);
     }
   };
-
-  const NewsSkeleton = () => (
-    <div className="news-card skeleton">
-      <div className="skeleton-image"></div>
-      <div className="news-info">
-        <div className="skeleton-title"></div>
-        <div className="skeleton-date"></div>
-        <div className="skeleton-description"></div>
-        <div className="skeleton-description"></div>
-        <div className="skeleton-link"></div>
-      </div>
-    </div>
-  );
 
   const ErrorState = () => (
     <div className="error-container">

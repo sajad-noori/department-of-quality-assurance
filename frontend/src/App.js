@@ -1,8 +1,8 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Menu from "./components/Menu";
-import Banner from "./components/Banner";
-import NewsSection from "./components/NewsSection";
+import BannerSkeleton from "./components/skeletons/BannerSkeleton";
+import MenuSkeleton from "./components/skeletons/MenuSkeleton";
+import NewsSkeleton from "./components/skeletons/NewsSkeleton";
 import FeedbackSection from "./components/FeedbackSection";
 import FooterSection from "./components/FooterSection";
 import AboutUs from "./components/AboutUs";
@@ -47,11 +47,17 @@ import NotificationsPage from "./pages/NotificationsPage";
 import AfghanistanMap from "./components/AfghanistanMap";
 import OrganizationalChart from "./components/OrganizationalChart";
 import Analysis from "./components/dashboard/Analysis";
+
+const Menu = lazy(() => import("./components/Menu"));
+const Banner = lazy(() => import("./components/Banner"));
+const NewsSection = lazy(() => import("./components/NewsSection"));
 function App() {
   return (
     <Router>
       <div dir="rtl" className="flex flex-col min-h-screen">
-        <Menu />
+        <Suspense fallback={<MenuSkeleton />}>
+          <Menu />
+        </Suspense>
         <div id="google_translate_element" style={{ display: "none" }}></div>
 
         <main className="flex-grow">
@@ -278,8 +284,12 @@ function App() {
               path="/"
               element={
                 <>
-                  <Banner />
-                  <NewsSection />
+                  <Suspense fallback={<BannerSkeleton />}>
+                    <Banner />
+                  </Suspense>
+                  <Suspense fallback={<NewsSkeleton />}>
+                    <NewsSection />
+                  </Suspense>
                   <Goals />
                   <FeedbackSection />
                   <AskAndAnswers />
