@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 const containerStyle = {
   backgroundColor: '#0a0a0a',
@@ -70,10 +68,7 @@ const inputStyle = {
   transition: 'border-color 0.2s ease',
 };
 
-const inputFocusStyle = {
-  borderColor: '#00d4ff',
-  boxShadow: '0 0 0 2px rgba(0, 212, 255, 0.1)',
-};
+
 
 const textareaStyle = {
   ...inputStyle,
@@ -123,11 +118,7 @@ const buttonStyle = {
   marginRight: '0.75rem',
 };
 
-const buttonHoverStyle = {
-  backgroundColor: '#00b8e6',
-  transform: 'translateY(-1px)',
-  boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
-};
+
 
 const buttonSecondaryStyle = {
   ...buttonStyle,
@@ -135,11 +126,7 @@ const buttonSecondaryStyle = {
   color: '#ffffff',
 };
 
-const buttonSecondaryHoverStyle = {
-  backgroundColor: '#555555',
-  transform: 'translateY(-1px)',
-  boxShadow: '0 4px 12px rgba(102, 102, 102, 0.3)',
-};
+
 
 const buttonContainerStyle = {
   display: 'flex',
@@ -183,9 +170,6 @@ const tableCellStyle = {
   borderBottom: '1px solid #333333',
 };
 
-const tableRowHoverStyle = {
-  backgroundColor: '#2a2a2a',
-};
 
 const imageStyle = {
   width: '60px',
@@ -261,12 +245,6 @@ const pageButtonStyle = {
   transition: 'all 0.2s ease',
 };
 
-const activePageButtonStyle = {
-  ...pageButtonStyle,
-  backgroundColor: '#00d4ff',
-  color: '#000000',
-  borderColor: '#00d4ff',
-};
 
 const disabledPageButtonStyle = {
   ...pageButtonStyle,
@@ -295,7 +273,6 @@ const NewsForm = () => {
     is_published: true,
   });
   const [editingId, setEditingId] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNews();

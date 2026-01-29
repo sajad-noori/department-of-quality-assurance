@@ -272,7 +272,7 @@ const ProfileSidebar = ({ onClose }) => {
         >
           {profileImage ? (
             <motion.img
-              src={profileImage}
+              src={`${API_BASE_URL}${profileImage}`}
               alt="Profile"
               className="profile-image"
               initial={{ opacity: 0 }}

@@ -5,6 +5,8 @@ import axios from "axios";
 import Comments from "./Comments";
 import { useTheme } from "../contexts/ThemeContext";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
 const containerStyle = {
   backgroundColor: "#0a0a0a",
   color: "#ffffff",
@@ -240,7 +242,6 @@ const errorStyle = {
   color: "#dc3545",
 };
 
-const mobileBreakpoint = "@media (max-width: 768px)";
 
 const NewsDetail = () => {
   const { id } = useParams();
@@ -456,29 +457,6 @@ const NewsDetail = () => {
     fetchOtherNews();
   }, [id]);
 
-  const handleImageHover = (e) => {
-    Object.assign(e.currentTarget.style, newsImageHoverStyle);
-  };
-
-  const handleImageLeave = (e) => {
-    Object.assign(e.currentTarget.style, newsImageStyle);
-  };
-
-  const handleOtherNewsHover = (e) => {
-    Object.assign(e.currentTarget.style, otherNewsItemHoverStyle);
-  };
-
-  const handleOtherNewsLeave = (e) => {
-    Object.assign(e.currentTarget.style, otherNewsItemStyle);
-  };
-
-  const handleBackLinkHover = (e) => {
-    Object.assign(e.currentTarget.style, backLinkHoverStyle);
-  };
-
-  const handleBackLinkLeave = (e) => {
-    Object.assign(e.currentTarget.style, backLinkStyle);
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -551,7 +529,7 @@ const NewsDetail = () => {
           onClick={() => setZoomed(true)}
         >
           <img
-            src={`${news.image_path}`}
+            src={`${API_BASE_URL}${news.image_path}`}
             alt={news.title}
             style={isLight ? newsImageStyleLight : newsImageStyle}
             onMouseEnter={(e) =>
@@ -700,7 +678,7 @@ const NewsDetail = () => {
             onClick={() => setZoomed(false)}
           />
           <img
-            src={`${news.image_path}`}
+            src={`${API_BASE_URL}${news.image_path}`}
             alt={news.title}
             style={isLight ? zoomedImageStyleLight : zoomedImageStyle}
             onClick={() => setZoomed(false)}
