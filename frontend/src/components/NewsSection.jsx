@@ -5,6 +5,8 @@ import { FaArrowLeft, FaExclamationTriangle, FaNewspaper } from "react-icons/fa"
 import "../styles/NewsSection.css";
 import NewsSkeleton from "./skeletons/NewsSkeleton";
 
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 // Persian date formatting utility
 const formatPersianDate = (dateString) => {
   if (!dateString) return '';
@@ -99,7 +101,7 @@ const NewsSection = () => {
                 <article key={news.id} className="news-card" tabIndex="0">
                   <div className="news-image-container">
                     <img 
-                      src={`${news.image_path}`} 
+                      src={`${API_BASE_URL}${news.image_path}`} 
                       alt={news.title} 
                       className="news-image"
                       loading="lazy"

@@ -34,7 +34,6 @@ const EmployeeProfile = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
-  const [totalCenters, setTotalCenters] = useState(0);
   const [stageCounts, setStageCounts] = useState({
     stage1: 0,
     stage2: 0,
@@ -88,7 +87,7 @@ const EmployeeProfile = () => {
     if (user) setEditName(user.name);
   }, [user]);
 
-  const fetchEducationalCenters = async (retryCount = 0) => {
+  const fetchEducationalCenters = useCallback(async (retryCount = 0) => {
     try {
       setIsSearching(true);
       const response = await axios.get(
@@ -100,7 +99,6 @@ const EmployeeProfile = () => {
 
       setEducationalCenters(response.data.centers);
       setTotalPages(response.data.totalPages);
-      setTotalCenters(response.data.total);
       setCentersError(null);
     } catch (err) {
       console.error("Error fetching educational centers:", err);
@@ -117,7 +115,7 @@ const EmployeeProfile = () => {
       setCentersLoading(false);
       setIsSearching(false);
     }
-  };
+  }, [currentPage, searchQuery]);
 
   const fetchStageCounts = async () => {
     try {
@@ -163,15 +161,16 @@ const EmployeeProfile = () => {
   };
 
   // Debounced search function
-  const debouncedFetchEducationalCenters = useCallback(
-    debounce(() => {
+  const debouncedFetchEducationalCenters = useRef(null);
+  
+  useEffect(() => {
+    debouncedFetchEducationalCenters.current = debounce(() => {
       fetchEducationalCenters();
-    }, 500),
-    [currentPage, searchQuery]
-  );
+    }, 500);
+  }, [fetchEducationalCenters]);
 
   useEffect(() => {
-    debouncedFetchEducationalCenters();
+    debouncedFetchEducationalCenters.current();
     fetchStageCounts();
     fetchUnansweredQuestionsCount();
     fetchTotalUncheckedFilledCount();
@@ -183,9 +182,11 @@ const EmployeeProfile = () => {
       })
       .catch(() => setUnansweredNewsComments(0));
     return () => {
-      debouncedFetchEducationalCenters.cancel();
+      if (debouncedFetchEducationalCenters.current) {
+        debouncedFetchEducationalCenters.current.cancel();
+      }
     };
-  }, [currentPage, searchQuery]);
+  }, [fetchEducationalCenters]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -475,7 +476,7 @@ const EmployeeProfile = () => {
           >
             {profileImage ? (
               <img
-                src={profileImage}
+                src={`${API_BASE_URL}${profileImage}`}
                 alt="Profile"
                 style={{
                   width: "100%",
