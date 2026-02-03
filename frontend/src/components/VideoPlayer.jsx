@@ -51,12 +51,18 @@ const VideoPlayer = () => {
     location.state?.video || null
   );
   const [videoDurations, setVideoDurations] = useState({});
+  const [isYouTubeLoading, setIsYouTubeLoading] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
     if (!currentVideo) {
       navigate(-1);
       return;
+    }
+    
+    // Set YouTube loading state when video changes
+    if (isYouTubeUrl(currentVideo.videoUrl)) {
+      setIsYouTubeLoading(true);
     }
   }, [currentVideo, navigate]);
 
@@ -318,6 +324,10 @@ const VideoPlayer = () => {
             transform: translateY(0);
           }
         }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
         @media (max-width: 1024px) {
           .page-container {
             flex-direction: column;
@@ -350,8 +360,49 @@ const VideoPlayer = () => {
                   position: "relative",
                   paddingBottom: "56.25%",
                   height: 0,
+                  background: `black url(${youtubeThumbnail(currentVideo.videoUrl)}) center/cover no-repeat`,
                 }}
               >
+                {isYouTubeLoading && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(0, 0, 0, 0.7)",
+                      zIndex: 10,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        border: "3px solid rgba(255, 255, 255, 0.1)",
+                        borderTop: "3px solid #0dcaf0",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                        marginBottom: "1rem",
+                      }}
+                    />
+                    <div
+                      style={{
+                        color: theme === "light" ? "#222" : "#fff",
+                        fontSize: "1rem",
+                        fontWeight: "500",
+                        textAlign: "center",
+                      }}
+                    >
+                      در حال بارگذاری ویدیوی YouTube...
+                    </div>
+                  </div>
+                )}
                 <iframe
                   title={`player-${currentVideo.id}`}
                   src={toYouTubeEmbed(currentVideo.videoUrl)}
@@ -365,6 +416,7 @@ const VideoPlayer = () => {
                     borderRadius: 12,
                   }}
                   allowFullScreen
+                  onLoad={() => setIsYouTubeLoading(false)}
                 />
               </div>
             ) : (
