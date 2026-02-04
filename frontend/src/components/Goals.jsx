@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import checklistImg from "../assets/goals/checklist-1-97.png";
-import computer from "../assets/goals/computer-22.png";
+import checklistImg from "../assets/goals/checklist-1-97.webp";
+import computer from "../assets/goals/computer-22.webp";
 import "../styles/goals.css";
 import Goals3 from "./Goals3";
 import Goal5 from "./Goal5";

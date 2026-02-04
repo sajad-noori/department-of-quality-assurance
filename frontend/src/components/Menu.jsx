@@ -645,7 +645,7 @@ export default function MenuWithUtilityBar() {
 
       <nav className={styles.navbar} ref={menuRef} dir="rtl">
         <img
-          src={require("../assets/Emblem_of_the_Islamic_Emirate_of_Afghanistan.png")}
+          src={require("../assets/Emblem_of_the_Islamic_Emirate_of_Afghanistan.webp")}
           alt="لوگو"
           className={styles.logo + " " + styles.leftLogo}
         />
@@ -732,7 +732,7 @@ export default function MenuWithUtilityBar() {
           ))}
         </ul>
         <img
-          src={require("../assets/tveta-logo-new.png")}
+          src={require("../assets/tveta-logo-new.webp")}
           alt="لوگو"
           className={styles.logo + " " + styles.rightLogo}
         />
