@@ -1,10 +1,53 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FaXTwitter, FaWhatsapp, FaYoutube, FaFacebook, FaUsers, FaCalendarDay, FaCalendarWeek, FaCalendar, FaGlobe, FaArrowUp } from "react-icons/fa6";
-import PropTypes from 'prop-types';
+import {
+  FaXTwitter,
+  FaWhatsapp,
+  FaYoutube,
+  FaFacebook,
+  FaUsers,
+  FaCalendarDay,
+  FaCalendarWeek,
+  FaCalendar,
+  FaGlobe,
+  FaArrowUp,
+} from "react-icons/fa6";
+import PropTypes from "prop-types";
 import "../styles/FooterSection.css";
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+
+/* -------------------- StatItem -------------------- */
+
+const StatItem = React.memo(({ icon: Icon, label, value, loading }) => (
+  <div className="stat-item">
+    <div className="stat-icon">
+      <Icon />
+    </div>
+    <div className="stat-content">
+      <span className="stat-value">
+        {loading ? (
+          <div className="stat-skeleton"></div>
+        ) : (
+          value.toLocaleString()
+        )}
+      </span>
+      <span className="stat-label">{label}</span>
+    </div>
+  </div>
+));
+
+StatItem.displayName = "StatItem";
+
+StatItem.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.number.isRequired,
+  loading: PropTypes.bool.isRequired,
+};
+
+/* -------------------- FooterSection -------------------- */
+
 const FooterSection = () => {
   const [visitorStats, setVisitorStats] = useState({
     activeUsers: 0,
@@ -13,72 +56,84 @@ const FooterSection = () => {
     monthly: 0,
     total: 0,
   });
+
   const [isLoading, setIsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
   const visitRecordedRef = useRef(false);
+  const footerRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    // Prevent multiple API calls
-    if (visitRecordedRef.current) {
-      return;
-    }
+  const recordVisitAndLoadStats = () => {
+    if (visitRecordedRef.current) return;
 
-    // Generate or retrieve visitorId
     let visitorId = localStorage.getItem("visitorId");
     if (!visitorId) {
       visitorId = crypto.randomUUID();
       localStorage.setItem("visitorId", visitorId);
     }
 
-    // Mark that we're recording a visit
     visitRecordedRef.current = true;
 
-    // Record the visit, then fetch stats
     fetch(`${API_BASE_URL}/api/visitors/visit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId }),
     })
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(() => fetch(`${API_BASE_URL}/api/visitors/visitor-stats`))
-      .then(res => res.json())
-      .then(stats => {
+      .then((res) => res.json())
+      .then((stats) => {
         setVisitorStats(stats);
         setIsLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching visitor stats:", err);
         setIsLoading(false);
-        // Reset the flag on error so we can retry
         visitRecordedRef.current = false;
       });
+  };
+
+  /* Load visitor stats only when footer becomes visible */
+  useEffect(() => {
+    if (!footerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          recordVisitAndLoadStats();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(footerRef.current);
+
+    return () => observer.disconnect();
   }, []);
 
+  /* Scroll button */
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scroll handler utility function
   const scrollToSection = (sectionId) => {
     const section = document.getElementById(sectionId);
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
-    }
+    if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handlers with navigation and scrolling
   const handleNewsClick = (e) => {
     e.preventDefault();
     if (location.pathname !== "/") {
@@ -99,35 +154,9 @@ const FooterSection = () => {
     }
   };
 
-  const StatItem = ({ icon: Icon, label, value, loading }) => (
-    <div className="stat-item">
-      <div className="stat-icon">
-        <Icon />
-      </div>
-      <div className="stat-content">
-        <span className="stat-value">
-          {loading ? (
-            <div className="stat-skeleton"></div>
-          ) : (
-            value.toLocaleString()
-          )}
-        </span>
-        <span className="stat-label">{label}</span>
-      </div>
-    </div>
-  );
-
-  // PropTypes for StatItem component
-  StatItem.propTypes = {
-    icon: PropTypes.elementType.isRequired,
-    label: PropTypes.string.isRequired,
-    value: PropTypes.number.isRequired,
-    loading: PropTypes.bool.isRequired
-  };
-
   return (
     <>
-      <footer className="footer">
+      <footer ref={footerRef} className="footer">
         <div className="footer-container">
           {/* Social Media */}
           <div className="footer-column social">
@@ -139,16 +168,32 @@ const FooterSection = () => {
               در شبکه‌های اجتماعی با ما در ارتباط باشید
             </p>
             <div className="social-icons">
-              <a href="https://x.com/DQATVETA" className="social-link twitter" aria-label="Twitter">
+              <a
+                href="https://x.com/DQATVETA"
+                className="social-link twitter"
+                aria-label="Twitter"
+              >
                 <FaXTwitter />
               </a>
-              <a href="https://wa.me/+93778558968" className="social-link whatsapp" aria-label="WhatsApp">
+              <a
+                href="https://wa.me/+93778558968"
+                className="social-link whatsapp"
+                aria-label="WhatsApp"
+              >
                 <FaWhatsapp />
               </a>
-              <a href="https://www.youtube.com/@TVETA-t9q" className="social-link youtube" aria-label="YouTube">
+              <a
+                href="https://www.youtube.com/@TVETA-t9q"
+                className="social-link youtube"
+                aria-label="YouTube"
+              >
                 <FaYoutube />
               </a>
-              <a href="#" className="social-link facebook" aria-label="Facebook">
+              <a
+                href="#"
+                className="social-link facebook"
+                aria-label="Facebook"
+              >
                 <FaFacebook />
               </a>
             </div>
@@ -174,13 +219,21 @@ const FooterSection = () => {
                 </Link>
               </li>
               <li>
-                <a href="#news-section" onClick={handleNewsClick} className="footer-link">
+                <a
+                  href="#news-section"
+                  onClick={handleNewsClick}
+                  className="footer-link"
+                >
                   <span className="link-icon">📰</span>
                   اخبار و اعلام ها
                 </a>
               </li>
               <li>
-                <a href="#feedback-section" onClick={handleFeedBackClick} className="footer-link">
+                <a
+                  href="#feedback-section"
+                  onClick={handleFeedBackClick}
+                  className="footer-link"
+                >
                   <span className="link-icon">📞</span>
                   تماس با ما
                 </a>
@@ -194,35 +247,36 @@ const FooterSection = () => {
               <span className="title-icon">📊</span>
               آمار بازدیدکنندگان
             </h3>
+
             <div className="stats-container">
-              <StatItem 
-                icon={FaUsers} 
-                label="کاربران فعال" 
-                value={visitorStats.activeUsers} 
+              <StatItem
+                icon={FaUsers}
+                label="کاربران فعال"
+                value={visitorStats.activeUsers}
                 loading={isLoading}
               />
-              <StatItem 
-                icon={FaCalendarDay} 
-                label="بازدید امروز" 
-                value={visitorStats.daily} 
+              <StatItem
+                icon={FaCalendarDay}
+                label="بازدید امروز"
+                value={visitorStats.daily}
                 loading={isLoading}
               />
-              <StatItem 
-                icon={FaCalendarWeek} 
-                label="بازدید هفته" 
-                value={visitorStats.weekly} 
+              <StatItem
+                icon={FaCalendarWeek}
+                label="بازدید هفته"
+                value={visitorStats.weekly}
                 loading={isLoading}
               />
-              <StatItem 
-                icon={FaCalendar} 
-                label="بازدید ماه" 
-                value={visitorStats.monthly} 
+              <StatItem
+                icon={FaCalendar}
+                label="بازدید ماه"
+                value={visitorStats.monthly}
                 loading={isLoading}
               />
-              <StatItem 
-                icon={FaGlobe} 
-                label="کل بازدیدها" 
-                value={visitorStats.total} 
+              <StatItem
+                icon={FaGlobe}
+                label="کل بازدیدها"
+                value={visitorStats.total}
                 loading={isLoading}
               />
             </div>
@@ -235,10 +289,13 @@ const FooterSection = () => {
               © 2025 ریاست تضمین کیفیت - اداره تعلیمات تخنیکی و مسلکی
             </p>
             <div className="footer-actions">
-              <button 
-                className="scroll-top-btn" 
+              <button
+                className="scroll-top-btn"
                 onClick={scrollToTop}
-                style={{ opacity: showScrollTop ? 1 : 0, visibility: showScrollTop ? 'visible' : 'hidden' }}
+                style={{
+                  opacity: showScrollTop ? 1 : 0,
+                  visibility: showScrollTop ? "visible" : "hidden",
+                }}
               >
                 <FaArrowUp />
               </button>

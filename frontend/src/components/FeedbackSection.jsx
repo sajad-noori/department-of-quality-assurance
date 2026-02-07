@@ -14,7 +14,6 @@ const FeedbackSection = () => {
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState({ show: false, type: "", message: "" });
   const [activeField, setActiveField] = useState(null);
-  const [particles, setParticles] = useState([]);
   const canvasRef = useRef(null);
 
   // Copy-to-clipboard tooltip state

@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import BannerSkeleton from "./components/skeletons/BannerSkeleton";
 import MenuSkeleton from "./components/skeletons/MenuSkeleton";
 import NewsSkeleton from "./components/skeletons/NewsSkeleton";
-import FeedbackSection from "./components/FeedbackSection";
 import FooterSection from "./components/FooterSection";
 import AboutUs from "./components/AboutUs";
 import {
@@ -51,6 +50,8 @@ import Analysis from "./components/dashboard/Analysis";
 const Menu = lazy(() => import("./components/Menu"));
 const Banner = lazy(() => import("./components/Banner"));
 const NewsSection = lazy(() => import("./components/NewsSection"));
+const FeedbackSection = React.lazy(() => import('./components/FeedbackSection'));
+
 function App() {
   return (
     <Router>
@@ -291,7 +292,9 @@ function App() {
                     <NewsSection />
                   </Suspense>
                   <Goals />
-                  <FeedbackSection />
+                  <Suspense fallback={<dev>در حال بارگزاری ...</dev>}>
+  <FeedbackSection />
+</Suspense>
                   <AskAndAnswers />
                 </>
               }
