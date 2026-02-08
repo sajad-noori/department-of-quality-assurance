@@ -184,7 +184,7 @@ const AfghanistanMap = () => {
           <option value="west">زون غرب</option>
           <option value="south">زون جنوب</option>
           <option value="east">زون شرق</option>
-          <option value="southwest">زون جنوب غرب</option>
+          <option value="southeast">زون جنوب شرق</option>
         </select>
       </div>
 

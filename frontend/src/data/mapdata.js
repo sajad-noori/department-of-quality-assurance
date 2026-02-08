@@ -74,7 +74,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "northwest",
+      zone: "west",
       color: "default",
       hover_color: "default",
       url: "default",
@@ -160,7 +160,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "northwest",
+      zone: "north",
     },
     AFG1746: {
       name: "جوزجان",
@@ -177,7 +177,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "northwest",
+      zone: "north",
     },
     AFG1747: {
       name: "غور",
@@ -192,7 +192,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "west",
+      zone: "central",
     },
     AFG1748: {
       name: "سرپل",
@@ -209,7 +209,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "northwest",
+      zone: "north",
     },
     AFG1749: {
       name: "فراه",
@@ -251,7 +251,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "southwest",
+      zone: "south",
     },
     AFG1751: {
       name: "نیمروز",
@@ -268,7 +268,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "southwest",
+      zone: "west",
     },
     AFG1752: {
       name: "ارزگان",
@@ -300,7 +300,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "south",
+      zone: "central",
     },
     AFG1754: {
       name: "کندهار",
@@ -359,7 +359,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "central",
+      zone: "southeast",
     },
     AFG1758: {
       name: "خوست",
@@ -382,7 +382,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "east",
+      zone: "southeast",
     },
     AFG1759: {
       name: "پکتیکا",
@@ -399,7 +399,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "east",
+      zone: "southeast",
     },
     AFG1760: {
       name: "بدخشان",
@@ -436,7 +436,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "northeast",
+      zone: "east",
     },
     AFG1762: {
       name: "کنر",
@@ -475,7 +475,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "east",
+      zone: "northeast",
     },
     AFG1764: {
       name: "ننگرهار",
@@ -522,7 +522,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "north",
+      zone: "northeast",
     },
     AFG1766: {
       name: "بغلان",
@@ -540,7 +540,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "north",
+      zone: "northeast",
     },
     AFG1767: {
       name: "کابل",
@@ -649,7 +649,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "south",
+      zone: "capital",
     },
     AFG1772: {
       name: "پروان",
@@ -709,7 +709,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "central",
+      zone: "capital",
     },
     AFG3413: {
       name: "پکتیا",
@@ -732,7 +732,7 @@ const mapdata = {
 </ul>
 
       `,
-      zone: "east",
+      zone: "southeast",
     },
   },
   locations: {
