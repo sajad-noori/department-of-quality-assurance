@@ -132,10 +132,6 @@ const dragDropAreaStyle = {
   marginBottom: "1.5rem",
 };
 
-const dragDropAreaHoverStyle = {
-  borderColor: "#00d4ff",
-  backgroundColor: "rgba(0, 212, 255, 0.05)",
-};
 
 const dragDropAreaActiveStyle = {
   borderColor: "#00d4ff",
@@ -393,12 +389,6 @@ const pageButtonStyle = {
   transition: "all 0.2s ease",
 };
 
-const activePageButtonStyle = {
-  ...pageButtonStyle,
-  backgroundColor: "#00d4ff",
-  color: "#000000",
-  borderColor: "#00d4ff",
-};
 
 const disabledPageButtonStyle = {
   ...pageButtonStyle,
