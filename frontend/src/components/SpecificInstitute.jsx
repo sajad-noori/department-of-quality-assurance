@@ -495,13 +495,10 @@ const SpecificInstitute = () => {
   // Download document
   const handleDownloadDocument = async (file_path, file_name) => {
     try {
-      // Encode the file path to handle special characters
-      const encodedPath = encodeURIComponent(file_path);
-
       // Open the download URL in a new window/tab
       // This will automatically include cookies for authentication
       window.open(
-        `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/api/profile-documents/download/${encodedPath}`,
+        `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/api/profile-documents/download/${file_path}`,
         "_blank"
       );
     } catch (error) {

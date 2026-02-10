@@ -195,7 +195,8 @@ exports.deleteDocument = async (req, res) => {
 // Download profile document
 exports.downloadDocument = async (req, res) => {
   try {
-    const { filePath } = req.params;
+    // Reconstruct the full path from URL segments
+const filePath = `${req.params.folder}/${req.params.subfolder}/${req.params.filename}`;
 
     console.log("Download request for file path:", filePath);
 
