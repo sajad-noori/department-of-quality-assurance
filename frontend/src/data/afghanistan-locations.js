@@ -119,7 +119,6 @@ export const districts = {
     { id: 'dawlatabad', name: 'دولت آباد' },
     { id: 'dihdadi', name: 'دهدادی' },
     { id: 'kaldar', name: 'کلدار' },
-    { id: 'khulm', name: 'خلم' },
     { id: 'kishindih', name: 'کیشند' },
     { id: 'marmul', name: 'مارمل' },
     { id: 'nahr-e-shahi', name: 'نهر شاهی' },
@@ -355,6 +354,7 @@ export const districts = {
   ],
   samangan: [
     { id: 'aybak', name: 'ایبک' },
+    { id: 'khulm', name: 'خلم' },
     { id: 'aybak', name: 'ایبک' },
     { id: 'dara-i-sufi-balla', name: 'دره صوف بالا' },
     { id: 'dara-i-sufi-payin', name: 'دره صوف پایین' },

@@ -1,4 +1,10 @@
-/* Reset and basics */
+/* ── Arabic calligraphy font ───────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* ============================================================
+   Banner — base (dark default)
+   ============================================================ */
+
 .banner {
   background-color: #121212;
   color: #eee;
@@ -9,64 +15,57 @@
   overflow: hidden;
 }
 
-/* Light mode styles */
+/* ── Light mode ───────────────────────────────────────────── */
+
 [data-theme="light"] .banner {
-  background-color: #ffffff;
-  color: #333333;
+  background-color: #f4f8fc;
+  color: #1a2a3a;
 }
-
-[data-theme="light"] .banner__subtitle {
-  color: #0dcaf0;
-}
-
+[data-theme="light"] .banner__subtitle      { color: #0099bb; }
 [data-theme="light"] .banner__title {
-  background: linear-gradient(45deg, #0dcaf0, #00b5d7);
+  background: linear-gradient(45deg, #0099bb, #007a99);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
-[data-theme="light"] .banner__typed {
-  color: #0dcaf0;
+[data-theme="light"] .banner__typed         { color: #0099bb; }
+[data-theme="light"] .banner__description   { color: #2a3a4a; }
+[data-theme="light"] .banner__list-item     { color: #1a2a3a; }
+[data-theme="light"] .banner__icon          { color: #0099bb; }
+[data-theme="light"] .banner__stat          { color: #0099bb; }
+[data-theme="light"] .banner__stat-label    { color: #2a3a4a; }
+[data-theme="light"] .banner__stat-value    { color: #007a99; }
+[data-theme="light"] .banner__progress-dot  {
+  background: rgba(0,153,187,0.15);
+  border: 1px solid #0099bb;
 }
+[data-theme="light"] .banner__progress-dot--active { background: #0099bb; }
 
-[data-theme="light"] .banner__description {
-  color: #333333;
+[data-theme="light"] .quran-panel {
+  background: linear-gradient(160deg, #ffffff 0%, #eaf5fb 100%);
+  border-color: rgba(0,153,187,0.3);
+  box-shadow:
+    0 0 0 1px rgba(0,153,187,0.15),
+    0 8px 40px rgba(0,153,187,0.1);
 }
+[data-theme="light"] .quran-panel__arabic--bismillah { color: #007a99; }
+[data-theme="light"] .quran-panel__arabic--xl        { color: #0099bb; }
+[data-theme="light"] .quran-panel__arabic--lg        { color: #0d5c73; }
+[data-theme="light"] .quran-panel__arabic--md        { color: #0d5c73; }
+[data-theme="light"] .quran-panel__arabic--dim       { color: #4a7a8a; }
+[data-theme="light"] .quran-panel__arabic--accent    { color: #0099bb; }
+[data-theme="light"] .quran-panel__ref               { color: #4a7a8a; }
+[data-theme="light"] .quran-panel__rule              { background: rgba(0,153,187,0.35); }
+[data-theme="light"] .quran-panel__diamond,
+[data-theme="light"] .quran-panel__rosette           { color: #0099bb; }
 
-[data-theme="light"] .banner__list-item {
-  color: #333333;
-}
-
-[data-theme="light"] .banner__icon {
-  color: #0dcaf0;
-}
-
-[data-theme="light"] .banner__stat {
-  color: #0dcaf0;
-}
-
-[data-theme="light"] .banner__stat-label {
-  color: #333333;
-}
-
-[data-theme="light"] .banner__stat-value {
-  color: #0dcaf0;
-}
-
-[data-theme="light"] .banner__progress-dot {
-  border: 1px solid #0dcaf0;
-}
-
-.banner::before {
-  display: none;
-}
+/* ── Layout ───────────────────────────────────────────────── */
 
 .banner__content {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -75,11 +74,12 @@
   box-sizing: border-box;
 }
 
-/* Text block */
+/* ── Text block ───────────────────────────────────────────── */
+
 .banner__text {
-  flex: 1 1 480px;
+  flex: 1 1 460px;
   min-width: 280px;
-  max-width: 600px;
+  max-width: 580px;
   text-align: right;
   user-select: none;
   z-index: 2;
@@ -87,14 +87,8 @@
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
 .banner__subtitle {
@@ -104,38 +98,37 @@
   font-weight: 700;
   margin-bottom: 0.5rem;
   font-size: 1rem;
-  text-shadow: 0 0 10px rgba(13, 202, 240, 0.3);
+  text-shadow: 0 0 10px rgba(13,202,240,0.3);
 }
 
 .banner__title {
-  font-size: 3rem;
+  font-size: 2.8rem;
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.15;
   margin-bottom: 1rem;
   background: linear-gradient(45deg, #0dcaf0, #00b5d7);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 20px rgba(13, 202, 240, 0.2);
 }
 
 .banner__typed {
   color: #0dcaf0;
-  min-height: 70px;
+  min-height: 68px;
   font-weight: 600;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   margin-bottom: 1.2rem;
-  letter-spacing: 0.05em;
-  min-width: 250px;
+  letter-spacing: 0.04em;
   direction: rtl;
   user-select: none;
-  text-shadow: 0 0 15px rgba(13, 202, 240, 0.3);
+  text-shadow: 0 0 14px rgba(13,202,240,0.3);
+  line-height: 1.3;
 }
 
 .banner__description {
-  font-size: 1.15rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.82);
   margin-bottom: 2rem;
   max-width: 500px;
   user-select: none;
@@ -151,25 +144,24 @@
 .banner__list-item {
   display: flex;
   align-items: center;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.75rem;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: #a9e5ff;
   user-select: none;
   transition: transform 0.3s ease;
 }
-
-.banner__list-item:hover {
-  transform: translateX(-5px);
-}
+.banner__list-item:hover { transform: translateX(-5px); }
 
 .banner__icon {
   color: #0dcaf0;
   margin-left: 0.5rem;
-  min-width: 22px;
+  min-width: 20px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px rgba(13, 202, 240, 0.5));
+  filter: drop-shadow(0 0 5px rgba(13,202,240,0.5));
 }
+
+/* ── Buttons ──────────────────────────────────────────────── */
 
 .banner__buttons {
   display: flex;
@@ -180,14 +172,14 @@
 
 .btn {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   padding: 0.8rem 1.8rem;
   border-radius: 6px;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
   display: inline-block;
-  min-width: 150px;
+  min-width: 148px;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
@@ -197,136 +189,227 @@
 .btn::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+  inset: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
 }
-
-.btn:hover::before {
-  transform: translateX(100%);
-}
+.btn:hover::before { transform: translateX(100%); }
 
 .btn--primary {
   background-color: #0dcaf0;
   color: #030305;
   border: none;
-  box-shadow: 0 4px 15px rgba(13, 202, 240, 0.3);
+  box-shadow: 0 4px 15px rgba(13,202,240,0.3);
 }
-
 .btn--primary:hover,
 .btn--primary:focus {
   background-color: #00b5d7;
-  outline: none;
   color: #030305;
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 202, 240, 0.4);
+  box-shadow: 0 6px 20px rgba(13,202,240,0.4);
 }
 
 .btn--outline {
   background-color: transparent;
   border: 2px solid #0dcaf0;
   color: #0dcaf0;
-  box-shadow: 0 4px 15px rgba(13, 202, 240, 0.1);
+  box-shadow: 0 4px 15px rgba(13,202,240,0.1);
 }
-
 .btn--outline:hover,
 .btn--outline:focus {
   background-color: #0dcaf0;
   color: #030305;
-  outline: none;
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 202, 240, 0.2);
+  box-shadow: 0 6px 20px rgba(13,202,240,0.2);
 }
 
-/* ===============================
-   IMAGE SLIDER (FIXED)
-   =============================== */
+/* ============================================================
+   Quranic text panel — right column
+   ============================================================ */
 
-.banner__image-wrapper {
+.banner__panel-wrapper {
   flex: 1 1 400px;
-  position: relative;
-  max-width: 600px;
   min-width: 280px;
-  height: 350px;
-  overflow: visible;
-  user-select: none;
-  perspective: 1000px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  width: 100%;
+  max-width: 520px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  min-height: 360px;
 }
 
-.banner__image-container {
+/* Each slide stacks absolutely; only the active one is visible */
+.banner__panel-slide {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
-
-.banner__image-overlay {
-  display: none;
-}
-
-.banner__image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
   opacity: 0;
-
-  /* slide + fade start */
-  transform: translate(-50%, -50%) translateX(24px) scale(0.96);
-
+  transform: translateY(16px) scale(0.97);
   transition:
-    opacity 0.8s ease-in-out,
-    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-
+    opacity  0.75s ease-in-out,
+    transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  will-change: opacity, transform;
-  color: #0dcaf0;
-  background: transparent;
 }
 
-.banner__image svg,
-.banner__image img {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(13, 202, 240, 0.3));
-}
-
-.banner__image--active {
+.banner__panel-slide--active {
   opacity: 1;
-
-  /* final slide position */
-  transform: translate(-50%, -50%) translateX(0) scale(1.05);
-
+  transform: translateY(0) scale(1);
   pointer-events: auto;
-  z-index: 10;
+  z-index: 2;
 }
 
-/* Progress dots */
+/* ── The panel card itself ────────────────────────────────── */
+
+.quran-panel {
+  width: 100%;
+  max-width: 460px;
+  padding: 2rem 2.2rem;
+  box-sizing: border-box;
+  text-align: center;
+  direction: rtl;
+
+  background: linear-gradient(
+    160deg,
+    rgba(10, 40, 70, 0.95) 0%,
+    rgba(5, 20, 45, 0.98)  100%
+  );
+  border: 1px solid rgba(13, 202, 240, 0.25);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(13,202,240,0.08),
+    0 8px 50px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(13,202,240,0.1);
+
+  animation: panelGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes panelGlow {
+  from { box-shadow: 0 0 0 1px rgba(13,202,240,0.08), 0 8px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(13,202,240,0.1); }
+  to   { box-shadow: 0 0 0 1px rgba(13,202,240,0.18), 0 8px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(13,202,240,0.18), 0 0 30px rgba(13,202,240,0.06); }
+}
+
+/* ── Ornamental divider row ───────────────────────────────── */
+
+.quran-panel__ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.quran-panel__ornament--light {
+  opacity: 0.5;
+  margin: 0.4rem 0;
+}
+
+.quran-panel__rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(13,202,240,0.5), transparent);
+}
+
+.quran-panel__diamond,
+.quran-panel__rosette {
+  color: #0dcaf0;
+  font-size: 0.65rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.quran-panel__rosette {
+  font-size: 0.8rem;
+  opacity: 0.55;
+}
+
+/* ── Verse block ──────────────────────────────────────────── */
+
+.quran-panel__verse {
+  padding: 0.7rem 0;
+}
+
+.quran-panel__verse--hero {
+  padding: 1rem 0;
+}
+
+/* ── Arabic text size scale ───────────────────────────────── */
+
+.quran-panel__arabic {
+  font-family: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
+  line-height: 1.8;
+  margin: 0 0 0.3rem;
+  letter-spacing: 0.03em;
+  transition: color 0.3s ease;
+}
+
+/* The big centrepiece — Bismillah-scale */
+.quran-panel__arabic--bismillah {
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #0dcaf0;
+  text-shadow:
+    0 0 18px rgba(13,202,240,0.55),
+    0 0 40px rgba(13,202,240,0.2);
+  line-height: 1.7;
+}
+
+/* Large — secondary hero verse */
+.quran-panel__arabic--xl {
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
+  font-weight: 700;
+  color: #7dd8f0;
+  text-shadow: 0 0 12px rgba(13,202,240,0.35);
+}
+
+/* Medium-large */
+.quran-panel__arabic--lg {
+  font-size: clamp(1rem, 2vw, 1.45rem);
+  font-weight: 400;
+  color: #a9e5ff;
+}
+
+/* Medium — supporting lines */
+.quran-panel__arabic--md {
+  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+  font-weight: 400;
+  color: #a9e5ff;
+}
+
+/* Dimmed — secondary lines */
+.quran-panel__arabic--dim {
+  color: rgba(169,229,255,0.6);
+}
+
+/* Accent — highlighted word */
+.quran-panel__arabic--accent {
+  color: #0dcaf0;
+  text-shadow:
+    0 0 22px rgba(13,202,240,0.7),
+    0 0 50px rgba(13,202,240,0.25);
+}
+
+/* Surah / ayah reference */
+.quran-panel__ref {
+  font-family: 'Amiri', 'Scheherazade New', serif;
+  font-size: 0.8rem;
+  color: rgba(13,202,240,0.55);
+  margin: 0.4rem 0 0;
+  letter-spacing: 0.06em;
+}
+
+/* ── Progress dots ────────────────────────────────────────── */
+
 .banner__progress {
   position: absolute;
-  bottom: 20px;
+  bottom: -36px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -338,46 +421,34 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255,255,255,0.2);
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0;
 }
-
-.banner__progress-dot:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
+.banner__progress-dot:hover { background: rgba(255,255,255,0.45); }
 .banner__progress-dot--active {
   background: #0dcaf0;
-  box-shadow: 0 0 10px rgba(13, 202, 240, 0.5);
-  transform: scale(1.2);
+  box-shadow: 0 0 10px rgba(13,202,240,0.5);
+  transform: scale(1.3);
 }
 
-/* Navigation arrows */
-.banner__nav,
-.banner__nav--left,
-.banner__nav--right {
-  display: none;
-}
+/* ============================================================
+   Stats bar
+   ============================================================ */
 
-/* Stats bar */
 .banner__stats {
   max-width: 1200px;
-  margin: 3rem auto 0 auto;
+  margin: 4.5rem auto 0;
   padding: 1.5rem;
   display: flex;
   gap: 3rem;
   justify-content: center;
   flex-wrap: wrap;
-  color: #0dcaf0;
   font-weight: 700;
   font-size: 1rem;
   user-select: none;
-  background: transparent;
-  border: none;
-  box-shadow: none;
 }
 
 .banner__stat {
@@ -386,59 +457,57 @@
   gap: 0.6rem;
   min-width: 140px;
   justify-content: center;
+  color: #0dcaf0;
   transition: transform 0.3s ease;
 }
-
-.banner__stat:hover {
-  transform: translateY(-2px);
-}
+.banner__stat:hover { transform: translateY(-2px); }
 
 .banner__stat-icon {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   color: #0dcaf0;
-  filter: drop-shadow(0 0 8px rgba(13, 202, 240, 0.4));
+  filter: drop-shadow(0 0 8px rgba(13,202,240,0.4));
 }
 
 .banner__stat-label {
   color: #a9e5ff;
   min-width: 120px;
   text-align: right;
-  user-select: none;
 }
 
 .banner__stat-value {
   color: #00c7ff;
   font-weight: 900;
-  text-shadow: 0 0 10px rgba(13, 202, 240, 0.3);
+  text-shadow: 0 0 10px rgba(13,202,240,0.3);
 }
 
-/* Responsive */
+/* ============================================================
+   Wave divider
+   ============================================================ */
+
+.banner__wave {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  width: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
 
 @media (max-width: 1400px) {
-  .banner {
-    padding: 2.5rem 1rem 7rem;
-  }
-  .banner__content {
-    gap: 1.5rem;
-  }
-  .banner__title {
-    font-size: 2.8rem;
-  }
-  .banner__typed {
-    font-size: 1.6rem;
-  }
-  .banner__image-wrapper {
-    height: 320px;
-  }
+  .banner          { padding: 2.5rem 1rem 7rem; }
+  .banner__title   { font-size: 2.5rem; }
+  .banner__typed   { font-size: 1.55rem; }
 }
 
 @media (max-width: 1024px) {
-  .banner {
-    padding: 2rem 1rem 6rem;
-  }
+  .banner { padding: 2rem 1rem 6rem; }
   .banner__content {
     flex-direction: column-reverse;
-    gap: 2rem;
+    gap: 2.5rem;
     text-align: center;
   }
   .banner__text {
@@ -446,56 +515,27 @@
     max-width: 100%;
     min-width: auto;
   }
-  .banner__image-wrapper {
+  .banner__panel-wrapper {
     flex: none;
-    max-width: 100%;
+    max-width: 520px;
     min-width: auto;
-    height: 280px;
     width: 100%;
+    min-height: 300px;
   }
-  .banner__title {
-    font-size: 2.5rem;
-  }
-  .banner__typed {
-    font-size: 1.5rem;
-    min-height: 60px;
-  }
-  .banner__list-item {
-    justify-content: center;
-  }
-  .banner__buttons {
-    justify-content: center;
-  }
-  .banner__stats {
-    gap: 2rem;
-  }
+  .banner__title         { font-size: 2.3rem; }
+  .banner__typed         { font-size: 1.4rem; min-height: 58px; }
+  .banner__list-item     { justify-content: center; }
+  .banner__buttons       { justify-content: center; }
+  .banner__stats         { gap: 2rem; }
 }
 
 @media (max-width: 768px) {
-  .banner {
-    padding: 1.5rem 0.75rem 5rem;
-  }
-  .banner__content {
-    gap: 1.5rem;
-  }
-  .banner__title {
-    font-size: 2.2rem;
-  }
-  .banner__typed {
-    font-size: 1.3rem;
-    min-height: 50px;
-  }
-  .banner__description {
-    font-size: 1rem;
-  }
-  .banner__image-wrapper {
-    height: 240px;
-    max-width: 90%;
-  }
-  .banner__image {
-    width: 90%;
-    height: 90%;
-  }
+  .banner { padding: 1.5rem 0.75rem 5rem; }
+  .banner__title       { font-size: 2rem; }
+  .banner__typed       { font-size: 1.25rem; min-height: 48px; }
+  .banner__description { font-size: 0.98rem; }
+  .banner__panel-wrapper { min-height: 270px; }
+  .quran-panel         { padding: 1.4rem 1.5rem; }
   .banner__stats {
     flex-direction: column;
     gap: 1rem;
@@ -514,170 +554,24 @@
 }
 
 @media (max-width: 480px) {
-  .banner {
-    padding: 1rem 0.5rem 4rem;
-  }
-  .banner__content {
-    gap: 1rem;
-  }
-  .banner__title {
-    font-size: 1.8rem;
-    line-height: 1.2;
-  }
-  .banner__typed {
-    font-size: 1.1rem;
-    min-height: 40px;
-  }
-  .banner__description {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-  }
-  .banner__list {
-    margin-bottom: 1.5rem;
-  }
-  .banner__list-item {
-    font-size: 0.95rem;
-    margin-bottom: 0.6rem;
-  }
-  .banner__buttons {
-    gap: 0.5rem;
-    flex-direction: column;
-    align-items: center;
-  }
-  .btn {
-    min-width: 200px;
-    font-size: 0.9rem;
-    padding: 0.7rem 1.5rem;
-  }
-  .banner__image-wrapper {
-    display: none;
-  }
-  .banner__stats {
-    font-size: 0.8rem;
-    gap: 0.8rem;
-    padding: 0.8rem;
-  }
-  .banner__stat-icon {
-    font-size: 1.2rem;
-  }
+  .banner { padding: 1rem 0.5rem 4rem; }
+  .banner__title       { font-size: 1.7rem; line-height: 1.2; }
+  .banner__typed       { font-size: 1.05rem; min-height: 38px; }
+  .banner__description { font-size: 0.88rem; margin-bottom: 1.4rem; }
+  .banner__list        { margin-bottom: 1.4rem; }
+  .banner__list-item   { font-size: 0.92rem; margin-bottom: 0.55rem; }
+  .banner__buttons     { gap: 0.5rem; flex-direction: column; align-items: center; }
+  .btn                 { min-width: 200px; font-size: 0.88rem; padding: 0.7rem 1.4rem; }
+  .quran-panel         { padding: 1.1rem 1rem; }
+  .banner__stats       { font-size: 0.8rem; gap: 0.8rem; padding: 0.8rem; }
+  .banner__stat-icon   { font-size: 1.2rem; }
 }
 
 @media (max-width: 320px) {
-  .banner {
-    padding: 0.75rem 0.25rem 3rem;
-  }
-  .banner__title {
-    font-size: 1.5rem;
-  }
-  .banner__typed {
-    font-size: 1rem;
-    min-height: 35px;
-  }
-  .banner__description {
-    font-size: 0.85rem;
-  }
-  .banner__list-item {
-    font-size: 0.9rem;
-  }
-  .btn {
-    min-width: 180px;
-    font-size: 0.85rem;
-    padding: 0.6rem 1.2rem;
-  }
-  .banner__image-wrapper {
-    display: none;
-  }
-  .banner__stats {
-    font-size: 0.75rem;
-    gap: 0.6rem;
-  }
-  .banner__stat-icon {
-    font-size: 1rem;
-  }
-}
-
-/* Animations (kept as your originals) */
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(2deg);
-  }
-}
-
-@keyframes float-delayed {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-25px) rotate(-2deg);
-  }
-}
-
-@keyframes draw {
-  from {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-  }
-  to {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: float-delayed 4s ease-in-out infinite;
-}
-
-.animate-draw {
-  animation: draw 2s ease-in-out forwards;
-}
-
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
-  transform-origin: center;
-}
-
-.animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.banner__wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
+  .banner__title       { font-size: 1.45rem; }
+  .banner__typed       { font-size: 0.95rem; min-height: 34px; }
+  .banner__description { font-size: 0.82rem; }
+  .btn                 { min-width: 175px; font-size: 0.82rem; padding: 0.55rem 1.1rem; }
+  .banner__stats       { font-size: 0.72rem; gap: 0.55rem; }
+  .banner__stat-icon   { font-size: 1rem; }
 }
