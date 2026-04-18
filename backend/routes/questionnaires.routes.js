@@ -23,17 +23,17 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
   fileFilter: (req, file, cb) => {
-    const allowedExt = /\.pdf$|\.doc$|\.docx$/i;
+    const allowedExt = /\.pdf$|\.doc$|\.docx$|\.xls$|\.xlsx$/i;
     const extOk = allowedExt.test(
       path.extname(file.originalname).toLowerCase()
     );
-    const mimeOk = /pdf|msword|officedocument/.test(
+    const mimeOk = /pdf|msword|officedocument|excel|spreadsheet/.test(
       file.mimetype.toLowerCase()
     );
     if (extOk && mimeOk) {
       cb(null, true);
     } else {
-      cb(new Error("Only PDF and Word files are allowed"));
+      cb(new Error("Only PDF, Word, and Excel files are allowed"));
     }
   },
 });

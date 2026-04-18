@@ -376,7 +376,7 @@ const Questionnaire = () => {
               marginBottom: 8,
             }}
           >
-            فایل (PDF یا Word):
+            فایل (PDF، Word یا Excel):
             <span style={{ color: "#aaa", fontSize: "0.9em", marginLeft: 8 }}>
               (حداکثر 10MB)
             </span>
@@ -422,7 +422,7 @@ const Questionnaire = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept=".pdf,.doc,.docx,.xls,.xlsx"
             onChange={(e) => {
               const selected = e.target.files[0];
               if (selected) {
@@ -430,12 +430,14 @@ const Questionnaire = () => {
                   "application/pdf",
                   "application/msword",
                   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  "application/vnd.ms-excel",
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 ];
                 if (
                   !allowedTypes.includes(selected.type) &&
-                  !/\.docx?$|\.pdf$/i.test(selected.name)
+                  !/\.docx?$|\.pdf$|\.xlsx?$/i.test(selected.name)
                 ) {
-                  setError("فقط فایل PDF یا Word مجاز است");
+                  setError("فقط فایل PDF، Word یا Excel مجاز است");
                   setFile(null);
                   return;
                 }
