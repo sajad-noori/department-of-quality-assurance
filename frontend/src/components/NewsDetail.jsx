@@ -133,6 +133,7 @@ const newsDescriptionStyle = {
   marginBottom: "1.5rem",
   lineHeight: "1.6",
   textAlign: "justify",
+  whiteSpace: "pre-wrap",
 };
 
 const newsContentStyle = {
@@ -141,6 +142,7 @@ const newsContentStyle = {
   color: "#ffffff",
   textAlign: "justify",
   marginBottom: "2rem",
+  whiteSpace: "pre-wrap",
 };
 
 const otherNewsContainerStyle = {
@@ -333,6 +335,7 @@ const NewsDetail = () => {
     marginBottom: "1.5rem",
     lineHeight: "1.6",
     textAlign: "justify",
+    whiteSpace: "pre-wrap",
   };
   const newsContentStyleLight = {
     lineHeight: "1.8",
@@ -340,6 +343,7 @@ const NewsDetail = () => {
     color: "#222",
     textAlign: "justify",
     marginBottom: "2rem",
+    whiteSpace: "pre-wrap",
   };
   const otherNewsContainerStyleLight = {
     backgroundColor: "#fff",
