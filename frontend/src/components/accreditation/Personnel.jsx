@@ -82,12 +82,7 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
     }
   }, [formData, originalData, hasExistingData]);
 
-  // Input validation function - now accepts empty values
-  const validateInput = (value) => {
-    if (value === '' || value === null || value === undefined) return true;
-    const num = parseInt(value);
-    return !isNaN(num) && num >= 0 && num <= 1000;
-  };
+
 
   // Calculate totals for each category
   const calculateTotals = (data) => {
@@ -435,8 +430,8 @@ export default function StaffCountForm({ formData, onChange, onSubmit }) {
       )}
 
       <div className="form-container">
-        {renderFieldGroup("👨‍🏫 استادان", teacherLevels, totalCounts.teachers, '#0dcaf0')}
-        {renderFieldGroup("🔧 کارکن تخنیکی", technicalLevels, totalCounts.technical, '#00b5d7')}
+        {renderFieldGroup("👨‍🏫 تعداد استادان", teacherLevels, totalCounts.teachers, '#0dcaf0')}
+        {renderFieldGroup("🔧 تعداد کارمندان فنی", technicalLevels, totalCounts.technical, '#00b5d7')}
         {renderFieldGroup("👔 کارکن اداری", adminLevels, totalCounts.admin, '#a9e5ff')}
         {renderFieldGroup("🧹 کارکن خدماتی", serviceLevels, totalCounts.service, '#0dcaf0')}
 

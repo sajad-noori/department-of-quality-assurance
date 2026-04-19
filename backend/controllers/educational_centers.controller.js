@@ -45,7 +45,7 @@ exports.validateCenter = [
     .trim()
     .notEmpty()
     .withMessage("نوع مرکز الزامی است")
-    .isIn(["دولتی", "خصوصی", "خیریه"])
+    .isIn(["امارتی", "خصوصی", "خیریه"])
     .withMessage("نوع مرکز نامعتبر است"),
 
   body("programType")

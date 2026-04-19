@@ -176,7 +176,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         {/* اسم مرکز آموزشی */}
         <div className="form-group">
           <label htmlFor="centerName" className="form-label">
-            اسم مرکز آموزشی <span className="required">*</span>
+            اسم نهاد آموزشی <span className="required">*</span>
           </label>
           <div className="input-wrapper">
           <input
@@ -200,7 +200,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         <div className="address-section">
           <h4 className="section-title">
             <span className="section-icon">📍</span>
-            آدرس مرکز آموزشی
+            آدرس نهاد آموزشی
           </h4>
           
           <div className="address-grid">
@@ -287,7 +287,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
         <div className="info-section">
           <h4 className="section-title">
             <span className="section-icon">📋</span>
-            معلومات مرکز آموزشی
+            معلومات نهاد آموزشی
           </h4>
           
           <div className="info-grid">
@@ -307,7 +307,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
               required
                 >
                   <option value="">انتخاب نوع مرکز</option>
-                  <option value="دولتی">دولتی</option>
+                  <option value="امارتی">امارتی</option>
                   <option value="خصوصی">خصوصی</option>
             </select>
                 <div className="input-border"></div>
@@ -376,7 +376,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
           <div className="contact-grid">
             <div className="form-group">
               <label htmlFor="contactName" className="form-label">
-                نام مسئول <span className="required">*</span>
+                اسم شخصی ارتباطی <span className="required">*</span>
             </label>
               <div className="input-wrapper">
             <input
@@ -421,7 +421,7 @@ export default function EducationalCenterForm({ formData, onChange, onSubmit, ha
 
             <div className="form-group">
               <label htmlFor="email" className="form-label">
-                ایمیل <span className="required">*</span>
+                ایمیل آدرس <span className="required">*</span>
             </label>
               <div className="input-wrapper">
             <input
