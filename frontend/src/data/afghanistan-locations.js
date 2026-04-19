@@ -355,7 +355,6 @@ export const districts = {
   samangan: [
     { id: 'aybak', name: 'ایبک' },
     { id: 'khulm', name: 'خلم' },
-    { id: 'aybak', name: 'ایبک' },
     { id: 'dara-i-sufi-balla', name: 'دره صوف بالا' },
     { id: 'dara-i-sufi-payin', name: 'دره صوف پایین' },
     { id: 'firoz-nakhchir', name: 'فیروز نخچیر' },
