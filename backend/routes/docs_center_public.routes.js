@@ -106,7 +106,18 @@ router.get(
   async (req, res) => {
     try {
       const { filename } = req.params;
-      const filePath = path.join(__dirname, "..", "uploads", "files", filename);
+      const safeFilename = path.basename(filename);
+      if (safeFilename !== filename) {
+        return res.status(400).json({ message: "نام فایل نامعتبر است" });
+      }
+
+      const filePath = path.join(
+        __dirname,
+        "..",
+        "uploads",
+        "files",
+        safeFilename
+      );
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -116,24 +127,23 @@ router.get(
       // Get file info for logging and proper download name
       const [results] = await promise.execute(
         "SELECT name, category, fileName FROM docs_center_and_uploads WHERE fileName = ?",
-        [filename]
+        [safeFilename]
       );
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: "فایل یافت نشد" });
-      }
-
-      const documentName = results[0].name;
-      const category = results[0].category;
-      const originalExt = path.extname(documentName) || path.extname(filename);
-      const safeName = `${documentName}${originalExt}`;
+      const matchedDoc = results[0] || null;
+      const extension = path.extname(safeFilename);
+      const documentName = matchedDoc?.name || path.basename(safeFilename, extension);
+      const category = matchedDoc?.category || null;
+      const safeName = documentName.toLowerCase().endsWith(extension.toLowerCase())
+        ? documentName
+        : `${documentName}${extension}`;
 
       // Set the filename for the logging middleware
-      req.params.filename = filename;
+      req.params.filename = safeFilename;
       req.documentInfo = { name: documentName, category };
 
       // Detect MIME type
-      const ext = path.extname(filename).toLowerCase();
+      const ext = extension.toLowerCase();
       const mimeTypes = {
         ".pdf": "application/pdf",
         ".doc": "application/msword",
@@ -142,16 +152,28 @@ router.get(
         ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       };
       const mimeType = mimeTypes[ext] || "application/octet-stream";
+      const stat = await fs.promises.stat(filePath);
 
       // Set headers to force proper download
       res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Length", stat.size);
+      res.setHeader("Accept-Ranges", "bytes");
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename="${encodeURIComponent(safeName)}"`
+        `attachment; filename*=UTF-8''${encodeURIComponent(safeName)}`
       );
+      res.setHeader("Cache-Control", "private, no-store, max-age=0");
 
       // Stream the file
       const fileStream = fs.createReadStream(filePath);
+      fileStream.on("error", (streamErr) => {
+        console.error("File stream error:", streamErr);
+        if (!res.headersSent) {
+          res.status(500).json({ message: "خطا در خواندن فایل" });
+        } else {
+          res.destroy(streamErr);
+        }
+      });
       fileStream.pipe(res);
     } catch (error) {
       console.error("Error in download route:", error);

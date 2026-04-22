@@ -15,7 +15,7 @@ const DocumentsPage = () => {
   const [sortBy, setSortBy] = useState("uploadDate");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isMobile, setIsMobile] = useState(false);
-  const [downloadingDocs, setDownloadingDocs] = useState(new Set());
+  const [downloadState, setDownloadState] = useState({});
 
   const categoryTranslations = useMemo(() => ({
     guideline: "رهنمودها",
@@ -96,8 +96,8 @@ const DocumentsPage = () => {
   useEffect(() => {
     let results = documents.filter(
       (doc) =>
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (doc.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (doc.category &&
           doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -158,25 +158,62 @@ const DocumentsPage = () => {
   };
 
   const handleDownload = async (doc) => {
+    const maxRetries = 2;
+    const requestUrl = `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`;
+
     try {
-      // Add document to downloading set
-      setDownloadingDocs(prev => new Set(prev).add(doc.id));
-      
-      // Use the new download endpoint that includes logging
-      const response = await axios.get(
-        `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
-        {
-          withCredentials: true,
-          responseType: "blob",
+      setDownloadState((prev) => ({
+        ...prev,
+        [doc.id]: { downloading: true, progress: 0, hasTotal: false, error: "" },
+      }));
+
+      let response;
+      let lastError;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          response = await axios.get(requestUrl, {
+            withCredentials: true,
+            responseType: "blob",
+            timeout: 5 * 60 * 1000,
+            onDownloadProgress: (progressEvent) => {
+              const total = progressEvent.total || 0;
+              const loaded = progressEvent.loaded || 0;
+              const hasTotal = total > 0;
+              const progress = hasTotal
+                ? Math.min(100, Math.round((loaded * 100) / total))
+                : 0;
+
+              setDownloadState((prev) => ({
+                ...prev,
+                [doc.id]: { downloading: true, progress, hasTotal, error: "" },
+              }));
+            },
+          });
+          break;
+        } catch (error) {
+          lastError = error;
+          if (attempt < maxRetries) {
+            await new Promise((resolve) => setTimeout(resolve, 700));
+          }
         }
-      );
+      }
+
+      if (!response) {
+        throw lastError || new Error("Download request failed");
+      }
 
       // Preserve extension from fileName while using readable name
-      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
+      const ext = doc.fileName.includes(".")
+        ? "." + doc.fileName.split(".").pop().toLowerCase()
+        : "";
       const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
 
       // Create blob and download
       const blob = new Blob([response.data]);
+      if (!blob.size) {
+        throw new Error("Received empty file");
+      }
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -185,16 +222,30 @@ const DocumentsPage = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      setDownloadState((prev) => ({
+        ...prev,
+        [doc.id]: { downloading: false, progress: 100, hasTotal: true, error: "" },
+      }));
     } catch (error) {
       console.error("Error downloading file:", error);
-      alert("خطا در دانلود فایل");
+      setDownloadState((prev) => ({
+        ...prev,
+        [doc.id]: {
+          downloading: false,
+          progress: 0,
+          hasTotal: false,
+          error: "دانلود ناموفق بود. لطفاً دوباره تلاش کنید.",
+        },
+      }));
     } finally {
-      // Remove document from downloading set
-      setDownloadingDocs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(doc.id);
-        return newSet;
-      });
+      setTimeout(() => {
+        setDownloadState((prev) => {
+          if (!prev[doc.id] || prev[doc.id].downloading) return prev;
+          const next = { ...prev };
+          if (!next[doc.id]?.error) delete next[doc.id];
+          return next;
+        });
+      }, 3000);
     }
   };
 
@@ -375,8 +426,15 @@ const DocumentsPage = () => {
         {/* Documents Grid */}
         {!loading && !error && filteredDocs.length > 0 && (
           <div className="row g-3">
-            {filteredDocs.map((doc) => (
-              <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+            {filteredDocs.map((doc) => {
+              const currentDownload = downloadState[doc.id];
+              const isDownloading = Boolean(currentDownload?.downloading);
+              const hasProgress = Boolean(currentDownload?.hasTotal);
+              const progress = currentDownload?.progress || 0;
+              const downloadError = currentDownload?.error || "";
+
+              return (
+                <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <div
                   className={`card h-100 hover-shadow ${
                     theme === "light" ? "light-card" : "dark-card"
@@ -477,12 +535,44 @@ const DocumentsPage = () => {
                   </div>
 
                   <div className="card-footer bg-transparent border-top-0 mt-auto">
+                    {isDownloading && (
+                      <div className="mb-2">
+                        {hasProgress ? (
+                          <>
+                            <div className="progress" style={{ height: "6px" }}>
+                              <div
+                                className="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar"
+                                style={{ width: `${progress}%` }}
+                                aria-valuenow={progress}
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                              />
+                            </div>
+                            <small className="d-block text-center mt-1 text-muted">
+                              {progress}%
+                            </small>
+                          </>
+                        ) : (
+                          <small className="d-block text-center text-muted">
+                            در حال دریافت فایل...
+                          </small>
+                        )}
+                      </div>
+                    )}
+
+                    {downloadError && (
+                      <small className="d-block text-danger text-center mb-2">
+                        {downloadError}
+                      </small>
+                    )}
+
                     <button
                       onClick={() => handleDownload(doc)}
                       className="btn btn-info btn-sm w-100 touch-target"
-                      disabled={downloadingDocs.has(doc.id)}
+                      disabled={isDownloading}
                     >
-                      {downloadingDocs.has(doc.id) ? (
+                      {isDownloading ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
                           در حال دانلود...
@@ -496,8 +586,9 @@ const DocumentsPage = () => {
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
