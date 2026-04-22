@@ -158,43 +158,33 @@ const DocumentsPage = () => {
   };
 
   const handleDownload = async (doc) => {
+    // Add document to downloading set
+    setDownloadingDocs((prev) => new Set(prev).add(doc.id));
+
     try {
-      // Add document to downloading set
-      setDownloadingDocs(prev => new Set(prev).add(doc.id));
-      
-      // Use the new download endpoint that includes logging
-      const response = await axios.get(
-        `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
-        {
-          withCredentials: true,
-          responseType: "blob",
-        }
-      );
+      // Use native browser download so users get standard download manager progress.
+      // Also URL-encode file names to prevent intermittent failures with spaces/non-Latin chars.
+      const encodedFileName = encodeURIComponent(doc.fileName);
+      const downloadUrl = `${API_BASE_URL}/api/docs-center-and-uploads/download/${encodedFileName}`;
 
-      // Preserve extension from fileName while using readable name
-      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
-      const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
-
-      // Create blob and download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = url;
-      link.download = displayName;
+      link.href = downloadUrl;
+      link.rel = "noopener";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading file:", error);
       alert("خطا در دانلود فایل");
     } finally {
-      // Remove document from downloading set
-      setDownloadingDocs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(doc.id);
-        return newSet;
-      });
+      // Keep spinner visible briefly to acknowledge action before resetting.
+      setTimeout(() => {
+        setDownloadingDocs((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(doc.id);
+          return newSet;
+        });
+      }, 1000);
     }
   };
 
