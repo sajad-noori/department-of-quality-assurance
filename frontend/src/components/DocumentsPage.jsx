@@ -96,8 +96,8 @@ const DocumentsPage = () => {
   useEffect(() => {
     let results = documents.filter(
       (doc) =>
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (doc.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (doc.category &&
           doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -157,43 +157,28 @@ const DocumentsPage = () => {
     }
   };
 
-  const handleDownload = async (doc) => {
+  const handleDownload = (doc) => {
+    const requestUrl = `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`;
+
     try {
-      // Add document to downloading set
-      setDownloadingDocs(prev => new Set(prev).add(doc.id));
-      
-      // Use the new download endpoint that includes logging
-      const response = await axios.get(
-        `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
-        {
-          withCredentials: true,
-          responseType: "blob",
-        }
-      );
+      setDownloadingDocs((prev) => new Set(prev).add(doc.id));
 
-      // Preserve extension from fileName while using readable name
-      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
-      const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
-
-      // Create blob and download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
+      // Trigger native browser download so progress appears in browser download manager
       const link = document.createElement("a");
-      link.href = url;
-      link.download = displayName;
+      link.href = requestUrl;
+      link.setAttribute("rel", "noopener");
+      link.style.display = "none";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading file:", error);
-      alert("خطا در دانلود فایل");
+      alert("دانلود فایل شروع نشد. لطفاً دوباره تلاش کنید.");
     } finally {
-      // Remove document from downloading set
-      setDownloadingDocs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(doc.id);
-        return newSet;
+      setDownloadingDocs((prev) => {
+        const next = new Set(prev);
+        next.delete(doc.id);
+        return next;
       });
     }
   };
@@ -375,8 +360,11 @@ const DocumentsPage = () => {
         {/* Documents Grid */}
         {!loading && !error && filteredDocs.length > 0 && (
           <div className="row g-3">
-            {filteredDocs.map((doc) => (
-              <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+            {filteredDocs.map((doc) => {
+              const isDownloading = downloadingDocs.has(doc.id);
+
+              return (
+                <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
                 <div
                   className={`card h-100 hover-shadow ${
                     theme === "light" ? "light-card" : "dark-card"
@@ -480,12 +468,12 @@ const DocumentsPage = () => {
                     <button
                       onClick={() => handleDownload(doc)}
                       className="btn btn-info btn-sm w-100 touch-target"
-                      disabled={downloadingDocs.has(doc.id)}
+                      disabled={isDownloading}
                     >
-                      {downloadingDocs.has(doc.id) ? (
+                      {isDownloading ? (
                         <>
                           <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                          در حال دانلود...
+                          در حال شروع دانلود...
                         </>
                       ) : (
                         <>
@@ -496,8 +484,9 @@ const DocumentsPage = () => {
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
