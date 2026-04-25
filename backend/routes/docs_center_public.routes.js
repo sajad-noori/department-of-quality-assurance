@@ -71,7 +71,6 @@ function multerErrorHandler(err, req, res, next) {
         .status(400)
         .json({ error: "حجم فایل نباید بیشتر از ۱۰۰ مگابایت باشد." });
     }
-    // You can add other multer error checks here if needed
     return res.status(500).json({ error: "خطایی در آپلود فایل رخ داد." });
   }
   next();
@@ -137,25 +136,51 @@ router.get(
       const mimeTypes = {
         ".pdf": "application/pdf",
         ".doc": "application/msword",
-        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".docx":
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ".xls": "application/vnd.ms-excel",
-        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".xlsx":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       };
       const mimeType = mimeTypes[ext] || "application/octet-stream";
 
-      // Set headers to force proper download
+      // FIX: Get file size and set Content-Length so the browser/axios can
+      // calculate download progress. Without this header, progressEvent.total
+      // is always 0 and no progress bar can be shown.
+      const fileStat = fs.statSync(filePath);
+      const fileSize = fileStat.size;
+
+      // Set headers
       res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Length", fileSize);
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${encodeURIComponent(safeName)}"`
       );
+      // FIX: Expose Content-Length to the browser in cross-origin (CORS) requests.
+      // Without this, axios cannot read the Content-Length header and
+      // progressEvent.total will be 0 even if the header is sent.
+      res.setHeader("Access-Control-Expose-Headers", "Content-Length");
 
       // Stream the file
       const fileStream = fs.createReadStream(filePath);
+
+      // Handle stream errors gracefully without crashing
+      fileStream.on("error", (streamErr) => {
+        console.error("File stream error:", streamErr);
+        if (!res.headersSent) {
+          res.status(500).json({ message: "خطا در خواندن فایل" });
+        } else {
+          res.end();
+        }
+      });
+
       fileStream.pipe(res);
     } catch (error) {
       console.error("Error in download route:", error);
-      res.status(500).json({ message: "خطا در دانلود فایل" });
+      if (!res.headersSent) {
+        res.status(500).json({ message: "خطا در دانلود فایل" });
+      }
     }
   }
 );

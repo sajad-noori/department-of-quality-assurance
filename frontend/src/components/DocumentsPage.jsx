@@ -4,6 +4,10 @@ import axios from "axios";
 import { useTheme } from "../contexts/ThemeContext";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
+// Helper: convert bytes to a readable MB string
+const formatMB = (bytes) => (bytes / (1024 * 1024)).toFixed(1) + " MB";
+
 const DocumentsPage = () => {
   const { type } = useParams();
   const { theme } = useTheme();
@@ -15,7 +19,11 @@ const DocumentsPage = () => {
   const [sortBy, setSortBy] = useState("uploadDate");
   const [sortOrder, setSortOrder] = useState("desc");
   const [isMobile, setIsMobile] = useState(false);
-  const [downloadingDocs, setDownloadingDocs] = useState(new Set());
+
+  // FIX: Changed from Set to Map so we can store per-doc progress data.
+  // Structure: Map<docId, { loaded: number, total: number }>
+  // loaded = bytes received so far, total = full file size (0 if unknown)
+  const [downloadProgress, setDownloadProgress] = useState(new Map());
 
   const categoryTranslations = useMemo(() => ({
     guideline: "رهنمودها",
@@ -25,43 +33,32 @@ const DocumentsPage = () => {
     standards: "استندرد ها",
   }), []);
 
-  // Map URL parameters to database category values
   const categoryMapping = useMemo(() => ({
     guideline: "guideline",
     form: "form",
     "legal-doc": "legal",
   }), []);
 
-  // Category colors for badges (dark theme)
   const categoryColors = {
     guideline: "info",
     form: "success",
     legal: "warning",
   };
 
-  // File type icons
   const getFileIcon = (fileName) => {
     const extension = fileName.split(".").pop().toLowerCase();
     switch (extension) {
-      case "pdf":
-        return "📄";
+      case "pdf":  return "📄";
       case "doc":
-      case "docx":
-        return "📝";
+      case "docx": return "📝";
       case "xls":
-      case "xlsx":
-        return "📊";
-      default:
-        return "📎";
+      case "xlsx": return "📊";
+      default:     return "📎";
     }
   };
 
-  // Check screen size for responsive behavior
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
+    const checkScreenSize = () => setIsMobile(window.innerWidth < 768);
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
@@ -102,7 +99,6 @@ const DocumentsPage = () => {
           doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    // Sort results
     results.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
@@ -115,11 +111,9 @@ const DocumentsPage = () => {
         bValue = bValue?.toLowerCase() || "";
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return sortOrder === "asc"
+        ? aValue > bValue ? 1 : -1
+        : aValue < bValue ? 1 : -1;
     });
 
     setFilteredDocs(results);
@@ -158,24 +152,42 @@ const DocumentsPage = () => {
   };
 
   const handleDownload = async (doc) => {
+    // FIX: Register the doc in the progress map with initial 0 values
+    setDownloadProgress(prev => {
+      const next = new Map(prev);
+      next.set(doc.id, { loaded: 0, total: 0 });
+      return next;
+    });
+
     try {
-      // Add document to downloading set
-      setDownloadingDocs(prev => new Set(prev).add(doc.id));
-      
-      // Use the new download endpoint that includes logging
       const response = await axios.get(
         `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
         {
           withCredentials: true,
           responseType: "blob",
+          // FIX: onDownloadProgress fires repeatedly as chunks arrive.
+          // progressEvent.loaded = bytes received so far
+          // progressEvent.total  = total file size (only works when the backend
+          //                        sends the Content-Length header, which we
+          //                        fixed in the backend file)
+          onDownloadProgress: (progressEvent) => {
+            setDownloadProgress(prev => {
+              const next = new Map(prev);
+              next.set(doc.id, {
+                loaded: progressEvent.loaded,
+                total: progressEvent.total || 0,
+              });
+              return next;
+            });
+          },
         }
       );
 
-      // Preserve extension from fileName while using readable name
-      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
+      const ext = doc.fileName.includes('.')
+        ? '.' + doc.fileName.split('.').pop().toLowerCase()
+        : '';
       const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
 
-      // Create blob and download
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -189,13 +201,25 @@ const DocumentsPage = () => {
       console.error("Error downloading file:", error);
       alert("خطا در دانلود فایل");
     } finally {
-      // Remove document from downloading set
-      setDownloadingDocs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(doc.id);
-        return newSet;
+      // Remove the doc from the progress map once done (success or error)
+      setDownloadProgress(prev => {
+        const next = new Map(prev);
+        next.delete(doc.id);
+        return next;
       });
     }
+  };
+
+  // FIX: Helper to build the progress label shown inside the download button.
+  // Shows "X.X MB / Y.Y MB" when total is known, or "X.X MB" when it isn't.
+  const getProgressLabel = (docId) => {
+    const progress = downloadProgress.get(docId);
+    if (!progress) return null;
+    const { loaded, total } = progress;
+    if (total > 0) {
+      return `${formatMB(loaded)} / ${formatMB(total)}`;
+    }
+    return `${formatMB(loaded)}`;
   };
 
   return (
@@ -225,7 +249,7 @@ const DocumentsPage = () => {
               </p>
             </div>
 
-            {/* Sort Controls - Centered */}
+            {/* Sort Controls */}
             <div className="d-flex justify-content-center mb-3">
               <div className="btn-group" role="group">
                 <button
@@ -375,134 +399,152 @@ const DocumentsPage = () => {
         {/* Documents Grid */}
         {!loading && !error && filteredDocs.length > 0 && (
           <div className="row g-3">
-            {filteredDocs.map((doc) => (
-              <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <div
-                  className={`card h-100 hover-shadow ${
-                    theme === "light" ? "light-card" : "dark-card"
-                  }`}
-                >
-                  <div className="card-body d-flex flex-column text-center">
-                    <div className="d-flex align-items-start mb-3">
-                      <div className="me-3 fs-2 flex-shrink-0">
-                        {getFileIcon(doc.fileName)}
-                      </div>
-                      <div className="flex-grow-1 min-width-0">
-                        <h6
-                          className={`card-title mb-1 text-truncate document-title ${
-                            theme === "light" ? "light-text" : "dark-text"
-                          }`}
-                          title={doc.name}
-                        >
-                          {doc.name}
-                        </h6>
-                        <span
-                          className={`badge bg-${
-                            categoryColors[doc.category] || "secondary"
-                          } badge-sm`}
-                        >
-                          {(() => {
-                            console.log(
-                              "Rendering badge for type:",
-                              type,
-                              "translation:",
-                              categoryTranslations[type]
-                            );
-                            return categoryTranslations[type];
-                          })()}
-                        </span>
-                      </div>
-                    </div>
+            {filteredDocs.map((doc) => {
+              const isDownloading = downloadProgress.has(doc.id);
+              const progressLabel = getProgressLabel(doc.id);
+              const progress = downloadProgress.get(doc.id);
+              const percent =
+                progress && progress.total > 0
+                  ? Math.round((progress.loaded / progress.total) * 100)
+                  : null;
 
-                    {doc.description && (
-                      <p
-                        className={`card-text small mb-3 flex-grow-1 ${
-                          theme === "light" ? "text-secondary" : "text-muted"
-                        }`}
-                        style={{
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {doc.description}
-                      </p>
-                    )}
+              return (
+                <div key={doc.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
+                  <div
+                    className={`card h-100 hover-shadow ${
+                      theme === "light" ? "light-card" : "dark-card"
+                    }`}
+                  >
+                    <div className="card-body d-flex flex-column text-center">
+                      <div className="d-flex align-items-start mb-3">
+                        <div className="me-3 fs-2 flex-shrink-0">
+                          {getFileIcon(doc.fileName)}
+                        </div>
+                        <div className="flex-grow-1 min-width-0">
+                          <h6
+                            className={`card-title mb-1 text-truncate document-title ${
+                              theme === "light" ? "light-text" : "dark-text"
+                            }`}
+                            title={doc.name}
+                          >
+                            {doc.name}
+                          </h6>
+                          <span
+                            className={`badge bg-${
+                              categoryColors[doc.category] || "secondary"
+                            } badge-sm`}
+                          >
+                            {categoryTranslations[type]}
+                          </span>
+                        </div>
+                      </div>
 
-                    {doc.video_link && (
-                      <div className="mb-3">
-                        <a
-                          href={doc.video_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`text-decoration-none d-flex align-items-center justify-content-center ${
-                            theme === "light" ? "text-info" : "text-info"
+                      {doc.description && (
+                        <p
+                          className={`card-text small mb-3 flex-grow-1 ${
+                            theme === "light" ? "text-secondary" : "text-muted"
                           }`}
                           style={{
-                            fontSize: "0.875rem",
-                            gap: "0.25rem",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.textDecoration = "underline";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.textDecoration = "none";
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
                           }}
                         >
-                          <span>🎥</span>
-                          <span>ویدیو آموزشی</span>
-                        </a>
-                      </div>
-                    )}
+                          {doc.description}
+                        </p>
+                      )}
 
-                    <div className="d-flex justify-content-center align-items-center mb-3">
-                      <small
-                        className={
-                          theme === "light" ? "text-secondary" : "text-muted"
-                        }
+                      {doc.video_link && (
+                        <div className="mb-3">
+                          <a
+                            href={doc.video_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`text-decoration-none d-flex align-items-center justify-content-center ${
+                              theme === "light" ? "text-info" : "text-info"
+                            }`}
+                            style={{ fontSize: "0.875rem", gap: "0.25rem" }}
+                            onMouseEnter={(e) => {
+                              e.target.style.textDecoration = "underline";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.textDecoration = "none";
+                            }}
+                          >
+                            <span>🎥</span>
+                            <span>ویدیو آموزشی</span>
+                          </a>
+                        </div>
+                      )}
+
+                      <div className="d-flex justify-content-center align-items-center mb-3">
+                        <small
+                          className={
+                            theme === "light" ? "text-secondary" : "text-muted"
+                          }
+                        >
+                          <i className="fas fa-calendar me-1"></i>
+                          <span className="d-none d-md-inline">
+                            {new Date(doc.uploadDate).toLocaleDateString("fa-IR")}
+                          </span>
+                          <span className="d-inline d-md-none">
+                            {new Date(doc.uploadDate).toLocaleDateString("fa-IR", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </small>
+                      </div>
+                    </div>
+
+                    <div className="card-footer bg-transparent border-top-0 mt-auto">
+                      {/* FIX: Show progress bar when total is known, otherwise just spinner + MB label */}
+                      {isDownloading && percent !== null && (
+                        <div className="mb-2">
+                          <div className="progress" style={{ height: "6px" }}>
+                            <div
+                              className="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                              role="progressbar"
+                              style={{ width: `${percent}%` }}
+                              aria-valuenow={percent}
+                              aria-valuemin="0"
+                              aria-valuemax="100"
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleDownload(doc)}
+                        className="btn btn-info btn-sm w-100 touch-target"
+                        disabled={isDownloading}
                       >
-                        <i className="fas fa-calendar me-1"></i>
-                        <span className="d-none d-md-inline">
-                          {new Date(doc.uploadDate).toLocaleDateString("fa-IR")}
-                        </span>
-                        <span className="d-inline d-md-none">
-                          {new Date(doc.uploadDate).toLocaleDateString(
-                            "fa-IR",
-                            { month: "short", day: "numeric" }
-                          )}
-                        </span>
-                      </small>
+                        {isDownloading ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-1"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            {/* FIX: Show MB downloaded (and total if known) */}
+                            {progressLabel || "در حال دانلود..."}
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-download me-1"></i>
+                            دانلود
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="card-footer bg-transparent border-top-0 mt-auto">
-                    <button
-                      onClick={() => handleDownload(doc)}
-                      className="btn btn-info btn-sm w-100 touch-target"
-                      disabled={downloadingDocs.has(doc.id)}
-                    >
-                      {downloadingDocs.has(doc.id) ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                          در حال دانلود...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-download me-1"></i>
-                          دانلود
-                        </>
-                      )}
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* CSS for dark and light theme, responsive design and skeleton loading */}
       <style>{`
         .dark-container {
           background: #121212;
@@ -600,7 +642,6 @@ const DocumentsPage = () => {
           border-color: rgba(255, 255, 255, 0.5) !important;
           color: #ffffff !important;
         }
-        /* Light mode override for sort buttons */
         .light-container .btn-outline-light {
           color: #0dcaf0 !important;
           border-color: #0dcaf0 !important;
@@ -685,7 +726,6 @@ const DocumentsPage = () => {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
         }
-        /* Responsive Design */
         .responsive-title {
           font-size: 1.5rem;
         }
@@ -702,7 +742,6 @@ const DocumentsPage = () => {
           min-height: 44px;
           padding: 0.5rem 1rem;
         }
-        /* Mobile Optimizations */
         @media (max-width: 575.98px) {
           .dark-container, .light-container {
             padding: 0.5rem 0;
@@ -726,13 +765,11 @@ const DocumentsPage = () => {
             font-size: 0.95rem;
           }
         }
-        /* Tablet Optimizations */
         @media (min-width: 576px) and (max-width: 767.98px) {
           .responsive-title {
             font-size: 1.35rem;
           }
         }
-        /* Desktop Optimizations */
         @media (min-width: 992px) {
           .responsive-title {
             font-size: 1.75rem;
@@ -747,13 +784,11 @@ const DocumentsPage = () => {
             font-size: 1.05rem;
           }
         }
-        /* Large Desktop Optimizations */
         @media (min-width: 1200px) {
           .responsive-title {
             font-size: 2rem;
           }
         }
-        /* Touch Device Optimizations */
         @media (hover: none) and (pointer: coarse) {
           .hover-shadow:hover {
             transform: none;
@@ -766,13 +801,11 @@ const DocumentsPage = () => {
             cursor: pointer;
           }
         }
-        /* High DPI Display Optimizations */
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
           .dark-card, .light-card {
             border-width: 0.5px;
           }
         }
-        /* Add this for document title size and style */
         .document-title {
           font-size: 1rem;
           font-weight: 500;
