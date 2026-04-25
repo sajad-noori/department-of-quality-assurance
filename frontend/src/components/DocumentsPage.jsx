@@ -16,6 +16,7 @@ const DocumentsPage = () => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [isMobile, setIsMobile] = useState(false);
   const [downloadingDocs, setDownloadingDocs] = useState(new Set());
+  const [downloadProgress, setDownloadProgress] = useState({});
 
   const categoryTranslations = useMemo(() => ({
     guideline: "رهنمودها",
@@ -157,22 +158,45 @@ const DocumentsPage = () => {
     }
   };
 
+  const formatBytesToMB = (bytes = 0) => {
+    if (!bytes || bytes < 0) {
+      return "0.00 MB";
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
   const handleDownload = async (doc) => {
     try {
       // Add document to downloading set
-      setDownloadingDocs(prev => new Set(prev).add(doc.id));
-      
-      // Use the new download endpoint that includes logging
+      setDownloadingDocs((prev) => new Set(prev).add(doc.id));
+      setDownloadProgress((prev) => ({
+        ...prev,
+        [doc.id]: { percent: 0, loaded: 0, total: 0 },
+      }));
+
+      // Use the download endpoint with progress updates
       const response = await axios.get(
         `${API_BASE_URL}/api/docs-center-and-uploads/download/${doc.fileName}`,
         {
           withCredentials: true,
           responseType: "blob",
+          onDownloadProgress: (progressEvent) => {
+            const loaded = progressEvent.loaded || 0;
+            const total = progressEvent.total || 0;
+            const percent = total > 0 ? Math.round((loaded * 100) / total) : 0;
+
+            setDownloadProgress((prev) => ({
+              ...prev,
+              [doc.id]: { percent, loaded, total },
+            }));
+          },
         }
       );
 
       // Preserve extension from fileName while using readable name
-      const ext = doc.fileName.includes('.') ? '.' + doc.fileName.split('.').pop().toLowerCase() : '';
+      const ext = doc.fileName.includes(".")
+        ? "." + doc.fileName.split(".").pop().toLowerCase()
+        : "";
       const displayName = doc.name.endsWith(ext) ? doc.name : `${doc.name}${ext}`;
 
       // Create blob and download
@@ -190,10 +214,17 @@ const DocumentsPage = () => {
       alert("خطا در دانلود فایل");
     } finally {
       // Remove document from downloading set
-      setDownloadingDocs(prev => {
+      setDownloadingDocs((prev) => {
         const newSet = new Set(prev);
         newSet.delete(doc.id);
         return newSet;
+      });
+
+      // Clear document progress
+      setDownloadProgress((prev) => {
+        const newProgress = { ...prev };
+        delete newProgress[doc.id];
+        return newProgress;
       });
     }
   };
@@ -484,8 +515,15 @@ const DocumentsPage = () => {
                     >
                       {downloadingDocs.has(doc.id) ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          <span
+                            className="spinner-border spinner-border-sm me-1"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
                           در حال دانلود...
+                          {downloadProgress[doc.id]?.total > 0
+                            ? ` ${downloadProgress[doc.id].percent}%`
+                            : ""}
                         </>
                       ) : (
                         <>
@@ -494,6 +532,51 @@ const DocumentsPage = () => {
                         </>
                       )}
                     </button>
+                    {downloadingDocs.has(doc.id) && (
+                      <div className="mt-2">
+                        <div
+                          className="progress"
+                          role="progressbar"
+                          aria-label="Download progress"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          aria-valuenow={downloadProgress[doc.id]?.percent || 0}
+                        >
+                          <div
+                            className={`progress-bar ${
+                              downloadProgress[doc.id]?.total > 0
+                                ? ""
+                                : "progress-bar-striped progress-bar-animated"
+                            }`}
+                            style={{
+                              width:
+                                downloadProgress[doc.id]?.total > 0
+                                  ? `${downloadProgress[doc.id]?.percent || 0}%`
+                                  : "100%",
+                            }}
+                          >
+                            {downloadProgress[doc.id]?.total > 0
+                              ? `${downloadProgress[doc.id]?.percent || 0}%`
+                              : "در حال دریافت..."}
+                          </div>
+                        </div>
+                        <small
+                          className={`d-block mt-1 text-center ${
+                            theme === "light" ? "text-secondary" : "text-light"
+                          }`}
+                        >
+                          {downloadProgress[doc.id]?.total > 0
+                            ? `${formatBytesToMB(
+                                downloadProgress[doc.id]?.loaded
+                              )} / ${formatBytesToMB(
+                                downloadProgress[doc.id]?.total
+                              )}`
+                            : `${formatBytesToMB(
+                                downloadProgress[doc.id]?.loaded
+                              )} دانلود شده`}
+                        </small>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
