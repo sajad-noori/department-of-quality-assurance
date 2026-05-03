@@ -67,6 +67,8 @@ const SpecificInstitute = () => {
   const [stakeholderInvolvementError, setStakeholderInvolvementError] =
     useState(null);
   const [profileDocumentsError, setProfileDocumentsError] = useState(null);
+  const [downloadingFiles, setDownloadingFiles] = useState(new Set());
+  const [downloadToast, setDownloadToast] = useState(null); // { type: 'success'|'error', message: string }
 
   // Add print styles
   React.useEffect(() => {
@@ -467,16 +469,17 @@ const SpecificInstitute = () => {
 
   // Download standard file
   const handleDownloadFile = async (standardId, fileName) => {
+    const key = `standard-${standardId}`;
+    setDownloadingFiles((prev) => new Set(prev).add(key));
     try {
       const response = await axios.get(
         `${API_BASE_URL}/api/standards/download/${standardId}`,
         {
           withCredentials: true,
-          responseType: "blob", // Important for file downloads
+          responseType: "blob",
         }
       );
 
-      // Create a blob URL and trigger download
       const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -486,24 +489,53 @@ const SpecificInstitute = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      setDownloadToast({ type: "success", message: "فایل با موفقیت دانلود شد ✓" });
     } catch (error) {
       console.error("Error downloading file:", error);
-      alert("خطا در دانلود فایل");
+      setDownloadToast({ type: "error", message: "خطا در دانلود فایل" });
+    } finally {
+      setDownloadingFiles((prev) => {
+        const s = new Set(prev);
+        s.delete(key);
+        return s;
+      });
+      setTimeout(() => setDownloadToast(null), 3500);
     }
   };
 
   // Download document
   const handleDownloadDocument = async (file_path, file_name) => {
+    const key = `doc-${file_path}`;
+    setDownloadingFiles((prev) => new Set(prev).add(key));
     try {
-      // Open the download URL in a new window/tab
-      // This will automatically include cookies for authentication
-      window.open(
+      const response = await axios.get(
         `${process.env.REACT_APP_DOWNLOAD_APP_API_URL}/api/profile-documents/download/${file_path}`,
-        "_blank"
+        {
+          withCredentials: true,
+          responseType: "blob",
+        }
       );
+
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setDownloadToast({ type: "success", message: "سند با موفقیت دانلود شد ✓" });
     } catch (error) {
       console.error("Error downloading document:", error);
-      alert("خطا در دانلود سند");
+      setDownloadToast({ type: "error", message: "خطا در دانلود سند" });
+    } finally {
+      setDownloadingFiles((prev) => {
+        const s = new Set(prev);
+        s.delete(key);
+        return s;
+      });
+      setTimeout(() => setDownloadToast(null), 3500);
     }
   };
 
@@ -598,6 +630,32 @@ const SpecificInstitute = () => {
         alignItems: "center",
       }}
     >
+      {/* Download Toast Notification */}
+      {downloadToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            background: downloadToast.type === "success" ? "#1a8a1a" : "#c0392b",
+            color: "#fff",
+            padding: "12px 28px",
+            borderRadius: "8px",
+            fontSize: "0.95rem",
+            fontWeight: "600",
+            boxShadow: "0 4px 18px rgba(0,0,0,0.35)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            direction: "rtl",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {downloadToast.message}
+        </div>
+      )}
       <div
         className="no-print"
         style={{
@@ -2544,26 +2602,32 @@ const SpecificInstitute = () => {
                         >
                           <span
                             onClick={() =>
+                              !downloadingFiles.has(`standard-${standard.id}`) &&
                               handleDownloadFile(
                                 standard.id,
                                 standard.original_file_name
                               )
                             }
                             style={{
-                              cursor: "pointer",
-                              color: themeColors.primary,
+                              cursor: downloadingFiles.has(`standard-${standard.id}`) ? "not-allowed" : "pointer",
+                              color: downloadingFiles.has(`standard-${standard.id}`) ? themeColors.primaryDark : themeColors.primary,
                               textDecoration: "underline",
                               transition: "color 0.2s ease",
+                              opacity: downloadingFiles.has(`standard-${standard.id}`) ? 0.6 : 1,
                             }}
                             onMouseOver={(e) =>
+                              !downloadingFiles.has(`standard-${standard.id}`) &&
                               (e.target.style.color = themeColors.primaryDark)
                             }
                             onMouseOut={(e) =>
+                              !downloadingFiles.has(`standard-${standard.id}`) &&
                               (e.target.style.color = themeColors.primary)
                             }
-                            title="کلیک کنید تا دانلود کنید"
+                            title={downloadingFiles.has(`standard-${standard.id}`) ? "در حال دانلود..." : "کلیک کنید تا دانلود کنید"}
                           >
-                            {standard.original_file_name || "نامشخص"}
+                            {downloadingFiles.has(`standard-${standard.id}`)
+                              ? "در حال دانلود..."
+                              : (standard.original_file_name || "نامشخص")}
                           </span>
                         </td>
                         <td
@@ -2602,6 +2666,7 @@ const SpecificInstitute = () => {
                         >
                           <button
                             className="download-button"
+                            disabled={downloadingFiles.has(`standard-${standard.id}`)}
                             onClick={() =>
                               handleDownloadFile(
                                 standard.id,
@@ -2609,25 +2674,37 @@ const SpecificInstitute = () => {
                               )
                             }
                             style={{
-                              background: themeColors.primary,
+                              background: downloadingFiles.has(`standard-${standard.id}`) ? themeColors.primaryDark : themeColors.primary,
                               color: "#030305",
                               border: "none",
                               padding: "6px 12px",
                               borderRadius: "4px",
                               fontSize: "0.75rem",
-                              cursor: "pointer",
+                              cursor: downloadingFiles.has(`standard-${standard.id}`) ? "not-allowed" : "pointer",
                               transition: "background-color 0.2s ease",
                               fontWeight: "600",
+                              opacity: downloadingFiles.has(`standard-${standard.id}`) ? 0.75 : 1,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "5px",
+                              minWidth: "80px",
+                              justifyContent: "center",
                             }}
-                            onMouseOver={(e) =>
-                              (e.target.style.background =
-                                themeColors.buttonHover)
-                            }
-                            onMouseOut={(e) =>
-                              (e.target.style.background = themeColors.primary)
-                            }
+                            onMouseOver={(e) => {
+                              if (!downloadingFiles.has(`standard-${standard.id}`))
+                                e.currentTarget.style.background = themeColors.buttonHover;
+                            }}
+                            onMouseOut={(e) => {
+                              if (!downloadingFiles.has(`standard-${standard.id}`))
+                                e.currentTarget.style.background = themeColors.primary;
+                            }}
                           >
-                            دانلود
+                            {downloadingFiles.has(`standard-${standard.id}`) ? (
+                              <>
+                                <CircularProgress size={11} style={{ color: "#030305" }} />
+                                دانلود...
+                              </>
+                            ) : "دانلود"}
                           </button>
                         </td>
                       </tr>
@@ -3864,6 +3941,7 @@ const SpecificInstitute = () => {
                           >
                             <button
                               className="download-button"
+                              disabled={downloadingFiles.has(`doc-${document.file_path}`)}
                               onClick={() =>
                                 handleDownloadDocument(
                                   document.file_path,
@@ -3871,26 +3949,37 @@ const SpecificInstitute = () => {
                                 )
                               }
                               style={{
-                                background: themeColors.primary,
+                                background: downloadingFiles.has(`doc-${document.file_path}`) ? themeColors.primaryDark : themeColors.primary,
                                 color: "#030305",
                                 border: "none",
                                 padding: "6px 12px",
                                 borderRadius: "4px",
                                 fontSize: "0.75rem",
-                                cursor: "pointer",
+                                cursor: downloadingFiles.has(`doc-${document.file_path}`) ? "not-allowed" : "pointer",
                                 transition: "background-color 0.2s ease",
                                 fontWeight: "600",
+                                opacity: downloadingFiles.has(`doc-${document.file_path}`) ? 0.75 : 1,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                minWidth: "80px",
+                                justifyContent: "center",
                               }}
-                              onMouseOver={(e) =>
-                                (e.target.style.background =
-                                  themeColors.buttonHover)
-                              }
-                              onMouseOut={(e) =>
-                                (e.target.style.background =
-                                  themeColors.primary)
-                              }
+                              onMouseOver={(e) => {
+                                if (!downloadingFiles.has(`doc-${document.file_path}`))
+                                  e.currentTarget.style.background = themeColors.buttonHover;
+                              }}
+                              onMouseOut={(e) => {
+                                if (!downloadingFiles.has(`doc-${document.file_path}`))
+                                  e.currentTarget.style.background = themeColors.primary;
+                              }}
                             >
-                              دانلود
+                              {downloadingFiles.has(`doc-${document.file_path}`) ? (
+                                <>
+                                  <CircularProgress size={11} style={{ color: "#030305" }} />
+                                  دانلود...
+                                </>
+                              ) : "دانلود"}
                             </button>
                           </td>
                         </tr>
