@@ -1,19 +1,94 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
-// Logs component for viewing user activity
+// ── Windowed pagination helper ───────────────────────────────────────────────
+// Returns an array like [1, '...', 4, 5, 6, '...', 20]
+const getPaginationRange = (currentPage, totalPages) => {
+  const delta = 2;
+  const range = [];
+
+  for (
+    let i = Math.max(2, currentPage - delta);
+    i <= Math.min(totalPages - 1, currentPage + delta);
+    i++
+  ) {
+    range.push(i);
+  }
+
+  const withDots = [];
+
+  if (currentPage - delta > 2) {
+    withDots.push(1, '...');
+  } else {
+    withDots.push(1);
+  }
+
+  withDots.push(...range);
+
+  if (currentPage + delta < totalPages - 1) {
+    withDots.push('...', totalPages);
+  } else if (totalPages > 1) {
+    withDots.push(totalPages);
+  }
+
+  return withDots;
+};
+
+// ── Reusable Pagination component ────────────────────────────────────────────
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  const pages = getPaginationRange(currentPage, totalPages);
+
+  return (
+    <div style={paginationStyle}>
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}
+      >
+        قبلی
+      </button>
+
+      {pages.map((page, idx) =>
+        page === '...' ? (
+          <span key={`dots-${idx}`} style={paginationDotsStyle}>
+            ...
+          </span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            style={currentPage === page ? activePageButtonStyle : pageButtonStyle}
+          >
+            {page}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}
+      >
+        بعدی
+      </button>
+    </div>
+  );
+};
+
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
+};
+
+// ── UserLogs ─────────────────────────────────────────────────────────────────
 const UserLogs = ({ userId, userName, onClose }) => {
-  // PropTypes validation
-  UserLogs.propTypes = {
-    userId: PropTypes.number.isRequired,
-    userName: PropTypes.string.isRequired,
-    onClose: PropTypes.func.isRequired
-  };
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +96,8 @@ const UserLogs = ({ userId, userName, onClose }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [actionFilter, setActionFilter] = useState('');
 
-  const fetchLogs = async () => {
+  // FIX: wrap in useCallback so the useEffect dep array is stable
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -37,11 +113,12 @@ const UserLogs = ({ userId, userName, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, currentPage, actionFilter]);
 
+  // FIX: dep array now correctly contains fetchLogs
   useEffect(() => {
     fetchLogs();
-  }, [userId, currentPage, actionFilter]);
+  }, [fetchLogs]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('fa-IR');
@@ -61,23 +138,16 @@ const UserLogs = ({ userId, userName, onClose }) => {
 
   const getRoleBadgeStyle = (role) => {
     switch (role) {
-      case 'admin':
-        return roleBadgeAdminStyle;
-      case 'institute':
-        return roleBadgeInstituteStyle;
-      case 'employee':
-        return roleBadgeEmployeeStyle;
-      default:
-        return roleBadgeUserStyle;
+      case 'admin':     return roleBadgeAdminStyle;
+      case 'institute': return roleBadgeInstituteStyle;
+      case 'employee':  return roleBadgeEmployeeStyle;
+      default:          return roleBadgeUserStyle;
     }
   };
 
   const modalStyle = {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     display: 'flex',
     justifyContent: 'center',
@@ -113,7 +183,7 @@ const UserLogs = ({ userId, userName, onClose }) => {
     <div style={modalStyle} onClick={onClose}>
       <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
         <button style={closeButtonStyle} onClick={onClose}>✕</button>
-        
+
         <h2 style={{ color: '#ffffff', marginBottom: '1rem', textAlign: 'center' }}>
           فعالیت های کاربر: {userName}
         </h2>
@@ -121,7 +191,7 @@ const UserLogs = ({ userId, userName, onClose }) => {
         <div style={{ marginBottom: '1rem' }}>
           <select
             value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
+            onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}
             style={selectStyle}
           >
             <option value="">همه عملیات</option>
@@ -166,7 +236,11 @@ const UserLogs = ({ userId, userName, onClose }) => {
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr key={log.id}>
+                  <tr
+                    key={log.id}
+                    onMouseEnter={(e) => Object.assign(e.currentTarget.style, tableRowHoverStyle)}
+                    onMouseLeave={(e) => Object.assign(e.currentTarget.style, { backgroundColor: '' })}
+                  >
                     <td style={tableCellStyle}>
                       <span style={getRoleBadgeStyle(log.action)}>
                         {getActionLabel(log.action)}
@@ -182,41 +256,24 @@ const UserLogs = ({ userId, userName, onClose }) => {
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div style={paginationStyle}>
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}
-            >
-              قبلی
-            </button>
-            
-            {[...Array(totalPages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => setCurrentPage(index + 1)}
-                style={currentPage === index + 1 ? activePageButtonStyle : pageButtonStyle}
-              >
-                {index + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}
-            >
-              بعدی
-            </button>
-          </div>
-        )}
+        {/* FIX: replaced raw [...Array] map with windowed <Pagination /> */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );
 };
 
-// All Logs component for viewing all user activity
+UserLogs.propTypes = {
+  userId: PropTypes.number.isRequired,
+  userName: PropTypes.string.isRequired,
+  onClose: PropTypes.func.isRequired,
+};
+
+// ── AllLogsModal ─────────────────────────────────────────────────────────────
 const AllLogsModal = ({ onClose }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -228,16 +285,16 @@ const AllLogsModal = ({ onClose }) => {
   const [instituteFilter, setInstituteFilter] = useState('');
   const [sortField, setSortField] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [dateFilter, setDateFilter] = useState('');
+  // FIX: removed unused dateFilter / setDateFilter state
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  // Unique list of institutes from logs
   const instituteOptions = Array.from(
     new Set(logs.map(log => log.institute_name).filter(Boolean))
   );
 
-  const fetchLogs = async () => {
+  // FIX: wrap in useCallback so the useEffect dep array is stable
+  const fetchLogs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -253,25 +310,27 @@ const AllLogsModal = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchLogs();
-    // eslint-disable-next-line
   }, [currentPage, actionFilter, search]);
 
-  // Filtering and sorting
+  // FIX: dep array now correctly contains fetchLogs
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
   let filteredLogs = logs;
   if (instituteFilter) {
     filteredLogs = filteredLogs.filter(log => log.institute_name === instituteFilter);
   }
   if (dateFrom) {
-    filteredLogs = filteredLogs.filter(log => log.created_at && log.created_at.slice(0, 10) >= dateFrom);
+    filteredLogs = filteredLogs.filter(
+      log => log.created_at && log.created_at.slice(0, 10) >= dateFrom
+    );
   }
   if (dateTo) {
-    filteredLogs = filteredLogs.filter(log => log.created_at && log.created_at.slice(0, 10) <= dateTo);
+    filteredLogs = filteredLogs.filter(
+      log => log.created_at && log.created_at.slice(0, 10) <= dateTo
+    );
   }
-  // Sorting
   if (sortField) {
     filteredLogs = [...filteredLogs].sort((a, b) => {
       let aValue = a[sortField] || '';
@@ -311,12 +370,24 @@ const AllLogsModal = ({ onClose }) => {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={onClose}>
-      <div style={{ backgroundColor: '#1a1a1a', borderRadius: '12px', padding: '2rem', maxWidth: '1000px', width: '95%', maxHeight: '85vh', overflow: 'auto', border: '1px solid #333', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', position: 'relative' }} onClick={e => e.stopPropagation()}>
-        <button style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer', padding: '0.5rem' }} onClick={onClose}>✕</button>
+    <div
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ backgroundColor: '#1a1a1a', borderRadius: '12px', padding: '2rem', maxWidth: '1000px', width: '95%', maxHeight: '85vh', overflow: 'auto', border: '1px solid #333', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', position: 'relative' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer', padding: '0.5rem' }}
+          onClick={onClose}
+        >
+          ✕
+        </button>
         <h2 style={{ color: '#fff', marginBottom: '1rem', textAlign: 'center' }}>فعالیت های کلی سیستم</h2>
+
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <select value={actionFilter} onChange={e => setActionFilter(e.target.value)} style={selectStyle}>
+          <select value={actionFilter} onChange={e => { setActionFilter(e.target.value); setCurrentPage(1); }} style={selectStyle}>
             <option value="">همه عملیات</option>
             <option value="login">ورود</option>
             <option value="comment">نظر</option>
@@ -364,6 +435,7 @@ const AllLogsModal = ({ onClose }) => {
             </span>
           </div>
         </div>
+
         {loading ? (
           <div style={loadingStyle}>
             <div style={spinnerStyle}></div>
@@ -391,13 +463,13 @@ const AllLogsModal = ({ onClose }) => {
                   <th style={tableHeaderCellStyle}>IP</th>
                   <th
                     style={{ ...tableHeaderCellStyle, cursor: 'pointer', userSelect: 'none' }}
-                    onClick={() => handleSort('created_at') }
+                    onClick={() => handleSort('created_at')}
                   >
                     تاریخ {sortField === 'created_at' && (sortOrder === 'asc' ? '▲' : '▼')}
                   </th>
                   <th
                     style={{ ...tableHeaderCellStyle, cursor: 'pointer', userSelect: 'none' }}
-                    onClick={() => handleSort('institute_name') }
+                    onClick={() => handleSort('institute_name')}
                   >
                     نام مرکز آموزشی {sortField === 'institute_name' && (sortOrder === 'asc' ? '▲' : '▼')}
                   </th>
@@ -405,7 +477,11 @@ const AllLogsModal = ({ onClose }) => {
               </thead>
               <tbody>
                 {filteredLogs.map(log => (
-                  <tr key={log.id}>
+                  <tr
+                    key={log.id}
+                    onMouseEnter={(e) => Object.assign(e.currentTarget.style, tableRowHoverStyle)}
+                    onMouseLeave={(e) => Object.assign(e.currentTarget.style, { backgroundColor: '' })}
+                  >
                     <td style={tableCellStyle}>{log.user_name || '-'}</td>
                     <td style={tableCellStyle}>{log.user_email || '-'}</td>
                     <td style={tableCellStyle}>{getActionLabel(log.action)}</td>
@@ -419,23 +495,23 @@ const AllLogsModal = ({ onClose }) => {
             </table>
           </div>
         )}
-        {totalPages > 1 && (
-          <div style={paginationStyle}>
-            <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}>قبلی</button>
-            {[...Array(totalPages)].map((_, idx) => (
-              <button key={idx + 1} onClick={() => setCurrentPage(idx + 1)} style={currentPage === idx + 1 ? activePageButtonStyle : pageButtonStyle}>{idx + 1}</button>
-            ))}
-            <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}>بعدی</button>
-          </div>
-        )}
+
+        {/* FIX: replaced raw [...Array] map with windowed <Pagination /> */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );
 };
 
 AllLogsModal.propTypes = {
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
 
 const containerStyle = {
   backgroundColor: '#0a0a0a',
@@ -563,6 +639,7 @@ const tableCellStyle = {
   borderBottom: '1px solid #333333',
 };
 
+// FIX: tableRowHoverStyle is now actually used on table rows in all three components
 const tableRowHoverStyle = {
   backgroundColor: '#2a2a2a',
 };
@@ -704,9 +781,17 @@ const paginationStyle = {
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
+  flexWrap: 'wrap',
   gap: '0.5rem',
   marginTop: '1.5rem',
   padding: '1rem',
+};
+
+const paginationDotsStyle = {
+  padding: '0.5rem 0.25rem',
+  color: '#999999',
+  fontSize: '0.875rem',
+  userSelect: 'none',
 };
 
 const pageButtonStyle = {
@@ -718,6 +803,7 @@ const pageButtonStyle = {
   cursor: 'pointer',
   fontSize: '0.875rem',
   transition: 'all 0.2s ease',
+  minWidth: '36px',
 };
 
 const activePageButtonStyle = {
@@ -763,6 +849,7 @@ const emptyStateIconStyle = {
   opacity: 0.5,
 };
 
+// ── UserManagement ────────────────────────────────────────────────────────────
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -778,44 +865,40 @@ const UserManagement = () => {
   const [showLogs, setShowLogs] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAllLogs, setShowAllLogs] = useState(false);
-  const navigate = useNavigate();
+  // FIX: removed unused `navigate` / useNavigate()
   const usersPerPage = 15;
 
   const roles = [
-    { value: 'user', label: 'کاربر عادی' },
+    { value: 'user',      label: 'کاربر عادی' },
     { value: 'institute', label: 'مرکز آموزشی' },
-    { value: 'admin', label: 'مدیر' },
-    { value: 'employee', label: "کارمند"}
+    { value: 'admin',     label: 'مدیر' },
+    { value: 'employee',  label: 'کارمند' },
   ];
 
   const getRoleBadgeStyle = (role) => {
     switch (role) {
-      case 'admin':
-        return roleBadgeAdminStyle;
-      case 'institute':
-        return roleBadgeInstituteStyle;
-      case 'employee':
-        return roleBadgeEmployeeStyle;
-      default:
-        return roleBadgeUserStyle;
+      case 'admin':     return roleBadgeAdminStyle;
+      case 'institute': return roleBadgeInstituteStyle;
+      case 'employee':  return roleBadgeEmployeeStyle;
+      default:          return roleBadgeUserStyle;
     }
   };
 
-  const fetchUsers = async (retryCount = 0) => {
+  // FIX: fetchUsers is now a useCallback so its reference is stable
+  const fetchUsers = useCallback(async (retryCount = 0) => {
     try {
       setIsSearching(true);
-      const response = await axios.get(`${API_BASE_URL}/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`, {
-        withCredentials: true
-      });
+      const response = await axios.get(
+        `${API_BASE_URL}/api/users?page=${currentPage}&limit=${usersPerPage}&search=${searchQuery}`,
+        { withCredentials: true }
+      );
       setUsers(response.data.users);
       setTotalPages(Math.ceil(response.data.total / usersPerPage));
       setError(null);
     } catch (err) {
       console.error('Error fetching users:', err);
       if (retryCount < 3) {
-        setTimeout(() => {
-          fetchUsers(retryCount + 1);
-        }, Math.pow(2, retryCount) * 1000);
+        setTimeout(() => fetchUsers(retryCount + 1), Math.pow(2, retryCount) * 1000);
       } else {
         setError('خطا در دریافت اطلاعات کاربران. لطفا دوباره تلاش کنید.');
       }
@@ -823,21 +906,20 @@ const UserManagement = () => {
       setLoading(false);
       setIsSearching(false);
     }
-  };
+  }, [currentPage, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const debouncedFetchUsers = useCallback(
-    debounce(() => {
-      fetchUsers();
-    }, 500),
-    [currentPage, searchQuery]
-  );
+  // FIX: stable debounce via useRef — not recreated on every render
+  const debouncedFetchUsers = useRef(
+    debounce((fn) => fn(), 500)
+  ).current;
 
+  // FIX: dep array now contains fetchUsers (stable useCallback ref) and debouncedFetchUsers (stable ref)
   useEffect(() => {
-    debouncedFetchUsers();
+    debouncedFetchUsers(fetchUsers);
     return () => {
       debouncedFetchUsers.cancel();
     };
-  }, [currentPage, searchQuery]);
+  }, [fetchUsers, debouncedFetchUsers]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -856,14 +938,15 @@ const UserManagement = () => {
     try {
       setUpdateError(null);
       setUpdateSuccess(null);
-      
-      const response = await axios.put(
+
+      // FIX: removed unused `const response =`
+      await axios.put(
         `${API_BASE_URL}/api/users/${userId}/role`,
         { role: editingUser.role },
         { withCredentials: true }
       );
 
-      setUsers(users.map(user => 
+      setUsers(users.map(user =>
         user.id === userId ? { ...user, role: editingUser.role } : user
       ));
 
@@ -907,14 +990,9 @@ const UserManagement = () => {
   const handleButtonHover = (e, type = 'primary') => {
     let style;
     switch (type) {
-      case 'secondary':
-        style = buttonSecondaryHoverStyle;
-        break;
-      case 'success':
-        style = buttonSuccessHoverStyle;
-        break;
-      default:
-        style = buttonHoverStyle;
+      case 'secondary': style = buttonSecondaryHoverStyle; break;
+      case 'success':   style = buttonSuccessHoverStyle;   break;
+      default:          style = buttonHoverStyle;
     }
     Object.assign(e.currentTarget.style, style);
   };
@@ -922,14 +1000,9 @@ const UserManagement = () => {
   const handleButtonLeave = (e, type = 'primary') => {
     let style;
     switch (type) {
-      case 'secondary':
-        style = buttonSecondaryStyle;
-        break;
-      case 'success':
-        style = buttonSuccessStyle;
-        break;
-      default:
-        style = buttonStyle;
+      case 'secondary': style = buttonSecondaryStyle; break;
+      case 'success':   style = buttonSuccessStyle;   break;
+      default:          style = buttonStyle;
     }
     Object.assign(e.currentTarget.style, style);
   };
@@ -945,10 +1018,10 @@ const UserManagement = () => {
   };
 
   const stats = {
-    total: users.length,
-    admins: users.filter(user => user.role === 'admin').length,
-    institutes: users.filter(user => user.role === 'institute').length,
-    employees: users.filter(user => user.role === 'employee').length,
+    total:      users.length,
+    admins:     users.filter(u => u.role === 'admin').length,
+    institutes: users.filter(u => u.role === 'institute').length,
+    employees:  users.filter(u => u.role === 'employee').length,
   };
 
   if (loading) {
@@ -999,7 +1072,7 @@ const UserManagement = () => {
             <span>مشاهده همه فعالیت ها</span>
           </button>
         </div>
-        
+
         <div style={statsContainerStyle}>
           <div style={statItemStyle}>
             <div style={statValueStyle}>{stats.total}</div>
@@ -1033,7 +1106,7 @@ const UserManagement = () => {
             ...(searchFocused ? searchInputFocusStyle : {})
           }}
         />
-        
+
         {isSearching && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#00d4ff' }}>
             <div style={spinnerStyle}></div>
@@ -1044,31 +1117,21 @@ const UserManagement = () => {
 
       {updateSuccess && (
         <div style={successMessageStyle}>
-          <button
-            onClick={() => setUpdateSuccess(null)}
-            style={closeButtonStyle}
-          >
-            ✕
-          </button>
+          <button onClick={() => setUpdateSuccess(null)} style={closeButtonStyle}>✕</button>
           <span>✅ {updateSuccess}</span>
         </div>
       )}
-      
+
       {updateError && (
         <div style={errorMessageStyle}>
-          <button
-            onClick={() => setUpdateError(null)}
-            style={closeButtonStyle}
-          >
-            ✕
-          </button>
+          <button onClick={() => setUpdateError(null)} style={closeButtonStyle}>✕</button>
           <span>❌ {updateError}</span>
         </div>
       )}
 
       <div style={tableContainerStyle}>
         <h3 style={{ marginBottom: '1.5rem', color: '#ffffff' }}>لیست کاربران</h3>
-        
+
         {users.length === 0 ? (
           <div style={emptyStateStyle}>
             <div style={emptyStateIconStyle}>👥</div>
@@ -1076,10 +1139,9 @@ const UserManagement = () => {
               {searchQuery ? 'هیچ کاربری یافت نشد' : 'هیچ کاربری وجود ندارد'}
             </h4>
             <p style={{ color: '#999999' }}>
-              {searchQuery 
+              {searchQuery
                 ? `هیچ کاربری با عبارت "${searchQuery}" یافت نشد`
-                : 'هنوز هیچ کاربری در سیستم ثبت نشده است'
-              }
+                : 'هنوز هیچ کاربری در سیستم ثبت نشده است'}
             </p>
           </div>
         ) : (
@@ -1099,6 +1161,8 @@ const UserManagement = () => {
                   <tr
                     key={user.id}
                     style={{ transition: 'background-color 0.2s ease' }}
+                    onMouseEnter={(e) => Object.assign(e.currentTarget.style, tableRowHoverStyle)}
+                    onMouseLeave={(e) => Object.assign(e.currentTarget.style, { backgroundColor: '' })}
                   >
                     <td style={tableCellStyle}>{user.name}</td>
                     <td style={tableCellStyle}>{user.email}</td>
@@ -1187,39 +1251,16 @@ const UserManagement = () => {
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div style={paginationStyle}>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            style={currentPage === 1 ? disabledPageButtonStyle : pageButtonStyle}
-          >
-            قبلی
-          </button>
-          
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => handlePageChange(index + 1)}
-              style={currentPage === index + 1 ? activePageButtonStyle : pageButtonStyle}
-            >
-              {index + 1}
-            </button>
-          ))}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            style={currentPage === totalPages ? disabledPageButtonStyle : pageButtonStyle}
-          >
-            بعدی
-          </button>
-        </div>
-      )}
+      {/* FIX: replaced raw [...Array] map with windowed <Pagination /> */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <style>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
+          0%   { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
       `}</style>
@@ -1238,4 +1279,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement; 
+export default UserManagement;
