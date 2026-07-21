@@ -31,18 +31,21 @@ const DocumentsPage = () => {
     "legal-doc": "اسناد تقنینی",
     "check-list": "چک لیست ها",
     standards: "استندرد ها",
+    letter: "مکاتیب",
   }), []);
 
   const categoryMapping = useMemo(() => ({
     guideline: "guideline",
     form: "form",
     "legal-doc": "legal",
+    letter: "letter",
   }), []);
 
   const categoryColors = {
     guideline: "info",
     form: "success",
     legal: "warning",
+    letter: "primary",
   };
 
   const getFileIcon = (fileName) => {
@@ -53,6 +56,10 @@ const DocumentsPage = () => {
       case "docx": return "📝";
       case "xls":
       case "xlsx": return "📊";
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "webp": return "🖼️";
       default:     return "📎";
     }
   };

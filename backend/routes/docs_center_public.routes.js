@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, checkRole } = require("../middleware/auth.middleware");
 const { authLimiter } = require("../middleware/rateLimiter");
 const { logDownload } = require("../middleware/logging.middleware");
 const { promise } = require("../config/db");
@@ -28,7 +28,17 @@ const storage = multer.diskStorage({
   },
 });
 
-const allowedExtensions = [".pdf", ".doc", ".docx", ".xls", ".xlsx"];
+const allowedExtensions = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+];
 const allowedMimeTypes = [
   "application/pdf",
   "application/msword",
@@ -38,16 +48,29 @@ const allowedMimeTypes = [
   "application/octet-stream",
   "application/x-msdownload",
   "application/x-ole-storage",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
 ];
+
+// Categories that are also allowed to accept image files (e.g. مکاتیب/letters
+// are often scanned/photographed rather than produced as PDF/Word).
+const IMAGE_ENABLED_CATEGORIES = ["letter"];
 
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
   const mime = file.mimetype;
+  const isImage = mime.startsWith("image/");
+  const category = req.body?.category;
+
+  if (isImage && !IMAGE_ENABLED_CATEGORIES.includes(category)) {
+    return cb(new Error("فقط فایل‌های PDF، Word و Excel مجاز هستند."));
+  }
 
   if (allowedExtensions.includes(ext) && allowedMimeTypes.includes(mime)) {
     cb(null, true);
   } else {
-    cb(new Error("فقط فایل‌های PDF، Word و Excel مجاز هستند."));
+    cb(new Error("فقط فایل‌های PDF، Word، Excel یا تصویر مجاز هستند."));
   }
 };
 
@@ -63,7 +86,10 @@ const upload = multer({
 // Error handling middleware for multer file validation
 function multerErrorHandler(err, req, res, next) {
   if (err) {
-    if (err.message === "فقط فایل‌های PDF، Word و Excel مجاز هستند.") {
+    if (
+      err.message === "فقط فایل‌های PDF، Word و Excel مجاز هستند." ||
+      err.message === "فقط فایل‌های PDF، Word، Excel یا تصویر مجاز هستند."
+    ) {
       return res.status(400).json({ error: "فرمت فایل پشتیبانی نمی‌شود." });
     }
     if (err.code === "LIMIT_FILE_SIZE") {
@@ -77,26 +103,42 @@ function multerErrorHandler(err, req, res, next) {
 }
 
 // Routes with security middlewares
-router.post("/", [authenticate, authLimiter], (req, res, next) => {
-  upload.single("file")(req, res, (err) => {
-    if (err) return multerErrorHandler(err, req, res, next);
-    uploadDocument(req, res, next);
-  });
-});
+// NOTE: upload/update/delete are admin-only. This matches the frontend
+// <AdminRoute> guard around the dashboard, but that guard alone is not
+// real security since API requests can bypass the UI — so it's enforced
+// here too with checkRole("admin").
+router.post(
+  "/",
+  [authenticate, checkRole("admin"), authLimiter],
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) return multerErrorHandler(err, req, res, next);
+      uploadDocument(req, res, next);
+    });
+  }
+);
 
-router.put("/:id", [authenticate, authLimiter], (req, res, next) => {
-  upload.single("file")(req, res, (err) => {
-    if (err) return multerErrorHandler(err, req, res, next);
-    updateDocumentWithFile(req, res, next);
-  });
-});
+router.put(
+  "/:id",
+  [authenticate, checkRole("admin"), authLimiter],
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) return multerErrorHandler(err, req, res, next);
+      updateDocumentWithFile(req, res, next);
+    });
+  }
+);
 
 // Public routes
 router.get("/", getDocuments);
 router.get("/documents", getDocumentsByType);
 
 // Protected routes
-router.delete("/:id", [authenticate, authLimiter], deleteDocument);
+router.delete(
+  "/:id",
+  [authenticate, checkRole("admin"), authLimiter],
+  deleteDocument
+);
 
 // Download route with logging
 router.get(
@@ -141,6 +183,10 @@ router.get(
         ".xls": "application/vnd.ms-excel",
         ".xlsx":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp",
       };
       const mimeType = mimeTypes[ext] || "application/octet-stream";
 

@@ -34,6 +34,7 @@ const menuItems = [
       "ستندرد ها",
       "رهنمود ها",
       "اسناد تقنینی",
+      "مکاتیب",
       "فورم ها",
       "چک لیست ها",
       "پرسش نامه ها",
@@ -399,6 +400,9 @@ export default function MenuWithUtilityBar() {
         break;
       case "اسناد تقنینی":
         navigate("/documents/legal-doc");
+        break;
+      case "مکاتیب":
+        navigate("/documents/letter");
         break;
       case "ستندرد ها":
         navigate("/documents/standards");

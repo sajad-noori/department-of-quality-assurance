@@ -552,6 +552,8 @@ export default function GuidelinesDashboard() {
         return "فورم ها";
       case "legal":
         return "اسناد تقنینی";
+      case "letter":
+        return "مکاتیب";
       default:
         return category;
     }
@@ -584,6 +586,7 @@ export default function GuidelinesDashboard() {
     legal: files.filter((file) => file.category === "legal").length,
     standards: files.filter((file) => file.category === "standards").length,
     check_list: files.filter((file) => file.category === "check-list").length,
+    letters: files.filter((file) => file.category === "letter").length,
   };
 
   if (fetching) {
@@ -623,6 +626,10 @@ export default function GuidelinesDashboard() {
             <div style={statLabelStyle}>اسناد تقنینی</div>
           </div>
           <div style={statItemStyle}>
+            <div style={statValueStyle}>{stats.letters}</div>
+            <div style={statLabelStyle}>مکاتیب</div>
+          </div>
+          <div style={statItemStyle}>
             <div style={statValueStyle}>{stats.standards}</div>
             <div style={statLabelStyle}>ستندرد ها</div>
           </div>
@@ -659,14 +666,20 @@ export default function GuidelinesDashboard() {
 
           <div style={formGroupStyle}>
             <label htmlFor="file" style={labelStyle}>
-              انتخاب فایل (Word, Excel, PDF) — تا ۱۰۰ مگابایت
+              {formData.category === "letter"
+                ? "انتخاب فایل (Word, PDF یا تصویر) — تا ۱۰۰ مگابایت"
+                : "انتخاب فایل (Word, Excel, PDF) — تا ۱۰۰ مگابایت"}
             </label>
             <input
               type="file"
               id="file"
               name="file"
               onChange={handleChange}
-              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              accept={
+                formData.category === "letter"
+                  ? ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                  : ".pdf,.doc,.docx,.xls,.xlsx"
+              }
               required={!formData.id}
               style={fileInputStyle}
             />
@@ -688,6 +701,7 @@ export default function GuidelinesDashboard() {
               <option value="guideline">رهنمود ها</option>
               <option value="form">فورم ها</option>
               <option value="legal">اسناد تقنینی</option>
+              <option value="letter">مکاتیب</option>
               <option value="standards">ستندرد ها</option>
               <option value="check-list">چک لیست ها</option>
             </select>
